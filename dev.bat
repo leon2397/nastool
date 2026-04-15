@@ -9,16 +9,19 @@ if "%1"=="lint" goto lint
 if "%1"=="run" goto run
 if "%1"=="status" goto status
 if "%1"=="commit" goto commit
+if "%1"=="diff" goto diff
 goto help
 
 :test
-echo [TEST] Running pytest...
+echo [TEST] Running pytest (FAST mode)...
 cd /d D:\armtool415\nastool
+set FAST=1
 if "%2"=="" (
     python -m pytest tests/ -v --tb=short %3 %4 %5
 ) else (
     python -m pytest tests/%2 -v --tb=short %3 %4 %5
 )
+set FAST=
 goto end
 
 :lint
@@ -56,17 +59,24 @@ if "%2"=="" (
 )
 goto end
 
+:diff
+echo [DIFF] Last commit changes...
+cd /d D:\armtool415
+git diff HEAD~1 --stat
+goto end
+
 :help
 echo.
 echo   nastools dev commands:
-echo   ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
-echo   dev test          Run all tests
+echo   ================================
+echo   dev test          Run tests (FAST, skip slow)
 echo   dev test X        Run specific test file
 echo   dev lint          Run ruff linter
 echo   dev run           Run arm_diagnose --parallel 2
 echo   dev run [args]    Run with custom args
 echo   dev status        Git status + version
 echo   dev commit [msg]  Stage all + commit
+echo   dev diff          Last commit diff stat
 echo.
 
 :end
