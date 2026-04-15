@@ -50,3 +50,16 @@ node_modules/
 # Environment
 .env
 .env.local
+
+# Temp/debug scripts
+check_cmd.py
+check_device.py
+check_sessions.py
+db_check.py
+fix_tests.py
+test_command.py
+test_nastool.py
+ws-test.js
+
+# Relay server temp
+relay_server/tmp_*.txt
