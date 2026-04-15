@@ -1,0 +1,51 @@
+# nastool v2.0 Configuration Example
+# Copy this file to config.yaml and modify as needed
+
+# NAS backend connection
+nas:
+  host: "120.77.249.3"        # NAS backend IP or hostname
+  port: 8000                   # NAS backend port
+  timeout: 10                  # Connection timeout in seconds
+
+# Device identity (auto-detected if not set)
+device:
+  name: ""                     # Custom device name (default: board model)
+  storage_paths:               # Storage paths to check
+    - "/nas"
+    - "/nas/media"
+    - "/nas/photos"
+    - "/nas/videos"
+
+# Diagnostic options
+diagnostics:
+  full_mode: false             # Run full diagnosis with benchmarks
+  skip_categories: []          # Skip categories: [system, network, storage, ai, security]
+  offline: false               # Run in offline mode (skip version checks)
+  timeout: 10                  # Command timeout in seconds
+
+# Fix options
+fix:
+  auto: false                  # Auto-apply fixes without confirmation
+  risk_level: "low"            # Maximum risk level to auto-apply: low | medium | high
+
+# Reporting
+report:
+  format: "terminal"           # terminal | json | html
+  output_file: ""              # File path for json/html output (auto-generated if empty)
+  verbose: false               # Show detailed information
+
+# Version database
+version_db:
+  update_on_start: true        # Check for version updates on startup
+  cache_days: 7                # Local cache validity in days
+  fallback_offline: true       # Use cached data if offline
+
+# Auto-registration (requires NAS backend)
+register:
+  enabled: false               # Register device to NAS after diagnosis
+  upload_report: true          # Include diagnostic report in registration
+
+# Performance tuning (Jetson only)
+tuning:
+  enabled: false               # Apply performance tuning after diagnosis
+  profile: "performance"       # performance | power_save | default

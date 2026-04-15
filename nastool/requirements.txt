@@ -1,0 +1,14 @@
+# nastool v3.0.4 dependencies
+
+# Core dependencies
+pyyaml>=6.0
+requests>=2.28.0
+
+# Web/API dependencies
+fastapi>=0.100.0
+uvicorn>=0.23.0
+httpx>=0.24.0
+
+# Optional: platform-specific
+# jetson-stats>=4.0  # for Jetson devices
+# rknn-toolkit2>=2.0  # for Rockchip NPU

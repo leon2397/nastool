@@ -1,0 +1,52 @@
+# nastools ARM Agent 配置示例
+# 复制为 config.yaml 并修改
+
+# Relay Server 连接
+relay:
+  url: "ws://120.77.249.3:18888"  # Relay Server 地址
+  agent_key: ""  # 设备密钥（必须，从 Relay Server 管理界面获取）
+
+# 设备信息
+device:
+  id: ""  # 设备ID（留空则自动生成）
+  name: "我的NAS"  # 设备名称（在 GUI 中显示）
+  type: "generic"  # 设备类型: synology, qnap, jetson, rk3588, pi5, generic
+  capabilities:  # 能力标签
+    - storage
+    - network
+    - system
+    # - ai  # 如果有 AI 加速器
+    # - security  # 如果支持安全检测
+
+# 心跳与超时
+timing:
+  heartbeat_interval: 30000  # 心跳间隔（毫秒）
+  read_timeout: 90000  # 读取超时（毫秒）
+
+# 重连策略
+reconnect:
+  base_delay: 1   # 初始重连延迟（秒）
+  max_delay: 60   # 最大重连延迟（秒）
+  jitter: 0.2     # 抖动幅度（±20%）
+
+# 网络检测
+network:
+  ping_before_connect: true   # 连接前先 ping 检测 Relay 是否可达
+  connect_timeout: 10        # 连接超时（秒）
+
+# OTA 升级配置
+ota:
+  enabled: true              # 是否启用 OTA 升级
+  check_interval: 3600       # 检查新版本间隔（秒），默认1小时
+  download_dir: "/tmp/nastool-ota"  # OTA 下载目录
+
+# 诊断配置
+diagnose:
+  on_start: false  # 启动时执行诊断
+  interval: 3600  # 定期诊断间隔（秒），0表示禁用
+  script: "arm_diagnose.py"  # 诊断脚本路径
+
+# 日志
+log:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: ""  # 日志文件路径，空则输出到控制台

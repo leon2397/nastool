@@ -1,0 +1,3 @@
+# nastools ARM Agent 依赖
+websockets>=12.0
+pyyaml>=6.0

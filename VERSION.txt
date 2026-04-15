@@ -1,0 +1,35 @@
+# nastools v3.0.0-beta Release
+
+## Version
+__version__ = "3.0.0-beta"
+
+## Release Date
+2026-04-14
+
+## Components
+- nastools_pkg/    — Windows GUI v1.2 (+ USB dialog, V3.0)
+- relay_server/   — Node.js Relay Server v2.0
+- nastool/       — ARM 诊断工具 v3.0.7
+- scripts/       — 部署脚本 + USB Gadget 脚本
+
+## Features (v3.0.0-beta)
+### V3.0 USB 模块（四种方式）
+- nastool/usb/manager.py — USBManager（统一调度，4种后端）
+- nastool/usb/__init__.py — 模块导出
+- nastool/scripts/setup_usb_gadget.py — 设备端一键启用脚本
+- nastool/scripts/setup_usb_gadget_pc.bat — PC 端配置脚本
+
+### USB Gadget 支持
+- 自动检测 SOC 类型（Jetson / RK3588 / 树莓派 / 通用）
+- 自动选择最优驱动（g_rndis / g_ether / g_ecm）
+- IP 自动分配（192.168.58.x）
+- 可选 NAT 互联网共享
+- Windows PC 端一键配置脚本
+
+## Features (v3.0.0-alpha)
+- nastool/adapters/adb_adapter.py
+- nastools_pkg/gui/usb_dialog.py
+- 主界面新增 USB 按钮
+
+## Features (v2.0.0)
+- Phase 4 Relay Server 完成

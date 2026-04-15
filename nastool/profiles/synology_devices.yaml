@@ -1,0 +1,671 @@
+# 群晖设备配置
+#
+# 包含：
+# - DS220+ / DS920+ / DS1520+ 等 x86 机型
+# - DS223j / DS223 等 ARM 机型
+# - J 系列 ARM 机型
+#
+# 每个机型包含：
+# - 硬件规格（CPU/内存/盘位）
+# - 系统路径（Python/Docker/套件路径）
+# - 检测项配置
+# - 部署参数
+
+# ══════════════════════════════════════════════════════════════════
+# 群晖设备型号配置
+# ══════════════════════════════════════════════════════════════════
+
+devices:
+  # ────────────────────────────────────────────────────────────────
+  # Plus 系列（x86，Docker 支持）
+  # ────────────────────────────────────────────────────────────────
+  
+  DS220+:
+    name: "群晖 DS220+"
+    arch: "x86_64"
+    cpu:
+      model: "Intel Celeron J4025"
+      cores: 2
+      freq: "2.0 GHz"
+    memory:
+      installed: "2 GB"
+      max: "2 GB"
+      slots: 1
+    storage:
+      bays: 2
+      max_capacity: "32 TB"
+      raid_support: [basic, jbod, raid0, raid1]
+    network:
+      ports: 1
+      speed: "1 Gbps"
+    features:
+      docker: true
+      virtual_machine: false
+      ssd_cache: false
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      docker: "/var/packages/Docker"
+      packages: "/var/packages"
+      shared: "/volume1"
+      home: "/var/services/homes"
+    docker:
+      enabled: true
+      compose_support: true
+      port_range: "5000-5999"
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+    
+  DS920+:
+    name: "群晖 DS920+"
+    arch: "x86_64"
+    cpu:
+      model: "Intel Celeron J4125"
+      cores: 4
+      freq: "2.0 GHz"
+      boost: "2.7 GHz"
+    memory:
+      installed: "4 GB"
+      max: "8 GB"
+      slots: 2
+    storage:
+      bays: 4
+      max_capacity: "64 TB"
+      raid_support: [basic, jbod, raid0, raid1, raid5, raid6, raid10]
+      expansion: true
+      expansion_unit: "DX517"
+    network:
+      ports: 2
+      speed: "1 Gbps"
+      link_aggregation: true
+    features:
+      docker: true
+      virtual_machine: true
+      ssd_cache: true
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      docker: "/var/packages/Docker"
+      packages: "/var/packages"
+      shared: "/volume1"
+      home: "/var/services/homes"
+    docker:
+      enabled: true
+      compose_support: true
+      port_range: "5000-5999"
+      recommended: true
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+    
+  DS1520+:
+    name: "群晖 DS1520+"
+    arch: "x86_64"
+    cpu:
+      model: "Intel Celeron J3455"
+      cores: 4
+      freq: "1.5 GHz"
+      boost: "2.3 GHz"
+    memory:
+      installed: "8 GB"
+      max: "8 GB"
+      slots: 2
+    storage:
+      bays: 5
+      max_capacity: "80 TB"
+      raid_support: [basic, jbod, raid0, raid1, raid5, raid6, raid10]
+      expansion: true
+      expansion_unit: "DX517"
+    network:
+      ports: 4
+      speed: "1 Gbps"
+      link_aggregation: true
+    features:
+      docker: true
+      virtual_machine: true
+      ssd_cache: true
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      docker: "/var/packages/Docker"
+      packages: "/var/packages"
+      shared: "/volume1"
+      home: "/var/services/homes"
+    docker:
+      enabled: true
+      compose_support: true
+      port_range: "5000-5999"
+      recommended: true
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  DS720+:
+    name: "群晖 DS720+"
+    arch: "x86_64"
+    cpu:
+      model: "Intel Celeron J4125"
+      cores: 4
+      freq: "2.0 GHz"
+      boost: "2.7 GHz"
+    memory:
+      installed: "2 GB"
+      max: "6 GB"
+      slots: 2
+    storage:
+      bays: 2
+      max_capacity: "32 TB"
+      raid_support: [basic, jbod, raid0, raid1]
+      expansion: true
+      expansion_unit: "DX517"
+    network:
+      ports: 2
+      speed: "1 Gbps"
+      link_aggregation: true
+    features:
+      docker: true
+      virtual_machine: true
+      ssd_cache: true
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      docker: "/var/packages/Docker"
+      packages: "/var/packages"
+      shared: "/volume1"
+      home: "/var/services/homes"
+    docker:
+      enabled: true
+      compose_support: true
+      port_range: "5000-5999"
+      recommended: true
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  # ────────────────────────────────────────────────────────────────
+  # Value 系列（x86，Docker 支持）
+  # ────────────────────────────────────────────────────────────────
+  
+  DS220:
+    name: "群晖 DS220"
+    arch: "x86_64"
+    cpu:
+      model: "Intel Celeron J4025"
+      cores: 2
+      freq: "2.0 GHz"
+    memory:
+      installed: "2 GB"
+      max: "2 GB"
+      slots: 1
+    storage:
+      bays: 2
+      max_capacity: "32 TB"
+      raid_support: [basic, jbod, raid0, raid1]
+    network:
+      ports: 1
+      speed: "1 Gbps"
+    features:
+      docker: true
+      virtual_machine: false
+      ssd_cache: false
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      docker: "/var/packages/Docker"
+      packages: "/var/packages"
+      shared: "/volume1"
+    docker:
+      enabled: true
+      compose_support: true
+      port_range: "5000-5999"
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  DS420+:
+    name: "群晖 DS420+"
+    arch: "x86_64"
+    cpu:
+      model: "Intel Celeron J4025"
+      cores: 2
+      freq: "2.0 GHz"
+    memory:
+      installed: "2 GB"
+      max: "2 GB"
+      slots: 1
+    storage:
+      bays: 4
+      max_capacity: "64 TB"
+      raid_support: [basic, jbod, raid0, raid1, raid5, raid6, raid10]
+    network:
+      ports: 2
+      speed: "1 Gbps"
+      link_aggregation: true
+    features:
+      docker: true
+      virtual_machine: false
+      ssd_cache: false
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      docker: "/var/packages/Docker"
+      packages: "/var/packages"
+      shared: "/volume1"
+    docker:
+      enabled: true
+      compose_support: true
+      port_range: "5000-5999"
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  # ────────────────────────────────────────────────────────────────
+  # J 系列（ARM，无 Docker）
+  # ────────────────────────────────────────────────────────────────
+  
+  DS223j:
+    name: "群晖 DS223j"
+    arch: "aarch64"
+    cpu:
+      model: "Realtek RTD1619B"
+      vendor: "Realtek"
+      cores: 4
+      freq: "1.7 GHz"
+    memory:
+      installed: "1 GB"
+      max: "1 GB"
+      slots: 0  # 焊死
+    storage:
+      bays: 2
+      max_capacity: "36 TB"
+      raid_support: [basic, jbod, raid0, raid1]
+    network:
+      ports: 1
+      speed: "1 Gbps"
+    features:
+      docker: false
+      virtual_machine: false
+      ssd_cache: false
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      packages: "/var/packages"
+      shared: "/volume1"
+    deployment:
+      method: "native"  # 非 Docker，直接部署
+      service_port: 9999
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  DS223:
+    name: "群晖 DS223"
+    arch: "aarch64"
+    cpu:
+      model: "Realtek RTD1619B"
+      vendor: "Realtek"
+      cores: 4
+      freq: "1.7 GHz"
+    memory:
+      installed: "1 GB"
+      max: "1 GB"
+      slots: 0
+    storage:
+      bays: 2
+      max_capacity: "36 TB"
+      raid_support: [basic, jbod, raid0, raid1]
+    network:
+      ports: 1
+      speed: "1 Gbps"
+    features:
+      docker: false
+      virtual_machine: false
+      ssd_cache: false
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      packages: "/var/packages"
+      shared: "/volume1"
+    deployment:
+      method: "native"
+      service_port: 9999
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  DS423j:
+    name: "群晖 DS423j"
+    arch: "aarch64"
+    cpu:
+      model: "Realtek RTD1619B"
+      vendor: "Realtek"
+      cores: 4
+      freq: "1.7 GHz"
+    memory:
+      installed: "1 GB"
+      max: "1 GB"
+      slots: 0
+    storage:
+      bays: 4
+      max_capacity: "72 TB"
+      raid_support: [basic, jbod, raid0, raid1, raid5, raid6]
+    network:
+      ports: 1
+      speed: "1 Gbps"
+    features:
+      docker: false
+      virtual_machine: false
+      ssd_cache: false
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      packages: "/var/packages"
+      shared: "/volume1"
+    deployment:
+      method: "native"
+      service_port: 9999
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  DS120j:
+    name: "群晖 DS120j"
+    arch: "aarch64"
+    cpu:
+      model: "Marvell Armada 3700"
+      vendor: "Marvell"
+      cores: 2
+      freq: "1.4 GHz"
+    memory:
+      installed: "512 MB"
+      max: "512 MB"
+      slots: 0
+    storage:
+      bays: 1
+      max_capacity: "16 TB"
+      raid_support: [basic]
+    network:
+      ports: 1
+      speed: "1 Gbps"
+    features:
+      docker: false
+      virtual_machine: false
+      ssd_cache: false
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      packages: "/var/packages"
+      shared: "/volume1"
+    deployment:
+      method: "native"
+      service_port: 9999
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  DS220j:
+    name: "群晖 DS220j"
+    arch: "aarch64"
+    cpu:
+      model: "Marvell Armada 3700"
+      vendor: "Marvell"
+      cores: 2
+      freq: "1.4 GHz"
+    memory:
+      installed: "512 MB"
+      max: "512 MB"
+      slots: 0
+    storage:
+      bays: 2
+      max_capacity: "32 TB"
+      raid_support: [basic, jbod, raid0, raid1]
+    network:
+      ports: 1
+      speed: "1 Gbps"
+    features:
+      docker: false
+      virtual_machine: false
+      ssd_cache: false
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      packages: "/var/packages"
+      shared: "/volume1"
+    deployment:
+      method: "native"
+      service_port: 9999
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  # ────────────────────────────────────────────────────────────────
+  # 高端系列（x86，全功能）
+  # ────────────────────────────────────────────────────────────────
+  
+  DS1019+:
+    name: "群晖 DS1019+"
+    arch: "x86_64"
+    cpu:
+      model: "Intel Celeron J3455"
+      cores: 4
+      freq: "1.5 GHz"
+      boost: "2.3 GHz"
+    memory:
+      installed: "8 GB"
+      max: "8 GB"
+      slots: 2
+    storage:
+      bays: 5
+      max_capacity: "80 TB"
+      raid_support: [basic, jbod, raid0, raid1, raid5, raid6, raid10]
+      expansion: true
+      expansion_unit: "DX517"
+    network:
+      ports: 2
+      speed: "1 Gbps"
+      link_aggregation: true
+    features:
+      docker: true
+      virtual_machine: true
+      ssd_cache: true
+      btrfs: true
+    paths:
+      python: "/usr/bin/python3"
+      docker: "/var/packages/Docker"
+      packages: "/var/packages"
+      shared: "/volume1"
+      home: "/var/services/homes"
+    docker:
+      enabled: true
+      compose_support: true
+      port_range: "5000-5999"
+      recommended: true
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+  
+  DS923+:
+    name: "群晖 DS923+"
+    arch: "x86_64"
+    cpu:
+      model: "AMD Ryzen R1600"
+      vendor: "AMD"
+      cores: 2
+      freq: "2.6 GHz"
+      boost: "3.1 GHz"
+    memory:
+      installed: "4 GB"
+      max: "32 GB"
+      slots: 2
+    storage:
+      bays: 4
+      max_capacity: "64 TB"
+      raid_support: [basic, jbod, raid0, raid1, raid5, raid6, raid10]
+      expansion: true
+      expansion_unit: "DX517"
+    network:
+      ports: 2
+      speed: "1 Gbps"
+      link_aggregation: true
+      nvme_slots: 2
+    features:
+      docker: true
+      virtual_machine: true
+      ssd_cache: true
+      btrfs: true
+      nvme_cache: true
+    paths:
+      python: "/usr/bin/python3"
+      docker: "/var/packages/Docker"
+      packages: "/var/packages"
+      shared: "/volume1"
+      home: "/var/services/homes"
+    docker:
+      enabled: true
+      compose_support: true
+      port_range: "5000-5999"
+      recommended: true
+    dsm:
+      min_version: "7.0"
+      recommended_version: "7.2"
+
+# ══════════════════════════════════════════════════════════════════
+# 检测项配置（群晖专用）
+# ══════════════════════════════════════════════════════════════════
+
+checks:
+  # 系统检测
+  system:
+    - id: dsm_version
+      name: "DSM 版本"
+      command: "synogetkeyvalue /etc.defaults/VERSION majorversion"
+      expected: "7"
+      severity: warning
+      
+    - id: dsm_build
+      name: "DSM 构建号"
+      command: "synogetkeyvalue /etc.defaults/VERSION smallfixnumber"
+      
+    - id: uptime
+      name: "运行时间"
+      command: "uptime -p"
+      
+  # 存储检测
+  storage:
+    - id: volume_status
+      name: "存储卷状态"
+      command: "cat /proc/mdstat"
+      parse: raid_status
+      
+    - id: disk_smart
+      name: "磁盘 SMART 状态"
+      command: "syno_disk_smart --status"
+      severity: critical
+      
+    - id: disk_temp
+      name: "磁盘温度"
+      command: "syno_disk_temperature"
+      
+    - id: volume_usage
+      name: "存储卷使用率"
+      command: "df -h | grep volume"
+      
+  # 网络检测
+  network:
+    - id: network_interface
+      name: "网络接口状态"
+      command: "ip link show"
+      
+    - id: bond_status
+      name: "链路聚合状态"
+      command: "cat /proc/net/bonding/bond0"
+      optional: true
+      
+  # 服务检测
+  services:
+    - id: docker_status
+      name: "Docker 服务状态"
+      command: "synoservicectl --status pkgctl-Docker"
+      optional: true
+      arch: x86_64
+      
+    - id: web_status
+      name: "Web 服务状态"
+      command: "synoservicectl --status httpd-syno"
+      
+    - id: smb_status
+      name: "SMB 服务状态"
+      command: "synoservicectl --status smb"
+      
+  # Python 环境
+  python:
+    - id: python_version
+      name: "Python 版本"
+      command: "python3 --version"
+      expected: "3."
+      
+    - id: pip_available
+      name: "pip 可用"
+      command: "pip3 --version"
+      
+  # Docker 环境（仅 x86）
+  docker:
+    - id: docker_version
+      name: "Docker 版本"
+      command: "docker --version"
+      arch: x86_64
+      
+    - id: docker_running
+      name: "Docker 运行状态"
+      command: "docker ps"
+      arch: x86_64
+      
+    - id: compose_available
+      name: "Docker Compose 可用"
+      command: "docker-compose --version"
+      arch: x86_64
+      optional: true
+
+# ══════════════════════════════════════════════════════════════════
+# 部署配置
+# ══════════════════════════════════════════════════════════════════
+
+deployment:
+  # Docker 部署（x86 机型）
+  docker:
+    pre_install:
+      - "synopkg install Docker"
+      - "synoservicectl --start pkgctl-Docker"
+    compose_path: "/volume1/docker/ai-nas"
+    volumes:
+      - "/volume1/docker/ai-nas/data:/data"
+      - "/volume1:/nas:ro"
+    ports:
+      - "8000:8000"
+    environment:
+      NAS_PATH: "/nas"
+      TZ: "Asia/Shanghai"
+      
+  # 原生部署（ARM 机型）
+  native:
+    install_dir: "/volume1/@appstore/ai-nas"
+    service_name: "ai-nas-arm"
+    pre_install:
+      - "mkdir -p /volume1/@appstore/ai-nas"
+      - "mkdir -p /volume1/@appstore/ai-nas/data"
+    post_install:
+      - "chmod +x /volume1/@appstore/ai-nas/arm_server.py"
+    service_template: |
+      [Unit]
+      Description=AI-NAS ARM Service
+      After=network.target
+      
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/python3 {install_dir}/arm_server.py --port 9999 --nas-path /volume1
+      Restart=on-failure
+      RestartSec=10
+      
+      [Install]
+      WantedBy=multi-user.target

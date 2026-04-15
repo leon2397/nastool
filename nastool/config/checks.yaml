@@ -1,0 +1,361 @@
+# ══════════════════════════════════════════════════════════════════
+# nastools 检测项配置
+# 所有阈值、超时、权重均可通过此文件配置
+# ══════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────
+# 系统检测
+# ───────────────────────────────────────────────────────────────────
+system:
+  # Python 版本
+  python:
+    min_version: "3.8"
+    recommended_version: "3.11"
+    check_enabled: true
+
+  # 内存
+  memory:
+    min_mb: 1024          # 1GB 最低
+    recommended_mb: 4096  # 4GB 推荐
+    warning_percent: 85   # 使用率 > 85% 警告
+    critical_percent: 95  # 使用率 > 95% 严重
+    check_enabled: true
+
+  # CPU
+  cpu:
+    warning_percent: 80   # 使用率 > 80% 警告
+    critical_percent: 95  # 使用率 > 95% 严重
+    warning_temp: 70      # 温度 > 70°C 警告
+    critical_temp: 85     # 温度 > 85°C 严重
+    check_enabled: true
+
+  # 磁盘空间
+  disk:
+    warning_percent: 80   # 使用率 > 80% 警告
+    critical_percent: 95  # 使用率 > 95% 严重
+    min_free_gb: 10       # 最少剩余 10GB
+    check_enabled: true
+
+  # Docker
+  docker:
+    min_version: "20.10"
+    recommended_version: "24.0"
+    check_enabled: true
+
+  # 系统库
+  system_libs:
+    required:
+      - ssl
+      - sqlite3
+      - ffi
+      - zlib
+    check_enabled: true
+
+# ───────────────────────────────────────────────────────────────────
+# 存储检测
+# ───────────────────────────────────────────────────────────────────
+storage:
+  # SMART 健康检测
+  smart:
+    check_enabled: true
+    # 关键 SMART 属性阈值
+    attributes:
+      # 重分配扇区
+      reallocated_sectors:
+        id: 5
+        warning: 10
+        critical: 100
+      # 当前待处理扇区
+      pending_sectors:
+        id: 197
+        warning: 10
+        critical: 100
+      # 离线无法纠正扇区
+      offline_uncorrectable:
+        id: 198
+        warning: 1
+        critical: 10
+      # 温度
+      temperature:
+        id: 194
+        warning: 55
+        critical: 70
+      # 使用时长
+      power_on_hours:
+        id: 9
+        warning_hours: 43800   # 5年
+        critical_hours: 70080  # 8年
+
+  # 磁盘温度
+  temperature:
+    warning: 55
+    critical: 70
+    check_enabled: true
+
+  # SSD TBW（总写入量）
+  tbw:
+    warning_percent: 80   # 已用 > 80% TBW 警告
+    critical_percent: 95  # 已用 > 95% TBW 严重
+    check_enabled: true
+
+  # RAID 状态
+  raid:
+    check_enabled: true
+    # 重建进度警告阈值
+    rebuild_warning_percent: 50  # 重建进度 < 50% 时警告
+
+  # 读写速度测试
+  speed_test:
+    file_size_mb: 100
+    timeout_seconds: 30
+    min_write_mbps: 50   # 最低写入速度
+    min_read_mbps: 100   # 最低读取速度
+    check_enabled: true
+
+# ───────────────────────────────────────────────────────────────────
+# 网络检测
+# ───────────────────────────────────────────────────────────────────
+network:
+  # 带宽测试
+  bandwidth:
+    speedtest_timeout: 30
+    iperf3_timeout: 10
+    curl_timeout: 10
+    min_download_mbps: 10
+    min_upload_mbps: 5
+    check_enabled: true
+
+  # 端口扫描
+  port_scan:
+    timeout_seconds: 5
+    common_ports:
+      - 22    # SSH
+      - 80    # HTTP
+      - 443   # HTTPS
+      - 8000  # NAS
+      - 8080  # 备用
+      - 9000  # 服务
+    check_enabled: true
+
+  # DNS 解析
+  dns:
+    timeout_seconds: 5
+    test_domains:
+      - google.com
+      - cloudflare.com
+      - baidu.com
+    servers:
+      - name: Google
+        ip: 8.8.8.8
+      - name: Cloudflare
+        ip: 1.1.1.1
+      - name: 114 DNS
+        ip: 114.114.114.114
+      - name: 阿里
+        ip: 223.5.5.5
+      - name: 腾讯
+        ip: 119.29.29.29
+    check_enabled: true
+
+  # 网卡健康
+  interface:
+    min_speed_mbps: 100    # 最低链路速率
+    max_error_rate: 0.01   # 最大错误率 1%
+    max_drop_rate: 0.01    # 最大丢包率 1%
+    wireless_min_signal: -70  # 无线最低信号强度 dBm
+    check_enabled: true
+
+  # 连通性
+  connectivity:
+    ping_count: 3
+    ping_timeout: 5
+    http_timeout: 10
+    check_enabled: true
+
+# ───────────────────────────────────────────────────────────────────
+# 安全检测
+# ───────────────────────────────────────────────────────────────────
+security:
+  # 登录失败检测
+  login_failures:
+    hours: 24             # 统计最近 N 小时
+    warning_threshold: 10  # 失败 > 10 次警告
+    critical_threshold: 50 # 失败 > 50 次严重
+    brute_force_threshold: 5  # 同一 IP 失败 > 5 次标记暴力破解
+    check_enabled: true
+
+  # 防火墙
+  firewall:
+    expected_open_ports:
+      - 22
+      - 8000
+    blocked_ports:
+      - 23    # Telnet
+      - 21    # FTP（如不需要）
+    check_enabled: true
+
+  # SSL 证书
+  ssl:
+    warning_days: 30     # 剩余 < 30 天警告
+    critical_days: 7     # 剩余 < 7 天严重
+    check_enabled: true
+
+  # 自动更新
+  auto_update:
+    security_update_days: 7   # 安全更新 > 7 天未安装警告
+    kernel_update_days: 30    # 内核更新 > 30 天未安装警告
+    check_enabled: true
+
+  # SSH 配置
+  ssh:
+    permit_root_login: false
+    password_authentication: false
+    pubkey_authentication: true
+    max_auth_tries: 3
+    check_enabled: true
+
+# ───────────────────────────────────────────────────────────────────
+# NAS 专用检测
+# ───────────────────────────────────────────────────────────────────
+nas:
+  # DSM 版本
+  dsm:
+    min_version: "6.2"
+    recommended_version: "7.0"
+    check_enabled: true
+
+  # UPS
+  ups:
+    low_battery_percent: 20
+    critical_battery_percent: 10
+    max_load_percent: 90
+    check_enabled: true
+
+  # 共享文件夹
+  share:
+    warning_usage_percent: 80
+    critical_usage_percent: 95
+    check_enabled: true
+
+  # 日志分析
+  logs:
+    hours: 1              # 分析最近 N 小时
+    error_threshold: 10   # 错误 > 10 次警告
+    warning_threshold: 50 # 警告 > 50 次提示
+    check_enabled: true
+
+# ───────────────────────────────────────────────────────────────────
+# AI/GPU 检测
+# ───────────────────────────────────────────────────────────────────
+ai:
+  # GPU
+  gpu:
+    min_memory_mb: 4096   # 最低显存 4GB
+    recommended_memory_mb: 8192
+    warning_temp: 80
+    critical_temp: 90
+    check_enabled: true
+
+  # CUDA
+  cuda:
+    min_version: "11.0"
+    recommended_version: "12.0"
+    check_enabled: true
+
+  # cuDNN
+  cudnn:
+    min_version: "8.0"
+    check_enabled: true
+
+  # TensorRT
+  tensorrt:
+    min_version: "8.0"
+    check_enabled: true
+
+# ───────────────────────────────────────────────────────────────────
+# UPnP 发现
+# ───────────────────────────────────────────────────────────────────
+upnp:
+  scan_timeout: 5
+  mx: 3                  # SSDP MX 值
+  search_targets:
+    - "upnp:rootdevice"
+    - "ssdp:all"
+  check_enabled: true
+
+# ───────────────────────────────────────────────────────────────────
+# 健康分数权重
+# ───────────────────────────────────────────────────────────────────
+scoring:
+  # 各类别权重（总和应为 100）
+  weights:
+    system: 20
+    storage: 25
+    network: 15
+    security: 25
+    nas: 10
+    ai: 5
+
+  # 扣分规则
+  penalties:
+    # 系统
+    cpu_usage_high: 15
+    cpu_temp_high: 20
+    memory_usage_high: 20
+    disk_usage_high: 15
+
+    # 存储
+    smart_warning: 10
+    smart_failed: 30
+    raid_degraded: 25
+    raid_failed: 50
+
+    # 网络
+    gateway_unreachable: 20
+    internet_unreachable: 30
+    dns_failed: 10
+
+    # 安全
+    firewall_disabled: 20
+    root_login_enabled: 10
+    password_auth_enabled: 5
+    ssl_expiring: 15
+    brute_force_detected: 10
+
+    # NAS
+    ups_on_battery: 20
+    ups_low_battery: 30
+    share_full: 15
+
+# ───────────────────────────────────────────────────────────────────
+# 超时配置
+# ───────────────────────────────────────────────────────────────────
+timeouts:
+  ssh_connect: 10
+  ssh_command: 30
+  http_request: 10
+  dns_resolve: 5
+  port_scan: 5
+  speed_test: 30
+  smart_read: 10
+
+# ───────────────────────────────────────────────────────────────────
+# 报告配置
+# ───────────────────────────────────────────────────────────────────
+report:
+  # 历史数据保留天数
+  history_days: 30
+
+  # 导出格式
+  export_formats:
+    - txt
+    - json
+    - html
+
+  # 报告包含项
+  include:
+    - summary
+    - details
+    - issues
+    - recommendations
+    - history_trend

@@ -1,0 +1,28 @@
+{
+  "name": "nastools-relay-server",
+  "version": "2.0.0",
+  "description": "nastools v2.0 Relay Server - WebSocket relay for ARM NAS remote management",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "fastify": "^5.2.1",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/jwt": "^9.0.1",
+    "@fastify/multipart": "^9.0.1",
+    "@fastify/websocket": "^11.0.1",
+    "sql.js": "^1.11.0",
+    "uuid": "^11.0.5",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "author": "nastools",
+  "license": "MIT"
+}

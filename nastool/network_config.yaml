@@ -1,0 +1,8 @@
+localhost:
+  ipv4: 127.0.0.1
+  ipv6: ::1
+usb_gadget:
+  device_gateway: 192.168.42.254
+  device_ip: 192.168.42.1
+  ip_range: 192.168.42.0/24
+  netmask: 255.255.255.0

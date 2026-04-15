@@ -1,0 +1,658 @@
+# SOPHON（算能）AI 芯片设备配置
+#
+# 包含：
+# - BM1688 系列（边缘 AI SoC）
+# - BM1684 系列（边缘 AI SoC）
+# - BM1690 系列（云端 AI 卡）
+# - 开发板（SE5 / SE7 / SM5 等）
+#
+# 算能科技（SOPHGO）国产 AI 芯片，支持 TPU 推理。
+
+# ══════════════════════════════════════════════════════════════════
+# SOPHON 设备型号配置
+# ══════════════════════════════════════════════════════════════════
+
+devices:
+  # ────────────────────────────────────────────────────────────────
+  # BM1688 系列（最新边缘 SoC）
+  # ────────────────────────────────────────────────────────────────
+  
+  BM1688:
+    name: "SOPHON BM1688"
+    generation: "BM1688"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    tpu:
+      cores: 2
+      topology: "双核 TPU"
+      int8_performance: "32 TOPS"
+      fp16_performance: "16 TFLOPS"
+      fp32_performance: "4 TFLOPS"
+    cpu:
+      model: "双核 ARM Cortex-A53"
+      cores: 2
+      freq: "1.2 GHz"
+    memory:
+      type: "DDR4"
+      size: "共享内存"
+      max_external: "8 GB"
+      bandwidth: "25.6 GB/s"
+    video:
+      decode:
+        h264: "4K @ 60fps"
+        h265: "4K @ 60fps"
+        channels_1080p: 16
+      encode:
+        h264: "4K @ 30fps"
+        h265: "4K @ 30fps"
+    interfaces:
+      pcie: "Gen3 x2"
+      ethernet: "1 Gbps x2"
+      usb: "3.0 x2"
+      sdio: true
+      spi: true
+      i2c: true
+      uart: true
+    power:
+      typical: "8 W"
+      max: "12 W"
+    temperature:
+      operating: "-40°C ~ 85°C"
+      storage: "-40°C ~ 125°C"
+    software:
+      sdk: "SophonSDK"
+      min_version: "2.0"
+      recommended_version: "2.7"
+      bmcompiler: true
+      bmruntime: true
+      bmtpu_runtime: true
+    frameworks:
+      tensorflow: true
+      pytorch: true
+      onnx: true
+      caffe: true
+      mxnet: false
+    paths:
+      sdk: "/opt/sophon"
+      bmcompiler: "/opt/sophon/bmcompiler"
+      bmruntime: "/opt/sophon/bmruntime"
+      drivers: "/opt/sophon/drivers"
+      models: "/opt/sophon/models"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥200"
+      category: "edge"
+    notes: "双核 TPU，适合多路视频分析"
+    
+  BM1688X:
+    name: "SOPHON BM1688X"
+    generation: "BM1688"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    tpu:
+      cores: 2
+      topology: "双核 TPU + AI 加速"
+      int8_performance: "40 TOPS"
+      fp16_performance: "20 TFLOPS"
+    cpu:
+      model: "四核 ARM Cortex-A53"
+      cores: 4
+      freq: "1.5 GHz"
+    memory:
+      type: "DDR4"
+      max_external: "16 GB"
+      bandwidth: "51.2 GB/s"
+    video:
+      decode:
+        h264: "4K @ 120fps"
+        h265: "4K @ 120fps"
+        channels_1080p: 32
+      encode:
+        h264: "4K @ 60fps"
+        h265: "4K @ 60fps"
+    power:
+      typical: "10 W"
+      max: "15 W"
+    software:
+      sdk: "SophonSDK"
+      min_version: "2.0"
+      recommended_version: "2.7"
+    paths:
+      sdk: "/opt/sophon"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥300"
+      category: "edge"
+
+  # ────────────────────────────────────────────────────────────────
+  # BM1684 系列（成熟边缘 SoC）
+  # ────────────────────────────────────────────────────────────────
+  
+  BM1684:
+    name: "SOPHON BM1684"
+    generation: "BM1684"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    tpu:
+      cores: 1
+      topology: "单核 TPU"
+      int8_performance: "17 TOPS"
+      fp16_performance: "8.5 TFLOPS"
+      fp32_performance: "2 TFLOPS"
+    cpu:
+      model: "双核 ARM Cortex-A53"
+      cores: 2
+      freq: "1.0 GHz"
+    memory:
+      type: "DDR4"
+      max_external: "4 GB"
+      bandwidth: "12.8 GB/s"
+    video:
+      decode:
+        h264: "4K @ 30fps"
+        h265: "4K @ 30fps"
+        channels_1080p: 8
+      encode:
+        h264: "1080p @ 30fps"
+        h265: "1080p @ 30fps"
+    interfaces:
+      pcie: "Gen2 x1"
+      ethernet: "1 Gbps"
+      usb: "3.0"
+    power:
+      typical: "5 W"
+      max: "8 W"
+    software:
+      sdk: "SophonSDK"
+      min_version: "1.7"
+      recommended_version: "2.0"
+    paths:
+      sdk: "/opt/sophon"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥100"
+      category: "edge"
+    notes: "成熟稳定，性价比高"
+    
+  BM1684X:
+    name: "SOPHON BM1684X"
+    generation: "BM1684"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    tpu:
+      cores: 1
+      topology: "单核 TPU 增强"
+      int8_performance: "22 TOPS"
+      fp16_performance: "11 TFLOPS"
+    cpu:
+      model: "四核 ARM Cortex-A53"
+      cores: 4
+      freq: "1.2 GHz"
+    memory:
+      type: "DDR4"
+      max_external: "8 GB"
+      bandwidth: "25.6 GB/s"
+    video:
+      decode:
+        h264: "4K @ 60fps"
+        h265: "4K @ 60fps"
+        channels_1080p: 16
+      encode:
+        h264: "4K @ 30fps"
+        h265: "4K @ 30fps"
+    power:
+      typical: "7 W"
+      max: "10 W"
+    software:
+      sdk: "SophonSDK"
+      min_version: "1.7"
+      recommended_version: "2.0"
+    paths:
+      sdk: "/opt/sophon"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      mskp_cny: "¥150"
+      category: "edge"
+
+  # ────────────────────────────────────────────────────────────────
+  # BM1690 系列（云端 AI 卡）
+  # ────────────────────────────────────────────────────────────────
+  
+  BM1690:
+    name: "SOPHON BM1690"
+    generation: "BM1690"
+    arch: "x86_64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    form_factor: "PCIe 加速卡"
+    tpu:
+      cores: 4
+      topology: "四核 TPU"
+      int8_performance: "256 TOPS"
+      fp16_performance: "128 TFLOPS"
+      fp32_performance: "32 TFLOPS"
+    memory:
+      type: "HBM2"
+      size: "32 GB"
+      bandwidth: "460 GB/s"
+    interfaces:
+      pcie: "Gen4 x16"
+    power:
+      typical: "75 W"
+      max: "150 W"
+    software:
+      sdk: "SophonSDK"
+      min_version: "2.5"
+      recommended_version: "3.0"
+    paths:
+      sdk: "/opt/sophon"
+      drivers: "/opt/sophon/bm1690-driver"
+    deployment:
+      method: "docker"
+      service_port: 9999
+    price:
+      msrp_cny: "¥5000"
+      category: "cloud"
+    notes: "云端推理卡，适合数据中心部署"
+    
+  BM1690X:
+    name: "SOPHON BM1690X"
+    generation: "BM1690"
+    arch: "x86_64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    form_factor: "PCIe 加速卡"
+    tpu:
+      cores: 8
+      topology: "八核 TPU"
+      int8_performance: "512 TOPS"
+      fp16_performance: "256 TFLOPS"
+    memory:
+      type: "HBM2E"
+      size: "64 GB"
+      bandwidth: "819 GB/s"
+    interfaces:
+      pcie: "Gen4 x16"
+    power:
+      typical: "150 W"
+      max: "300 W"
+    software:
+      sdk: "SophonSDK"
+      min_version: "3.0"
+      recommended_version: "3.0"
+    paths:
+      sdk: "/opt/sophon"
+    deployment:
+      method: "docker"
+      service_port: 9999
+    price:
+      msrp_cny: "¥12000"
+      category: "cloud"
+
+  # ────────────────────────────────────────────────────────────────
+  # 开发板 / 边缘计算盒
+  # ────────────────────────────────────────────────────────────────
+  
+  SE5:
+    name: "SOPHON SE5 边缘计算盒"
+    generation: "BM1684"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    form_factor: "边缘计算盒"
+    chip: "BM1684"
+    tpu:
+      int8_performance: "17 TOPS"
+    cpu:
+      model: "双核 ARM Cortex-A53"
+      cores: 2
+    memory:
+      size: "4 GB"
+      type: "DDR4"
+    storage:
+      emmc: "8 GB"
+      sd_support: true
+      m2_sata: true
+    network:
+      ethernet: "1 Gbps x2"
+      wifi: false
+    usb:
+      usb3: 2
+      usb2: 1
+    power:
+      input: "12V DC"
+      typical: "8 W"
+    dimensions:
+      size: "110mm x 110mm x 43mm"
+    software:
+      sdk: "SophonSDK"
+      min_version: "1.7"
+    paths:
+      sdk: "/opt/sophon"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥399"
+      category: "edge_box"
+    notes: "入门级边缘计算盒"
+    
+  SE5_16:
+    name: "SOPHON SE5-16 边缘计算盒"
+    generation: "BM1684X"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    form_factor: "边缘计算盒"
+    chip: "BM1684X"
+    tpu:
+      int8_performance: "22 TOPS"
+    memory:
+      size: "8 GB"
+    storage:
+      emmc: "16 GB"
+      sd_support: true
+      m2_nvme: true
+    network:
+      ethernet: "1 Gbps x2"
+    power:
+      typical: "12 W"
+    software:
+      sdk: "SophonSDK"
+      min_version: "1.7"
+    paths:
+      sdk: "/opt/sophon"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥599"
+      category: "edge_box"
+    
+  SE7:
+    name: "SOPHON SE7 边缘计算盒"
+    generation: "BM1688"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    form_factor: "边缘计算盒"
+    chip: "BM1688"
+    tpu:
+      cores: 2
+      int8_performance: "32 TOPS"
+    cpu:
+      model: "双核 ARM Cortex-A53"
+      cores: 2
+    memory:
+      size: "8 GB"
+      type: "DDR4"
+    storage:
+      emmc: "16 GB"
+      sd_support: true
+      m2_nvme: true
+    network:
+      ethernet: "1 Gbps x2"
+      wifi: "802.11ac"
+    usb:
+      usb3: 4
+    power:
+      input: "12V DC"
+      typical: "15 W"
+    dimensions:
+      size: "150mm x 115mm x 50mm"
+    software:
+      sdk: "SophonSDK"
+      min_version: "2.0"
+      recommended_version: "2.7"
+    paths:
+      sdk: "/opt/sophon"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥899"
+      category: "edge_box"
+    notes: "双核 TPU，支持 WiFi"
+    
+  SE7_32:
+    name: "SOPHON SE7-32 边缘计算盒"
+    generation: "BM1688X"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    form_factor: "边缘计算盒"
+    chip: "BM1688X"
+    tpu:
+      cores: 2
+      int8_performance: "40 TOPS"
+    memory:
+      size: "16 GB"
+    storage:
+      emmc: "32 GB"
+      m2_nvme: true
+    network:
+      ethernet: "1 Gbps x4"
+      wifi: "802.11ax"
+    power:
+      typical: "20 W"
+    software:
+      sdk: "SophonSDK"
+      min_version: "2.0"
+    paths:
+      sdk: "/opt/sophon"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥1299"
+      category: "edge_box"
+    
+  SM5:
+    name: "SOPHON SM5 算力模组"
+    generation: "BM1684"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    form_factor: "算力模组（SOM）"
+    chip: "BM1684"
+    tpu:
+      int8_performance: "17 TOPS"
+    memory:
+      size: "4 GB"
+    storage:
+      emmc: "8 GB"
+    interfaces:
+      board_to_board: "100-pin"
+      mipi_csi: "2-lane x2"
+      mipi_dsi: "4-lane"
+    power:
+      typical: "5 W"
+    dimensions:
+      size: "50mm x 40mm"
+    software:
+      sdk: "SophonSDK"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥199"
+      category: "module"
+    notes: "嵌入式算力模组，需载板"
+    
+  SM7:
+    name: "SOPHON SM7 算力模组"
+    generation: "BM1688"
+    arch: "aarch64"
+    vendor: "SOPHGO"
+    vendor_cn: "算能科技"
+    form_factor: "算力模组（SOM）"
+    chip: "BM1688"
+    tpu:
+      cores: 2
+      int8_performance: "32 TOPS"
+    memory:
+      size: "8 GB"
+    storage:
+      emmc: "16 GB"
+    interfaces:
+      board_to_board: "200-pin"
+      mipi_csi: "4-lane x2"
+      pcie: "Gen3 x1"
+    power:
+      typical: "10 W"
+    dimensions:
+      size: "70mm x 50mm"
+    software:
+      sdk: "SophonSDK"
+    deployment:
+      method: "native"
+      service_port: 9999
+    price:
+      msrp_cny: "¥399"
+      category: "module"
+
+# ══════════════════════════════════════════════════════════════════
+# SOPHON 专用检测项
+# ══════════════════════════════════════════════════════════════════
+
+checks:
+  # SDK 版本
+  system:
+    - id: sophon_sdk_version
+      name: "SophonSDK 版本"
+      command: "cat /opt/sophon/version.txt"
+      
+    - id: bmcompiler_version
+      name: "BMCompiler 版本"
+      command: "bm_compiler --version"
+      
+    - id: bmruntime_version
+      name: "BMRuntime 版本"
+      command: "bm_runtime --version"
+      
+  # TPU 状态
+  tpu:
+    - id: tpu_available
+      name: "TPU 可用"
+      command: "ls /dev/bm*"
+      
+    - id: tpu_utilization
+      name: "TPU 利用率"
+      command: "bm-smi"
+      
+    - id: tpu_memory
+      name: "TPU 内存"
+      command: "bm-smi --memory"
+      
+  # 视频编解码
+  video:
+    - id: vpu_decode
+      name: "视频解码能力"
+      command: "cat /proc/bm-vpu/decode"
+      optional: true
+      
+    - id: vpu_encode
+      name: "视频编码能力"
+      command: "cat /proc/bm-vpu/encode"
+      optional: true
+      
+  # Python 环境
+  python:
+    - id: python_version
+      name: "Python 版本"
+      command: "python3 --version"
+      
+    - id: sophon_python
+      name: "Sophon Python 库"
+      command: "python3 -c 'import sophon; print(sophon.__version__)'"
+      optional: true
+      
+    - id: bmtorch_version
+      name: "BMtorch 版本"
+      command: "python3 -c 'import bmtorch; print(bmtorch.__version__)'"
+      optional: true
+
+# ══════════════════════════════════════════════════════════════════
+# 模型编译配置
+# ══════════════════════════════════════════════════════════════════
+
+model_compile:
+  # 模型转换流程
+  workflow:
+    - step: 1
+      name: "模型导出"
+      description: "PyTorch/TensorFlow → ONNX"
+      tools: ["torch.onnx.export", "tf2onnx"]
+      
+    - step: 2
+      name: "模型优化"
+      description: "ONNX 优化"
+      tools: ["onnx-simplifier", "onnxoptimizer"]
+      
+    - step: 3
+      name: "模型编译"
+      description: "ONNX → bmodel"
+      tools: ["bm_compile"]
+      command: "bm_compile --model input.onnx --output output.bmodel --target {chip}"
+      
+    - step: 4
+      name: "模型部署"
+      description: "加载 bmodel 推理"
+      tools: ["bmruntime"]
+      
+  # 支持的模型格式
+  supported_formats:
+    input: ["onnx", "tflite", "caffe", "mxnet"]
+    output: ["bmodel"]
+    
+  # 量化配置
+  quantization:
+    methods: ["int8", "fp16", "fp32"]
+    calibration: true
+    mixed_precision: true
+
+# ══════════════════════════════════════════════════════════════════
+# 部署配置
+# ══════════════════════════════════════════════════════════════════
+
+deployment:
+  native:
+    install_dir: "/opt/ai-nas"
+    service_name: "ai-nas-sophon"
+    pre_install:
+      - "apt-get update"
+      - "apt-get install -y python3-pip"
+    pip_packages:
+      - "fastapi>=0.100.0"
+      - "uvicorn>=0.23.0"
+      - "sophon>=2.0.0"
+    environment:
+      SOPHON_SDK_PATH: "/opt/sophon"
+      LD_LIBRARY_PATH: "/opt/sophon/lib:$LD_LIBRARY_PATH"
+    service_port: 9999
+    
+  docker:
+    base_image: "sophgo/tpu-runtime:latest"
+    devices:
+      - "/dev/bmdev0:/dev/bmdev0"
+      - "/dev/bmdev1:/dev/bmdev1"
+    volumes:
+      - "/opt/ai-nas/data:/data"
+      - "/opt/sophon:/opt/sophon:ro"
+      - "/nas:/nas:ro"
+    ports:
+      - "9999:9999"
+    environment:
+      SOPHON_SDK_PATH: "/opt/sophon"

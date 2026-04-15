@@ -1,0 +1,639 @@
+# nastool Device Profiles
+# Pre-configured diagnostic profiles for popular ARM NAS devices
+
+version: "3.0"
+last_updated: "2026-04-12"
+
+# ============================================
+# NVIDIA Jetson Series
+# ============================================
+
+jetson-xavier-nx:
+  name: "NVIDIA Jetson Xavier NX"
+  vendor: "NVIDIA"
+  category: "ai-edge"
+  cpu:
+    cores: 6
+    architecture: "arm64"
+    model: "Carmel A78AE"
+  gpu:
+    type: "cuda"
+    cores: 384
+    compute_capability: "7.2"
+  memory:
+    total_gb: 8
+    type: "LPDDR5"
+  ai:
+    type: "cuda"
+    tflops: 6
+  power:
+    min_w: 10
+    max_w: 20
+    modes: ["10w", "15w", "maxn"]
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+    ai:
+      - gpu_detected
+      - cuda_version
+      - jetpack_version
+      - tensorrt_version
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+
+  fixes:
+    - install_jetpack
+    - set_power_mode
+    - enable_cuda
+    - configure_swap
+
+  thresholds:
+    disk_space_warning_gb: 30
+    disk_space_critical_gb: 10
+    memory_warning_gb: 1
+    memory_critical_gb: 0.5
+    write_speed_warning_mbps: 50
+    write_speed_critical_mbps: 20
+    cpu_temp_warning_c: 75
+    cpu_temp_critical_c: 85
+    gpu_temp_warning_c: 80
+    gpu_temp_critical_c: 90
+
+  benchmarks:
+    - cpu_integer
+    - memory_bandwidth
+    - gpu_inference_resnet50
+    - storage_seq_write
+    - storage_rand_write
+
+---
+
+jetson-orin-nano:
+  name: "NVIDIA Jetson Orin Nano"
+  vendor: "NVIDIA"
+  category: "ai-edge"
+  cpu:
+    cores: 6
+    architecture: "arm64"
+    model: "Cortex-A78AE"
+  gpu:
+    type: "cuda"
+    cores: 1024
+    compute_capability: "8.7"
+  memory:
+    total_gb: 8
+    type: "LPDDR5"
+  ai:
+    type: "cuda"
+    tflops: 40
+  power:
+    min_w: 7
+    max_w: 15
+    modes: ["7w", "15w", "maxn"]
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+    ai:
+      - gpu_detected
+      - cuda_version
+      - jetpack_version
+      - tensorrt_version
+      - deepstream_version
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+
+  fixes:
+    - install_jetpack
+    - set_power_mode
+    - enable_cuda
+    - configure_swap
+
+  thresholds:
+    disk_space_warning_gb: 30
+    disk_space_critical_gb: 10
+    memory_warning_gb: 1
+    memory_critical_gb: 0.5
+    write_speed_warning_mbps: 50
+    write_speed_critical_mbps: 20
+    cpu_temp_warning_c: 75
+    cpu_temp_critical_c: 85
+    gpu_temp_warning_c: 80
+    gpu_temp_critical_c: 90
+
+---
+
+jetson-nano:
+  name: "NVIDIA Jetson Nano"
+  vendor: "NVIDIA"
+  category: "ai-edge"
+  cpu:
+    cores: 4
+    architecture: "arm64"
+    model: "Cortex-A57"
+  gpu:
+    type: "cuda"
+    cores: 128
+    compute_capability: "5.3"
+  memory:
+    total_gb: 4
+    type: "LPDDR4"
+  ai:
+    type: "cuda"
+    tflops: 0.5
+  power:
+    min_w: 5
+    max_w: 10
+    modes: ["5w", "10w", "maxn"]
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+    ai:
+      - gpu_detected
+      - cuda_version
+      - jetpack_version
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+
+  fixes:
+    - install_jetpack
+    - set_power_mode
+    - configure_swap
+    - increase_swap_size
+
+  thresholds:
+    disk_space_warning_gb: 20
+    disk_space_critical_gb: 5
+    memory_warning_gb: 0.5
+    memory_critical_gb: 0.2
+    write_speed_warning_mbps: 30
+    write_speed_critical_mbps: 10
+    cpu_temp_warning_c: 75
+    cpu_temp_critical_c: 85
+    gpu_temp_warning_c: 80
+    gpu_temp_critical_c: 90
+
+# ============================================
+# Rockchip RK3588 Series
+# ============================================
+
+---
+
+rk3588-orangepi5:
+  name: "Orange Pi 5 (RK3588)"
+  vendor: "Orange Pi"
+  category: "sbc"
+  cpu:
+    cores: 8
+    architecture: "arm64"
+    model: "Cortex-A76 + Cortex-A55"
+  gpu:
+    type: "mali"
+    model: "Mali-G610"
+  npu:
+    type: "rknn"
+    tops: 6
+  memory:
+    total_gb: [4, 8, 16, 32]
+    type: "LPDDR4"
+  ai:
+    type: "npu"
+    tops: 6
+  power:
+    min_w: 5
+    max_w: 12
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+      - cpu_governor
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+      - nvme_detected
+    ai:
+      - npu_detected
+      - rknn_version
+      - npu_firmware
+      - mali_driver
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+
+  fixes:
+    - install_rknn_toolkit
+    - enable_npu
+    - install_mali_driver
+    - configure_performance_governor
+
+  thresholds:
+    disk_space_warning_gb: 30
+    disk_space_critical_gb: 10
+    memory_warning_gb: 1
+    memory_critical_gb: 0.5
+    write_speed_warning_mbps: 100
+    write_speed_critical_mbps: 50
+    cpu_temp_warning_c: 70
+    cpu_temp_critical_c: 80
+    npu_temp_warning_c: 75
+    npu_temp_critical_c: 85
+
+  benchmarks:
+    - cpu_integer
+    - memory_bandwidth
+    - npu_inference_mobilenet
+    - storage_seq_write
+    - storage_rand_write
+
+---
+
+rk3588-rock5b:
+  name: "Radxa Rock 5B (RK3588)"
+  vendor: "Radxa"
+  category: "sbc"
+  cpu:
+    cores: 8
+    architecture: "arm64"
+    model: "Cortex-A76 + Cortex-A55"
+  gpu:
+    type: "mali"
+    model: "Mali-G610"
+  npu:
+    type: "rknn"
+    tops: 6
+  memory:
+    total_gb: [4, 8, 16]
+    type: "LPDDR4"
+  ai:
+    type: "npu"
+    tops: 6
+  power:
+    min_w: 5
+    max_w: 12
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+      - cpu_governor
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+      - nvme_detected
+    ai:
+      - npu_detected
+      - rknn_version
+      - npu_firmware
+      - mali_driver
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+
+  fixes:
+    - install_rknn_toolkit
+    - enable_npu
+    - install_mali_driver
+    - configure_performance_governor
+
+  thresholds:
+    disk_space_warning_gb: 30
+    disk_space_critical_gb: 10
+    memory_warning_gb: 1
+    memory_critical_gb: 0.5
+    write_speed_warning_mbps: 100
+    write_speed_critical_mbps: 50
+    cpu_temp_warning_c: 70
+    cpu_temp_critical_c: 80
+
+---
+
+rk3588-nanopi-r6s:
+  name: "FriendlyElec NanoPi R6S (RK3588)"
+  vendor: "FriendlyElec"
+  category: "sbc"
+  cpu:
+    cores: 8
+    architecture: "arm64"
+    model: "Cortex-A76 + Cortex-A55"
+  gpu:
+    type: "mali"
+    model: "Mali-G610"
+  npu:
+    type: "rknn"
+    tops: 6
+  memory:
+    total_gb: [4, 8, 16]
+    type: "LPDDR4"
+  ai:
+    type: "npu"
+    tops: 6
+  power:
+    min_w: 5
+    max_w: 12
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+      - cpu_governor
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+      - nvme_detected
+    ai:
+      - npu_detected
+      - rknn_version
+      - npu_firmware
+      - mali_driver
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+
+  fixes:
+    - install_rknn_toolkit
+    - enable_npu
+    - install_mali_driver
+
+  thresholds:
+    disk_space_warning_gb: 30
+    disk_space_critical_gb: 10
+    memory_warning_gb: 1
+    memory_critical_gb: 0.5
+    write_speed_warning_mbps: 100
+    write_speed_critical_mbps: 50
+
+# ============================================
+# Raspberry Pi Series
+# ============================================
+
+---
+
+pi5:
+  name: "Raspberry Pi 5"
+  vendor: "Raspberry Pi"
+  category: "sbc"
+  cpu:
+    cores: 4
+    architecture: "arm64"
+    model: "Cortex-A76"
+  gpu:
+    type: "videocore"
+    model: "VideoCore VII"
+  memory:
+    total_gb: [2, 4, 8]
+    type: "LPDDR4X"
+  ai:
+    type: "none"
+  power:
+    min_w: 3
+    max_w: 8
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+      - cpu_governor
+      - firmware_version
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+      - wifi_signal
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+      - sdcard_health
+    ai:
+      - none
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+      - default_password
+
+  fixes:
+    - update_firmware
+    - configure_performance_governor
+    - change_default_password
+    - configure_swap
+
+  thresholds:
+    disk_space_warning_gb: 20
+    disk_space_critical_gb: 5
+    memory_warning_gb: 0.5
+    memory_critical_gb: 0.2
+    write_speed_warning_mbps: 30
+    write_speed_critical_mbps: 10
+    cpu_temp_warning_c: 70
+    cpu_temp_critical_c: 80
+    sdcard_health_warning_percent: 90
+    sdcard_health_critical_percent: 95
+
+  benchmarks:
+    - cpu_integer
+    - memory_bandwidth
+    - storage_seq_write
+
+---
+
+pi4:
+  name: "Raspberry Pi 4 Model B"
+  vendor: "Raspberry Pi"
+  category: "sbc"
+  cpu:
+    cores: 4
+    architecture: "arm64"
+    model: "Cortex-A72"
+  gpu:
+    type: "videocore"
+    model: "VideoCore VI"
+  memory:
+    total_gb: [1, 2, 4, 8]
+    type: "LPDDR4"
+  ai:
+    type: "none"
+  power:
+    min_w: 3
+    max_w: 7
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+      - firmware_version
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+      - wifi_signal
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+      - sdcard_health
+    ai:
+      - none
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+      - default_password
+
+  fixes:
+    - update_firmware
+    - change_default_password
+    - configure_swap
+
+  thresholds:
+    disk_space_warning_gb: 15
+    disk_space_critical_gb: 5
+    memory_warning_gb: 0.3
+    memory_critical_gb: 0.1
+    write_speed_warning_mbps: 20
+    write_speed_critical_mbps: 5
+    cpu_temp_warning_c: 70
+    cpu_temp_critical_c: 80
+
+# ============================================
+# Generic ARM Profile (Fallback)
+# ============================================
+
+---
+
+generic-arm64:
+  name: "Generic ARM64 Device"
+  vendor: "Unknown"
+  category: "generic"
+  cpu:
+    cores: "auto"
+    architecture: "arm64"
+  gpu:
+    type: "auto"
+  memory:
+    total_gb: "auto"
+  ai:
+    type: "auto"
+
+  checks:
+    system:
+      - python_version
+      - pip_installed
+      - system_libs
+      - memory_check
+      - disk_space
+    network:
+      - internet_access
+      - dns_resolve
+      - nas_backend
+      - port_conflict
+    storage:
+      - disk_space
+      - write_speed
+      - path_exists
+    ai:
+      - gpu_detected
+      - version_checker
+    security:
+      - firewall
+      - selinux
+      - ssh_root
+
+  fixes:
+    - install_python
+    - config_dns
+    - create_paths
+
+  thresholds:
+    disk_space_warning_gb: 30
+    disk_space_critical_gb: 10
+    memory_warning_gb: 1
+    memory_critical_gb: 0.5
+    write_speed_warning_mbps: 50
+    write_speed_critical_mbps: 20

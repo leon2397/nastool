@@ -1,0 +1,385 @@
+"""
+Synology Task Scheduler - 群晖任务计划集成
+
+支持将 nastool 诊断任务集成到群晖任务计划中：
+- 定时诊断（每天/每周）
+- 开机启动诊断
+- 事件触发诊断
+
+任务类型：
+- 定期诊断：定期运行完整诊断并上报
+- 健康监控：持续监控设备健康状态
+- 存储巡检：定期检查存储池状态
+"""
+
+import os
+import json
+from pathlib import Path
+from typing import Dict, List, Optional
+from dataclasses import dataclass
+from enum import Enum
+
+
+class TaskType(Enum):
+    """任务类型"""
+
+    DAILY_DIAGNOSTIC = "daily_diagnostic"  # 每日诊断
+    WEEKLY_DIAGNOSTIC = "weekly_diagnostic"  # 每周诊断
+    BOOT_DIAGNOSTIC = "boot_diagnostic"  # 开机诊断
+    HEALTH_MONITOR = "health_monitor"  # 健康监控
+    STORAGE_CHECK = "storage_check"  # 存储巡检
+
+
+class TaskSchedule(Enum):
+    """任务调度"""
+
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    BOOT = "boot"
+    EVENT = "event"
+
+
+@dataclass
+class TaskConfig:
+    """任务配置"""
+
+    name: str  # 任务名称
+    task_type: TaskType  # 任务类型
+    schedule: TaskSchedule  # 调度方式
+    enabled: bool = True  # 是否启用
+
+    # 时间配置
+    hour: int = 3  # 执行时间（小时，0-23）
+    minute: int = 0  # 执行时间（分钟，0-59）
+    weekday: int = 0  # 星期几（0=周日，1-6=周一到周六）
+    day_of_month: int = 1  # 每月的第几天（1-31）
+
+    # 执行配置
+    command: str = ""  # 执行命令
+    timeout: int = 3600  # 超时时间（秒）
+    retry: int = 3  # 重试次数
+
+    # 通知配置
+    notify_on_success: bool = False  # 成功时通知
+    notify_on_failure: bool = True  # 失败时通知
+    notify_email: str = ""  # 通知邮箱
+
+    # 报告配置
+    save_report: bool = True  # 保存报告
+    upload_report: bool = True  # 上传报告
+
+    def to_dict(self) -> Dict:
+        """转换为字典"""
+        return {
+            "name": self.name,
+            "task_type": self.task_type.value,
+            "schedule": self.schedule.value,
+            "enabled": self.enabled,
+            "hour": self.hour,
+            "minute": self.minute,
+            "weekday": self.weekday,
+            "day_of_month": self.day_of_month,
+            "command": self.command,
+            "timeout": self.timeout,
+            "retry": self.retry,
+            "notify_on_success": self.notify_on_success,
+            "notify_on_failure": self.notify_on_failure,
+            "notify_email": self.notify_email,
+            "save_report": self.save_report,
+            "upload_report": self.upload_report,
+        }
+
+
+class SynologyTaskScheduler:
+    """
+    群晖任务计划管理器
+
+    创建和管理群晖任务计划中的 nastool 任务。
+    """
+
+    # 任务计划配置路径
+    TASK_CONFIG_PATH = "/usr/syno/etc/crontab"
+    SYNO_SCHEDULER_PATH = "/usr/syno/etc/synoscheduler.d"
+
+    def __init__(self):
+        self.tasks: Dict[str, TaskConfig] = {}
+        self._load_tasks()
+
+    def _load_tasks(self):
+        """加载已有任务"""
+        # 默认任务模板
+        default_tasks = [
+            TaskConfig(
+                name="nastool_daily_diagnostic",
+                task_type=TaskType.DAILY_DIAGNOSTIC,
+                schedule=TaskSchedule.DAILY,
+                hour=3,
+                minute=0,
+                command="/usr/local/bin/nastool --scene daily --upload",
+            ),
+            TaskConfig(
+                name="nastool_weekly_full",
+                task_type=TaskType.WEEKLY_DIAGNOSTIC,
+                schedule=TaskSchedule.WEEKLY,
+                hour=3,
+                minute=30,
+                weekday=0,  # 周日
+                command="/usr/local/bin/nastool --full --upload",
+            ),
+            TaskConfig(
+                name="nastool_boot_check",
+                task_type=TaskType.BOOT_DIAGNOSTIC,
+                schedule=TaskSchedule.BOOT,
+                command="/usr/local/bin/nastool --scene quick",
+            ),
+            TaskConfig(
+                name="nastool_storage_monitor",
+                task_type=TaskType.STORAGE_CHECK,
+                schedule=TaskSchedule.DAILY,
+                hour=6,
+                minute=0,
+                command="/usr/local/bin/nastool --scene storage --upload",
+            ),
+        ]
+
+        for task in default_tasks:
+            self.tasks[task.name] = task
+
+    def create_task(self, config: TaskConfig) -> bool:
+        """
+        创建任务
+
+        Args:
+            config: 任务配置
+
+        Returns:
+            True 如果创建成功
+        """
+        self.tasks[config.name] = config
+        return True
+
+    def update_task(self, name: str, config: TaskConfig) -> bool:
+        """更新任务"""
+        if name not in self.tasks:
+            return False
+        self.tasks[name] = config
+        return True
+
+    def delete_task(self, name: str) -> bool:
+        """删除任务"""
+        if name in self.tasks:
+            del self.tasks[name]
+            return True
+        return False
+
+    def get_task(self, name: str) -> Optional[TaskConfig]:
+        """获取任务"""
+        return self.tasks.get(name)
+
+    def list_tasks(self) -> List[TaskConfig]:
+        """列出所有任务"""
+        return list(self.tasks.values())
+
+    def generate_crontab(self) -> str:
+        """
+        生成 crontab 格式的任务配置
+
+        Returns:
+            crontab 格式字符串
+        """
+        lines = [
+            "# NAS Tool - Scheduled Tasks",
+            "# Generated by nastool",
+            "",
+        ]
+
+        for name, task in self.tasks.items():
+            if not task.enabled or task.schedule == TaskSchedule.BOOT:
+                continue
+
+            # 构建时间表达式
+            if task.schedule == TaskSchedule.DAILY:
+                cron_time = f"{task.minute} {task.hour} * * *"
+            elif task.schedule == TaskSchedule.WEEKLY:
+                cron_time = f"{task.minute} {task.hour} * * {task.weekday}"
+            elif task.schedule == TaskSchedule.MONTHLY:
+                cron_time = f"{task.minute} {task.hour} {task.day_of_month} * *"
+            else:
+                continue
+
+            # 构建完整命令
+            cmd = task.command
+            if task.save_report:
+                cmd += f" --save-report /var/log/nastool/reports/{name}_%Y%m%d.json"
+
+            line = f"{cron_time} {cmd}  # {name}"
+            lines.append(line)
+
+        lines.append("")
+        return "\n".join(lines)
+
+    def generate_dsm7_config(self) -> Dict:
+        """
+        生成 DSM 7.x 任务计划配置
+
+        Returns:
+            DSM 7.x 任务计划配置字典
+        """
+        tasks = []
+
+        for name, task in self.tasks.items():
+            if not task.enabled:
+                continue
+
+            dsm_task = {
+                "title": f"NAS Tool - {task.name}",
+                "enable": task.enabled,
+                "owner": "root",
+                "notify_enable": task.notify_on_failure,
+                "notify_mail": task.notify_email,
+                "operate_type": {
+                    TaskSchedule.DAILY: "custom",
+                    TaskSchedule.WEEKLY: "weekly",
+                    TaskSchedule.MONTHLY: "monthly",
+                    TaskSchedule.BOOT: "boot",
+                }.get(task.schedule, "custom"),
+                "operate_time": {
+                    TaskSchedule.DAILY: f"{task.hour:02d}:{task.minute:02d}",
+                    TaskSchedule.WEEKLY: f"{task.weekday},{task.hour:02d}:{task.minute:02d}",
+                    TaskSchedule.MONTHLY: f"{task.day_of_month},{task.hour:02d}:{task.minute:02d}",
+                }.get(task.schedule, ""),
+                "script": task.command,
+            }
+
+            tasks.append(dsm_task)
+
+        return {"tasks": tasks, "version": "1.0"}
+
+    def generate_boot_script(self) -> str:
+        """
+        生成开机启动脚本
+
+        Returns:
+            启动脚本内容
+        """
+        boot_tasks = [
+            t for t in self.tasks.values() if t.enabled and t.schedule == TaskSchedule.BOOT
+        ]
+
+        script = """#!/bin/sh
+
+# NAS Tool - Boot Time Tasks
+# Auto-generated by nastool
+
+# Wait for system to fully boot
+sleep 60
+
+# Run boot-time diagnostic tasks
+"""
+
+        for task in boot_tasks:
+            script += f"""
+# {task.name}
+echo "Running {task.name}..."
+{task.command} &
+"""
+
+        script += """
+echo "Boot tasks completed"
+exit 0
+"""
+
+        return script
+
+    def install_tasks(self) -> bool:
+        """
+        安装任务到群晖系统
+
+        Returns:
+            True 如果安装成功
+        """
+        try:
+            # 写入 crontab
+            crontab = self.generate_crontab()
+            with open("/tmp/nastool_crontab", "w") as f:
+                f.write(crontab)
+
+            # 写入开机脚本
+            boot_script = self.generate_boot_script()
+            with open("/tmp/nastool_boot.sh", "w") as f:
+                f.write(boot_script)
+
+            # DSM 7.x 配置
+            dsm7_config = self.generate_dsm7_config()
+            with open("/tmp/nastool_scheduler.json", "w") as f:
+                json.dump(dsm7_config, f, indent=2)
+
+            return True
+
+        except Exception as e:
+            print(f"Failed to install tasks: {e}")
+            return False
+
+
+def create_default_tasks() -> Dict[str, TaskConfig]:
+    """
+    创建默认任务配置
+
+    Returns:
+        默认任务字典
+    """
+    scheduler = SynologyTaskScheduler()
+    return scheduler.tasks
+
+
+def generate_task_scripts(output_dir: str) -> Dict[str, str]:
+    """
+    生成任务脚本文件
+
+    Args:
+        output_dir: 输出目录
+
+    Returns:
+        生成的文件路径字典
+    """
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    scheduler = SynologyTaskScheduler()
+    files = {}
+
+    # 生成 crontab
+    crontab_path = output_path / "nastool.crontab"
+    with open(crontab_path, "w") as f:
+        f.write(scheduler.generate_crontab())
+    files["crontab"] = str(crontab_path)
+
+    # 生成开机脚本
+    boot_path = output_path / "nastool_boot.sh"
+    with open(boot_path, "w") as f:
+        f.write(scheduler.generate_boot_script())
+    files["boot_script"] = str(boot_path)
+
+    # 生成 DSM 7.x 配置
+    dsm7_path = output_path / "nastool_scheduler.json"
+    with open(dsm7_path, "w") as f:
+        json.dump(scheduler.generate_dsm7_config(), f, indent=2)
+    files["dsm7_config"] = str(dsm7_path)
+
+    return files
+
+
+if __name__ == "__main__":
+    # 测试
+    scheduler = SynologyTaskScheduler()
+
+    print("=== Default Tasks ===")
+    for task in scheduler.list_tasks():
+        print(f"  - {task.name}: {task.task_type.value}")
+
+    print("\n=== Generated Crontab ===")
+    print(scheduler.generate_crontab())
+
+    print("\n=== DSM 7.x Config ===")
+    print(json.dumps(scheduler.generate_dsm7_config(), indent=2))
