@@ -1,56 +1,47 @@
 # -*- coding: utf-8 -*-
-"""Keras 版本检测"""
+"""Keras 版本检测 (declarative style)"""
 
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+from __future__ import annotations
+
+from checks.decorators import check, CheckContext
+from checks.base import CheckCategory, CheckSeverity, CheckResult
 
 
-@register_check
-class KerasVersionCheck(Check):
+@check(
+    id="keras_version",
+    category=CheckCategory.AI,
+    severity=CheckSeverity.WARNING,
+    title="Keras Version",
+    description="检查 Keras 深度学习框架版本",
+    timeout=10,
+)
+def keras_version(ctx: CheckContext) -> CheckResult:
     """检测 Keras 是否安装及版本"""
-
-    check_id = "keras_version"
-    category = CheckCategory.AI
-    title = "Keras Version"
-    description = "检查 Keras 深度学习框架版本"
-
-    def run(self) -> CheckResult:
-        """执行检测"""
+    try:
+        import keras
+        version = keras.__version__
         try:
-            import keras
-            version = keras.__version__
-            try:
-                backend = keras.backend.backend()
-            except Exception:
-                backend = "unknown"
-            severity = CheckSeverity.PASSED
-            passed = True
-            message = f"Keras {version} (backend: {backend})"
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
-                severity=severity,
-                passed=passed,
-                title=self.title,
-                current=version,
-                expected="installed",
-                message=message,
-                fix_available=False,
-                details={"version": version, "backend": backend},
-            )
-        except ImportError:
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
-                severity=CheckSeverity.WARNING,
-                passed=False,
-                title=self.title,
-                current="not installed",
-                expected="installed",
-                message="Keras 未安装",
-                fix_available=True,
-                fix_id="install_keras",
-                fix_command="pip install keras",
-                fix_description="安装 Keras",
-                fix_risk="low",
-            )
+            backend = keras.backend.backend()
+        except Exception:
+            backend = "unknown"
+        return ctx.passed(
+            current=version,
+            expected="installed",
+            message=f"Keras {version} (backend: {backend})",
+            details={"version": version, "backend": backend},
+        )
+    except ImportError:
+        return ctx.failed(
+            current="not installed",
+            expected="installed",
+            message="Keras 未安装",
+            fix_available=True,
+            fix_id="install_keras",
+            fix_command="pip install keras",
+            fix_description="安装 Keras",
+            fix_risk="low",
+        )
+
+
+# Backward-compatible class alias
+KerasVersionCheck = keras_version
