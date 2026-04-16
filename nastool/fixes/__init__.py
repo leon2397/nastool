@@ -1,6 +1,18 @@
 # nastool v2.0 - Fixes module
-from .base import Fix, FixResult
+from .base import Fix, FixResult as BaseFixResult
 from .registry import register_fix, get_fix, get_all_fixes, run_fix
+from .fix_engine import (
+    FixEngine,
+    FixResult,
+    FixRec,
+    FixRisk,
+    FixSnapshot,
+    FIX_MAP,
+    MANUAL_CATEGORIES,
+    get_recommendations_for,
+    has_fix,
+    summarize_check,
+)
 
 # ── System fixes ──────────────────────────────────────────────
 from .system.install_python import InstallPythonFix
