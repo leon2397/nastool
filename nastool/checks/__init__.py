@@ -20,15 +20,13 @@ from .network import (
     NASBackendCheck, NICSpeedCheck, NetworkLatencyCheck,
 )
 
-# Storage checks
-from .storage.storage_disk import DiskSpaceCheck
-from .storage.write_speed import WriteSpeedCheck
-from .storage.path_exists import PathExistsCheck
-from .storage.smart_health import SMARTHealthCheck
-from .storage.hdd_temp import HDDTempCheck
-from .storage.raid_status import RAIDStatusCheck
-from .storage.docker_images import DockerImagesCheck
-from .storage.storage_trend import StorageTrendCheck
+# Storage checks (from sub-package __init__)
+from .storage import (
+    DiskSpaceCheck, InodeCheck, IOWaitCheck,
+    PathExistsCheck, WriteSpeedCheck, ZFSHealthCheck,
+    SMARTHealthCheck, HDDTempCheck, RAIDStatusCheck,
+    DockerImagesCheck, StorageTrendCheck,
+)
 
 # AI checks
 from .ai.gpu_detected import GPUDetectedCheck

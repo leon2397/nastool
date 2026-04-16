@@ -1,62 +1,43 @@
 # -*- coding: utf-8 -*-
 """ZFS 存储池健康检测"""
+from __future__ import annotations
+
 import subprocess
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+from checks.decorators import check
 
-@register_check
-class ZFSHealthCheck(Check):
-    check_id = "zfs_pool"
-    title = "ZFS 存储池"
-    description = "检测 ZFS 存储池状态（仅 ZFS 系统）"
-    category = CheckCategory.STORAGE
 
-    def run(self) -> CheckResult:
-        try:
-            result = subprocess.run(["zpool", "status"], capture_output=True, text=True, timeout=15)
-            if result.returncode != 0:
-                return CheckResult(
-                    check_id=self.check_id, title=self.title,
-                    category=self.category, passed=True,
-                    severity=CheckSeverity.INFO,
-                    message="未使用 ZFS 存储",
-                    current="not ZFS", expected="ZFS healthy",
-                )
-            issues = []
-            for kw in ["DEGRADED", "FAULTED", "UNAVAIL"]:
-                if kw in result.stdout:
-                    issues.append(kw)
-            if issues:
-                return CheckResult(
-                    check_id=self.check_id, title=self.title,
-                    category=self.category, passed=False,
-                    severity=CheckSeverity.CRITICAL,
-                    message="; ".join(issues),
-                    current="error", expected="healthy",
-                    fix_available=True, fix_id="fix_zfs",
-                    fix_description="检查 ZFS 存储池状态",
-                    fix_risk="high",
-                )
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=True,
-                severity=CheckSeverity.PASSED,
-                message="ZFS 存储池健康",
-                current="healthy", expected="healthy",
-            )
-        except FileNotFoundError:
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=True,
-                severity=CheckSeverity.INFO,
-                message="未使用 ZFS 存储",
-                current="not ZFS", expected="ZFS healthy",
-            )
-        except Exception as e:
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=True,
-                severity=CheckSeverity.INFO,
-                message=f"ZFS 检测跳过: {str(e)}",
-                current="unknown", expected="ZFS healthy",
-            )
+@check(id="zfs_pool", category="STORAGE", title="ZFS Pool Health",
+       description="检测 ZFS 存储池状态（仅 ZFS 系统）")
+def zfs_health(ctx):
+    try:
+        r = subprocess.run(["zpool", "status"],
+                          capture_output=True, text=True, timeout=15)
+        if r.returncode != 0:
+            return ctx.result(passed=True, current="not ZFS",
+                            expected="ZFS healthy",
+                            message="Not using ZFS storage",
+                            severity="INFO")
+        issues = [kw for kw in ["DEGRADED", "FAULTED", "UNAVAIL"]
+                  if kw in r.stdout]
+        if issues:
+            return ctx.result(passed=False, current="error",
+                            expected="healthy",
+                            message="ZFS issues: " + "; ".join(issues),
+                            severity="CRITICAL",
+                            fix_available=True, fix_id="fix_zfs",
+                            fix_command="zpool status",
+                            fix_description="Check ZFS pool status",
+                            fix_risk="high")
+        return ctx.result(passed=True, current="healthy",
+                        expected="healthy",
+                        message="ZFS pool healthy")
+    except FileNotFoundError:
+        return ctx.result(passed=True, current="not ZFS",
+                        expected="ZFS healthy",
+                        message="Not using ZFS",
+                        severity="INFO")
+    except Exception as e:
+        return ctx.result(passed=True, current="unknown",
+                        expected="ZFS healthy",
+                        message=f"Could not check ZFS: {e}",
+                        severity="INFO")

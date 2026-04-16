@@ -1,72 +1,36 @@
-"""
-checks/storage/path_exists.py - Check NAS storage paths exist
-"""
+# -*- coding: utf-8 -*-
+"""NAS 存储路径检测"""
+from __future__ import annotations
 
 import os
-from ..base import Check, CheckResult, CheckSeverity, CheckCategory
-from ..registry import register_check
+from checks.decorators import check
+
+DEFAULT_PATHS = ["/nas", "/nas/media", "/nas/photos", "/nas/videos"]
 
 
-@register_check
-class PathExistsCheck(Check):
-    """Check required NAS storage paths exist"""
-
-    check_id = "path_exists"
-    title = "Storage Paths"
-    description = "Check NAS storage paths are configured"
-    category = CheckCategory.STORAGE
-
-    # Default NAS paths to check
-    DEFAULT_PATHS = [
-        "/nas",
-        "/nas/media",
-        "/nas/photos",
-        "/nas/videos",
-    ]
-
-    def run(self, paths=None) -> CheckResult:
-        """Run path existence check"""
-        paths = paths or self.DEFAULT_PATHS
-
-        missing = []
-        existing = []
-
-        for path in paths:
-            if os.path.exists(path):
-                existing.append(path)
-            else:
-                missing.append(path)
-
-        if not missing:
-            return CheckResult(
-                check_id=self.check_id,
-                title=self.title,
-                category=self.category,
-                passed=True,
-                severity=CheckSeverity.PASSED,
-                message=f"All {len(existing)} paths exist",
-                current=f"{len(existing)}/{len(paths)} paths",
-                expected="All paths exist",
-            )
-
-        # Some paths missing
-        if existing:
-            severity = CheckSeverity.WARNING
-            message = f"Missing {len(missing)}/{len(paths)} paths: {', '.join(missing[:3])}"
+@check(id="path_exists", category="STORAGE", title="Storage Paths",
+       description="检查 NAS 存储路径是否存在")
+def path_exists(ctx, paths=None):
+    paths = paths or DEFAULT_PATHS
+    missing, existing = [], []
+    for p in paths:
+        if os.path.exists(p):
+            existing.append(p)
         else:
-            severity = CheckSeverity.CRITICAL
-            message = f"No NAS paths found. Missing: {', '.join(missing[:3])}"
-
-        return CheckResult(
-            check_id=self.check_id,
-            title=self.title,
-            category=self.category,
-            passed=False,
-            severity=severity,
-            message=message,
-            current=f"{len(existing)}/{len(paths)} paths",
-            expected="All paths exist",
-            fix_available=True,
-            fix_description="Create missing directories",
-            fix_command=f"mkdir -p {' '.join(missing)}",
-        )
+            missing.append(p)
+    if not missing:
+        return ctx.result(passed=True,
+                        current=f"{len(existing)}/{len(paths)} paths",
+                        expected="All paths exist",
+                        message=f"All {len(existing)} paths exist")
+    msg = f"Missing {len(missing)}/{len(paths)}: {', '.join(missing[:3])}"
+    sev = "CRITICAL" if not existing else "WARNING"
+    return ctx.result(passed=False,
+                    current=f"{len(existing)}/{len(paths)} paths",
+                    expected="All paths exist",
+                    message=msg,
+                    severity=sev,
+                    fix_available=True, fix_id="create_paths",
+                    fix_command=f"mkdir -p {' '.join(missing)}",
+                    fix_description="Create missing directories",
+                    fix_risk="low")

@@ -1,61 +1,41 @@
-"""
-checks/storage/disk_space.py - Check available disk space
-"""
+# -*- coding: utf-8 -*-
+"""Disk space check"""
+from __future__ import annotations
 
 import shutil
-from ..base import Check, CheckResult, CheckSeverity, CheckCategory
-from ..registry import register_check
+from checks.decorators import check
 
 
-@register_check
-class DiskSpaceCheck(Check):
-    """Check available disk space for NAS storage"""
-
-    check_id = "disk_space"
-    title = "Disk Space"
-    description = "Check available disk space meets NAS requirements"
-    category = CheckCategory.STORAGE
-
-    def run(self) -> CheckResult:
-        """Run disk space check"""
-        # Get disk usage
+@check(id="disk_space", category="STORAGE", title="Disk Space",
+       description="检查磁盘空间是否满足 NAS 需求")
+def storage_disk(ctx):
+    try:
         total, used, free = shutil.disk_usage("/")
-
-        total_gb = total / (1024**3)
         free_gb = free / (1024**3)
-        free_percent = (free / total) * 100
-
-        # Check thresholds
+        free_pct = (free / total) * 100
         if free_gb < 10:
-            severity = CheckSeverity.CRITICAL
-            passed = False
-            message = f"Critical: Only {free_gb:.1f}GB free space (< 10GB)"
-            fix = "Clean up old files or expand storage"
-        elif free_gb < 50:
-            severity = CheckSeverity.WARNING
-            passed = True
-            message = f"Warning: Only {free_gb:.1f}GB free space (< 50GB)"
-            fix = "Consider cleaning up old files"
-        elif free_percent < 10:
-            severity = CheckSeverity.WARNING
-            passed = True
-            message = f"Warning: Disk {free_percent:.1f}% free (< 10%)"
-            fix = "Consider expanding storage"
-        else:
-            severity = CheckSeverity.PASSED
-            passed = True
-            message = f"{free_gb:.1f}GB free ({free_percent:.1f}%)"
-            fix = None
-
-        return CheckResult(
-            check_id=self.check_id,
-            title=self.title,
-            category=self.category,
-            passed=passed,
-            severity=severity,
-            message=message,
-            current=f"{free_gb:.1f}GB / {total_gb:.1f}GB ({free_percent:.1f}%)",
-            expected="≥50GB free or ≥10% free",
-            fix_available=fix is not None,
-            fix_description=fix,
-        )
+            return ctx.result(passed=False, current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
+                            expected=">=10GB or >=10%",
+                            message=f"Critical: only {free_gb:.1f}GB free",
+                            severity="CRITICAL",
+                            fix_available=True, fix_id="cleanup_disk",
+                            fix_command="docker system prune -af && rm -rf /tmp/*",
+                            fix_description="Clean up disk space",
+                            fix_risk="medium")
+        if free_gb < 50:
+            return ctx.result(passed=True, current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
+                            expected=">=50GB or >=10%",
+                            message=f"Low disk space: {free_gb:.1f}GB free",
+                            severity="WARNING",
+                            fix_available=True, fix_id="cleanup_disk",
+                            fix_command="docker system prune -af",
+                            fix_description="Clean up old files",
+                            fix_risk="low")
+        return ctx.result(passed=True, current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
+                        expected=">=50GB",
+                        message=f"{free_gb:.1f}GB free ({free_pct:.0f}%)")
+    except Exception as e:
+        return ctx.result(passed=True, current="unknown",
+                        expected="detectable",
+                        message=f"Could not check disk space: {e}",
+                        severity="INFO")
