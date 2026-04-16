@@ -29,6 +29,9 @@ htmlcov/
 *.gbk.bak
 *.utf8.bak
 
+# Runtime data
+nastool/data/history.json
+
 # Release packages
 nastools-v*.zip
 nastools-v*/
