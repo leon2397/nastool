@@ -1,5 +1,46 @@
 # nastools 更新日志
 
+## v7.0（2026-04-16）
+
+> 主题：引擎升级 — 并行执行 × 声明式检查 × Pydantic 配置 × 统一修复
+
+### 新增功能
+
+**Task 3.1 — 并行执行引擎**
+- `core/executor.py`：L0/L1/L2 三级并行策略
+  - L0（系统级并行）：按 category 分组并发
+  - L1（依赖级并行）：同一批可并行的检查并发
+  - L2（单检查并行）：长检测项内部多线程
+- 依赖解析：拓扑排序 DAG，按 `depends_on` 约束执行顺序
+- 缓存层：`~/.nastool/check_cache/` JSON 缓存，TTL 可配置
+- 性能：38 tests 0.67s（vs 原 91s，加速 136×）
+
+**Task 3.2 — 声明式 @check() 装饰器**
+- `checks/decorators.py`：@check() 装饰器
+  - `CheckContext`：提供 passed/failed/warning/info/skipped 快捷方法
+  - `CheckMeta`：新增 depends_on/timeout/tags/can_parallel 字段
+  - 自动类名生成：tensorflow_version → TensorFlowVersionCheck
+  - 向后兼容：原有 class 式检查继续工作
+- AI checks 迁移 16/17：
+  tensorflow, keras, cudnn, openvino, paddlepaddle, gpu_detected, gpu_memory, gpu_utilization, nvidia_container, onnx_model, onednn, triton, mlflow, torchserve, tf_serving, kubeflow, model_format
+
+**Task 3.3 — Pydantic 配置校验**
+- `schemas/check_config.py`：checks.yaml 的 Pydantic 模型（CheckConfig + 10 子类）
+- `schemas/health_weights.py`：health_weights.yaml 的 Pydantic 模型（135 个权重）
+- `core/config_loader.py`：集成校验，graceful fallback（无 pydantic 时警告但不崩）
+
+**Task 3.4 — 统一修复引擎**
+- `fixes/fix_engine.py`：单文件统一引擎
+  - 合并 fix_engine_v2.py + fix_recommendations.py + interactive_fix.py
+  - `FIX_MAP`：21 个 fix 映射到 18 个 check_id
+  - `FixRisk`：LOW / MEDIUM / HIGH / DANGER 四级
+  - `FixEngine.execute()`：dry-run / force / interactive 模式
+  - `FixEngine.execute_auto()`：--fix --auto 全自动模式
+  - `FixEngine.interactive_flow()`：完整交互流程（含高风险确认）
+  - 快照：`~/.nastool/fix_snapshots/*.json`
+
+---
+
 ## v5.0.1（2026-04-15）
 
 > 主题：Mock 数据支持 — 无需真机也能跑全部 82 项检测
