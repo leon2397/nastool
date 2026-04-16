@@ -44,6 +44,25 @@ from typing import Callable, List, Optional
 from .base import Check, CheckResult, CheckCategory, CheckSeverity
 
 
+# Map string category names to CheckCategory enum (case-insensitive)
+_STRING_TO_CATEGORY = {c.value.upper(): c for c in CheckCategory}
+
+
+def _normalize_category(cat) -> CheckCategory:
+    """Accept CheckCategory enum or string (case-insensitive)."""
+    if isinstance(cat, CheckCategory):
+        return cat
+    if isinstance(cat, str):
+        upper = cat.upper()
+        if upper in _STRING_TO_CATEGORY:
+            return _STRING_TO_CATEGORY[upper]
+        # Try exact match
+        for c in CheckCategory:
+            if c.value == cat:
+                return c
+    raise ValueError(f"Invalid category: {cat!r}. Must be CheckCategory enum or string.")
+
+
 class CheckContext:
     """
     Helper context passed to function-based checks.
@@ -56,7 +75,7 @@ class CheckContext:
     def __init__(
         self,
         check_id: str,
-        category: CheckCategory,
+        category,  # CheckCategory or str
         severity: CheckSeverity,
         title: str,
         description: str = "",
@@ -66,7 +85,7 @@ class CheckContext:
         can_parallel: bool = True,
     ):
         self.check_id = check_id
-        self.category = category
+        self.category = _normalize_category(category)
         self.severity = severity
         self.title = title
         self.description = description
@@ -237,7 +256,7 @@ def _id_to_class_name(check_id: str) -> str:
 
 def check(
     id: str,
-    category: CheckCategory,
+    category,  # CheckCategory or str (string auto-normalized)
     severity: CheckSeverity = CheckSeverity.WARNING,
     title: Optional[str] = None,
     description: str = "",
@@ -285,7 +304,7 @@ def check(
 
         # Capture closure values to avoid class-body scope issues
         _check_id = id
-        _category = category
+        _category = _normalize_category(category)
         _timeout = timeout
         _can_parallel = can_parallel
 
