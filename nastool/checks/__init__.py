@@ -3,15 +3,14 @@ from .base import Check, CheckResult, CheckSeverity, CheckCategory, CheckSummary
 from .registry import register_check, get_check, list_checks, run_check
 
 # Import all check classes for auto-registration
-# System checks
-from .system.python_version import PythonVersionCheck
-from .system.pip_installed import PipInstalledCheck
-from .system.system_libs import SystemLibsCheck
-from .system.memory_check import MemoryCheck
-from .system.system_disk import DiskSpaceCheck as SystemDiskSpaceCheck
-from .system.cpu_temp import CPUTempCheck
-from .system.uptime import UptimeCheck
-from .system.docker_containers import DockerContainersCheck
+# System checks (from module __init__ for backward compat aliases)
+# System checks (from sub-package __init__ for backward compat aliases)
+from .system import (
+    PythonVersionCheck, PipInstalledCheck, SystemLibsCheck,
+    MemoryCheck, CronJobsCheck, SystemLogsCheck,
+    ProcessCountCheck, PackageUpdatesCheck, SystemDiskSpaceCheck,
+    CPUTempCheck, UptimeCheck, DockerContainersCheck,
+)
 
 # Network checks
 from .network.internet_access import InternetAccessCheck
@@ -33,7 +32,7 @@ from .storage.storage_trend import StorageTrendCheck
 
 # AI checks
 from .ai.gpu_detected import GPUDetectedCheck
-from .ai.version_checker import VersionCheckerCheck
+from .ai.version_checker import nvidia_driver_version as VersionCheckerCheck
 # New AI Framework Checks
 from .ai.tensorflow_checker import TensorFlowVersionCheck
 from .ai.keras_checker import KerasVersionCheck

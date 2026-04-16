@@ -1,66 +1,42 @@
-"""
-checks/system/disk_space.py - Disk space check
-"""
+# -*- coding: utf-8 -*-
+"""系统磁盘空间检测"""
+from __future__ import annotations
 
-import shutil
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+import os
+from checks.decorators import check
 
 
-@register_check
-class DiskSpaceCheck(Check):
-    """Check available disk space"""
-
-    check_id = "disk_space"
-    category = CheckCategory.SYSTEM
-    title = "Disk Space"
-    description = "Check if disk has enough free space"
-
-    MIN_SPACE_GB = 5
-    RECOMMENDED_SPACE_GB = 50
-
-    def run(self) -> CheckResult:
-        # Get disk usage for current directory
-        try:
-            usage = shutil.disk_usage(".")
-            total_gb = usage.total // (1024**3)
-            free_gb = usage.free // (1024**3)
-            used_percent = (usage.used / usage.total) * 100
-        except Exception as e:
-            total_gb = 0
-            free_gb = 0
-            used_percent = 0
-
-        if free_gb >= self.RECOMMENDED_SPACE_GB:
-            severity = CheckSeverity.PASSED
-            passed = True
-            message = f"Disk {free_gb}GB free of {total_gb}GB total ({used_percent:.1f}% used)"
-        elif free_gb >= self.MIN_SPACE_GB:
-            severity = CheckSeverity.WARNING
-            passed = True
-            message = f"Disk {free_gb}GB free, {self.RECOMMENDED_SPACE_GB}GB recommended"
+@check(id="system_disk", category="SYSTEM", title="System Disk Space",
+       description="检查系统盘可用空间是否充足")
+def system_disk(ctx):
+    try:
+        if os.name == "nt":
+            import subprocess
+            r = subprocess.run(
+                'powershell -Command "(Get-PSDrive C).Free/1GB"',
+                shell=True, capture_output=True, text=True, timeout=10
+            )
+            free_gb = float(r.stdout.strip())
         else:
-            severity = CheckSeverity.CRITICAL
-            passed = False
-            message = f"Disk {free_gb}GB free, below minimum {self.MIN_SPACE_GB}GB"
+            stat = os.statvfs("/")
+            free_gb = stat.f_bavail * stat.f_frsize / (1024**3)
+    except Exception:
+        return ctx.result(passed=True, current="unknown",
+                          expected="detectable",
+                          message="Could not determine disk space",
+                          severity="INFO")
 
-        return CheckResult(
-            check_id=self.check_id,
-            category=self.category,
-            severity=severity,
-            passed=passed,
-            title=self.title,
-            current=f"{free_gb}GB free",
-            expected=f">= {self.MIN_SPACE_GB}GB",
-            message=message,
-            fix_available=False,
-            fix_description="Clean up files or expand disk"
-            if free_gb < self.MIN_SPACE_GB
-            else None,
-            fix_risk="none",
-            details={
-                "total_gb": total_gb,
-                "free_gb": free_gb,
-                "used_percent": round(used_percent, 1),
-            },
-        )
+    min_free = 10.0  # GB
+    if free_gb < min_free:
+        return ctx.result(passed=False, current=f"{free_gb:.1f}GB",
+                          expected=f">= {min_free:.0f}GB free",
+                          message=f"Only {free_gb:.1f}GB free, minimum {min_free:.0f}GB required",
+                          severity="CRITICAL",
+                          fix_available=True,
+                          fix_id="cleanup_tmp_space",
+                          fix_command="docker system prune -af && rm -rf /tmp/*",
+                          fix_description="Clean up disk space",
+                          fix_risk="medium")
+    return ctx.result(passed=True, current=f"{free_gb:.1f}GB",
+                      expected=f">= {min_free:.0f}GB free",
+                      message=f"{free_gb:.1f}GB free on system disk")

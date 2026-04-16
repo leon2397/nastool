@@ -1,51 +1,55 @@
 # -*- coding: utf-8 -*-
-"""系统日志异常检测"""
-import subprocess, os
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+"""系统日志检测"""
+from __future__ import annotations
 
-@register_check
-class SystemLogsCheck(Check):
-    check_id = "system_logs"
-    title = "系统日志"
-    description = "检测系统日志中近期的错误和警告"
-    category = CheckCategory.SYSTEM
+import os
+from checks.decorators import check
 
-    def run(self) -> CheckResult:
-        errors = []
-        for log in ["/var/log/syslog", "/var/log/messages", "/var/log/dmesg"]:
-            if not os.path.exists(log):
-                continue
-            try:
-                result = subprocess.run(["tail", "-n", "200", log], capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    for line in result.stdout.splitlines():
-                        lower = line.lower()
-                        if any(kw in lower for kw in ["error", "failed", "fault", "panic", "out of memory"]):
-                            errors.append(line.strip()[:100])
-                            if len(errors) >= 5:
-                                break
-            except Exception:
-                pass
-            if len(errors) >= 5:
-                break
 
-        if errors:
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=False,
-                severity=CheckSeverity.WARNING,
-                message=f"发现 {len(errors)} 条异常日志: {errors[0][:60]}",
-                current="errors found", expected="clean",
-                fix_available=True, fix_id="check_logs",
-                fix_description="检查系统日志处理错误",
-                fix_risk="medium",
-                details={"errors": errors[:5]},
-            )
-        return CheckResult(
-            check_id=self.check_id, title=self.title,
-            category=self.category, passed=True,
-            severity=CheckSeverity.PASSED,
-            message="近 200 行日志无明显异常",
-            current="clean", expected="clean",
-        )
+@check(id="system_logs", category="SYSTEM", title="System Logs",
+       description="检查系统日志目录是否有异常大文件")
+def system_logs(ctx):
+    log_dirs = ["/var/log", "/run/log"]
+    found_dir = None
+    for d in log_dirs:
+        if os.path.isdir(d):
+            found_dir = d
+            break
+
+    if not found_dir:
+        return ctx.result(passed=True, current="unknown",
+                          expected="detectable",
+                          message="No standard log directory found",
+                          severity="INFO")
+
+    large_files = []
+    total_mb = 0
+    try:
+        for entry in os.scandir(found_dir):
+            if entry.is_file():
+                size_mb = entry.stat().st_size / (1024**2)
+                total_mb += size_mb
+                if size_mb > 100:
+                    large_files.append(f"{entry.name} ({size_mb:.0f}MB)")
+    except PermissionError:
+        return ctx.result(passed=True, current="no access",
+                          expected="readable",
+                          message="No permission to read log directory",
+                          severity="INFO")
+
+    if large_files:
+        return ctx.result(passed=True, current=f"{total_mb:.0f}MB total",
+                          expected="< 1GB",
+                          message=f"Large log files: {', '.join(large_files[:3])}",
+                          severity="WARNING",
+                          fix_available=True,
+                          fix_id="cleanup_logs",
+                          fix_command=f"journalctl --vacuum-time=7d && rm -rf {found_dir}/*.gz",
+                          fix_description="Clean up old log files",
+                          fix_risk="low",
+                          details={"large_files": large_files, "total_mb": round(total_mb)})
+
+    return ctx.result(passed=True, current=f"{total_mb:.0f}MB",
+                      expected="< 1GB",
+                      message=f"Log directory size normal: {total_mb:.0f}MB",
+                      details={"total_mb": round(total_mb)})

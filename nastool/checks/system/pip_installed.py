@@ -1,53 +1,37 @@
-"""
-checks/system/pip_installed.py - pip availability check
-"""
+# -*- coding: utf-8 -*-
+"""pip 工具检测"""
+from __future__ import annotations
 
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+import subprocess
+from checks.decorators import check
 
 
-@register_check
-class PipInstalledCheck(Check):
-    """Check if pip is installed"""
+@check(id="pip_installed", category="SYSTEM", title="pip Installed",
+       description="检查 pip 包管理器是否可用")
+def pip_installed(ctx):
+    pip3_ok = subprocess.run("pip3 --version", shell=True,
+                              capture_output=True, timeout=5).returncode == 0
+    pip_ok = (not pip3_ok and
+              subprocess.run("pip --version", shell=True,
+                             capture_output=True, timeout=5).returncode == 0)
+    installed = pip3_ok or pip_ok
 
-    check_id = "pip_installed"
-    category = CheckCategory.SYSTEM
-    title = "pip Installed"
-    description = "Check if pip package manager is available"
-
-    def run(self) -> CheckResult:
-        pip_exists = self._command_exists("pip3") or self._command_exists("pip")
-
-        # Try to get pip version
-        pip_version = ""
-        if self._command_exists("pip3"):
-            pip_version = self._run_command("pip3 --version 2>/dev/null | head -1")
-        elif self._command_exists("pip"):
-            pip_version = self._run_command("pip --version 2>/dev/null | head -1")
-
-        if pip_exists:
-            severity = CheckSeverity.PASSED
-            passed = True
-            message = (
-                f"pip is available: {pip_version.split()[1] if pip_version else 'unknown version'}"
-            )
-        else:
-            severity = CheckSeverity.CRITICAL
-            passed = False
-            message = "pip is not installed, cannot install Python packages"
-
-        return CheckResult(
-            check_id=self.check_id,
-            category=self.category,
-            severity=severity,
-            passed=passed,
-            title=self.title,
-            current="installed" if pip_exists else "not installed",
-            expected="installed",
-            message=message,
-            fix_available=not passed,
-            fix_id="install_pip",
-            fix_command="apt install python3-pip" if self._command_exists("apt") else "Install pip",
-            fix_description="Install pip package manager",
-            fix_risk="low",
-        )
+    if installed:
+        ver_cmd = "pip3 --version" if pip3_ok else "pip --version"
+        ver = subprocess.run(ver_cmd, shell=True,
+                             capture_output=True, text=True, timeout=5).stdout
+        ver_str = ver.split()[1] if ver and len(ver.split()) > 1 else "unknown"
+        return ctx.result(passed=True, current="installed",
+                          expected="installed",
+                          message=f"pip available: {ver_str}")
+    else:
+        apt_ok = subprocess.run("apt --version", shell=True,
+                                capture_output=True, timeout=5).returncode == 0
+        fix_cmd = "apt install python3-pip" if apt_ok else "Install pip"
+        return ctx.result(passed=False, current="not installed",
+                          expected="installed",
+                          message="pip is not installed, cannot install Python packages",
+                          fix_available=True, fix_id="install_pip",
+                          fix_command=fix_cmd,
+                          fix_description="Install pip package manager",
+                          fix_risk="low")

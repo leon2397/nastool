@@ -1,64 +1,41 @@
 # -*- coding: utf-8 -*-
-"""进程数量检测"""
+"""进程数检测"""
+from __future__ import annotations
+
 import subprocess
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+from checks.decorators import check
 
-@register_check
-class ProcessCountCheck(Check):
-    check_id = "process_count"
-    title = "进程数量"
-    description = "检测系统进程数量，发现进程泄露"
-    category = CheckCategory.SYSTEM
 
-    def run(self) -> CheckResult:
-        count = 0
-        try:
-            result = subprocess.run(["ps", "aux"], capture_output=True, text=True, timeout=10)
-            if result.returncode == 0:
-                count = len(result.stdout.splitlines()) - 1
-        except Exception:
-            try:
-                result = subprocess.run(
-                    ["powershell", "-Command", "(Get-Process).Count"],
-                    capture_output=True, text=True, timeout=10
-                )
-                if result.returncode == 0:
-                    count = int(result.stdout.strip())
-            except Exception:
-                pass
+@check(id="process_count", category="SYSTEM", title="Process Count",
+       description="检查系统进程数是否异常")
+def process_count(ctx):
+    try:
+        if __import__("os").name == "nt":
+            r = subprocess.run('powershell "Get-Process | Measure-Object | Select-Object -ExpandProperty Count"',
+                               shell=True, capture_output=True, text=True, timeout=10)
+            count = int(r.stdout.strip())
+        else:
+            r = subprocess.run("ps aux | wc -l", shell=True,
+                               capture_output=True, text=True, timeout=5)
+            count = int(r.stdout.strip()) - 1  # subtract header
+    except Exception:
+        return ctx.result(passed=True, current="unknown",
+                          expected="detectable",
+                          message="Could not determine process count",
+                          severity="INFO")
 
-        if count == 0:
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=True,
-                severity=CheckSeverity.INFO,
-                message="无法统计进程数量",
-                current="unknown", expected="<500",
-            )
-        if count >= 500:
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=False,
-                severity=CheckSeverity.CRITICAL,
-                message=f"进程数量 {count} 过多，可能存在进程泄露",
-                current=f"{count} procs", expected="<500",
-                fix_available=True, fix_id="check_procs",
-                fix_description="检查异常进程",
-                fix_risk="medium",
-            )
-        elif count >= 300:
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=False,
-                severity=CheckSeverity.WARNING,
-                message=f"进程数量 {count} 偏高",
-                current=f"{count} procs", expected="<300",
-            )
-        return CheckResult(
-            check_id=self.check_id, title=self.title,
-            category=self.category, passed=True,
-            severity=CheckSeverity.PASSED,
-            message=f"进程数量 {count}，正常",
-            current=f"{count} procs", expected="<300",
-        )
+    max_normal = 500
+    warn = 300
+    if count > max_normal:
+        return ctx.result(passed=False, current=str(count),
+                          expected=f"< {max_normal}",
+                          message=f"Too many processes ({count}), possible fork bomb",
+                          severity="WARNING")
+    elif count > warn:
+        return ctx.result(passed=True, current=str(count),
+                          expected=f"< {max_normal}",
+                          message=f"High process count ({count}), monitoring",
+                          severity="WARNING")
+    return ctx.result(passed=True, current=str(count),
+                      expected=f"< {max_normal}",
+                      message=f"{count} processes running")
