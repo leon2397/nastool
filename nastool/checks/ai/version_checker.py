@@ -1,425 +1,417 @@
+# -*- coding: utf-8 -*-
 """
-checks/ai/version_checker.py - AI component version checker
+checks/ai/version_checker.py - AI 组件版本检测
+
+已迁移到 @check() 装饰器（Phase A 补完）。
+
+结构：
+  - AIVersionCheck：基类（复杂逻辑保留 class）
+  - 8 个具体子类：已改为 @check(class_name="XxxVersionCheck") 装饰
+  - _check_version_helper()：模块级版本比对，供函数式 check 调用
 """
 
-import os
+from __future__ import annotations
+
 import re
-import sys
-from checks.base import Check, CheckResult, CheckCategory, CheckSeverity
-from checks.registry import register_check
-from core.version_check import VersionDB, compare_versions
+from typing import Optional, TYPE_CHECKING
+
+from checks.base import CheckCategory, CheckResult, CheckSeverity
+from checks.decorators import check
+
+if TYPE_CHECKING:
+    from checks.base import CheckContext
+
+# ── VersionDB 单例（模块级，避免每次实例化）────────────────────────────────────
+
+_version_db_instance = None
 
 
-# Backward compatibility alias - resolved at access time
-class AIVersionCheck(Check):
-    """Base class for AI component version checks"""
-
-    category = CheckCategory.AI
-
-    def __init__(self):
-        super().__init__()
-        self.version_db = VersionDB()
-        self.version_db.load()
-
-    def _check_version(self, component: str, current: str, device_model: str = None) -> CheckResult:
-        """
-        Compare current version against database.
-
-        Args:
-            component: Component name (e.g., "nvidia_driver", "cuda")
-            current: Current installed version
-            device_model: Device model for compatibility check (e.g., "jetson-xavier-nx")
-
-        Returns:
-            CheckResult with version comparison
-        """
-        version_info = self.version_db.get_version(component)
-
-        if not version_info:
-            return CheckResult(
-                check_id=f"{component}_version",
-                category=self.category,
-                severity=CheckSeverity.INFO,
-                passed=True,
-                title=f"{component} Version",
-                current=current,
-                expected="unknown",
-                message=f"{component} version {current} installed (version database not available)",
-            )
-
-        latest = version_info.latest
-        min_recommended = version_info.min_recommended
-
-        # Check device compatibility
-        max_version = None
-        if device_model and version_info.compatibility:
-            compat = version_info.compatibility.get(device_model, {})
-            max_version = compat.get("max")
-
-        # Compare versions
-        cmp_latest = compare_versions(current, latest)
-        cmp_min = compare_versions(current, min_recommended)
-
-        if cmp_min < 0:
-            severity = CheckSeverity.CRITICAL
-            passed = False
-            message = f"{component} {current} is below minimum recommended {min_recommended}"
-        elif cmp_latest < 0:
-            severity = CheckSeverity.WARNING
-            passed = True
-            message = f"{component} {current} can be upgraded to {latest}"
-        else:
-            severity = CheckSeverity.PASSED
-            passed = True
-            message = f"{component} {current} is up to date"
-
-        # Check max compatibility
-        if max_version and compare_versions(current, max_version) > 0:
-            severity = CheckSeverity.WARNING
-            passed = True
-            message = f"{component} {current} may not be fully compatible with {device_model} (max: {max_version})"
-
-        return CheckResult(
-            check_id=f"{component}_version",
-            category=self.category,
-            severity=severity,
-            passed=passed,
-            title=f"{component} Version",
-            current=current,
-            expected=f">= {min_recommended}",
-            message=message,
-            fix_available=cmp_latest < 0,
-            fix_description=f"Upgrade {component} to {latest}",
-            fix_risk="medium",
-            url=version_info.url,
-            details={
-                "latest": latest,
-                "min_recommended": min_recommended,
-                "release_notes": version_info.release_notes,
-                "release_date": version_info.release_date,
-            },
-        )
-
-
-@register_check
-class NvidiaDriverVersionCheck(AIVersionCheck):
-    """Check NVIDIA driver version"""
-
-    check_id = "nvidia_driver_version"
-    title = "NVIDIA Driver Version"
-    description = "Check if NVIDIA driver is up to date"
-
-    def run(self) -> CheckResult:
-        # Check if nvidia-smi exists
-        if not self._command_exists("nvidia-smi"):
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
-                severity=CheckSeverity.INFO,
-                passed=True,
-                title=self.title,
-                current="not installed",
-                expected="installed",
-                message="NVIDIA driver not detected",
-            )
-
-        # Get driver version
-        output = self._run_command(
-            "nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1"
-        )
-        if not output:
-            output = self._run_command(
-                "nvidia-smi 2>/dev/null | grep 'Driver Version' | awk '{print $6}'"
-            )
-
-        current = output.strip() if output else "unknown"
-
-        if current == "unknown":
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
-                severity=CheckSeverity.WARNING,
-                passed=True,
-                title=self.title,
-                current="unknown",
-                expected="detectable",
-                message="NVIDIA driver installed but version could not be determined",
-            )
-
-        return self._check_version("nvidia_driver", current)
-
-
-@register_check
-class CudaVersionCheck(AIVersionCheck):
-    """Check CUDA version"""
-
-    check_id = "cuda_version"
-    title = "CUDA Version"
-    description = "Check if CUDA is installed and up to date"
-
-    def run(self) -> CheckResult:
-        # Check nvcc
-        if not self._command_exists("nvcc"):
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
-                severity=CheckSeverity.INFO,
-                passed=True,
-                title=self.title,
-                current="not installed",
-                expected="installed",
-                message="CUDA toolkit not detected (nvcc not found)",
-            )
-
-        # Get CUDA version
-        output = self._run_command(
-            "nvcc --version 2>/dev/null | grep 'release' | awk '{print $5}' | tr -d ','"
-        )
-        current = output.strip() if output else "unknown"
-
-        if current == "unknown":
-            # Try alternative method
-            output = self._run_command(
-                "cat /usr/local/cuda/version.txt 2>/dev/null | awk '{print $3}'"
-            )
-            current = output.strip() if output else "unknown"
-
-        return self._check_version("cuda", current)
-
-
-@register_check
-class TensorRTVersionCheck(AIVersionCheck):
-    """Check TensorRT version"""
-
-    check_id = "tensorrt_version"
-    title = "TensorRT Version"
-    description = "Check if TensorRT is installed and up to date"
-
-    def run(self) -> CheckResult:
-        # Try Python import
+def _get_version_db():
+    """懒加载 VersionDB 单例"""
+    global _version_db_instance
+    if _version_db_instance is None:
         try:
-            import tensorrt
-
-            current = tensorrt.__version__
-        except ImportError:
-            # Check via command line
-            output = self._run_command("trtexec --version 2>/dev/null | head -1")
-            if output:
-                match = re.search(r"(\d+\.\d+\.\d+)", output)
-                current = match.group(1) if match else "unknown"
-            else:
-                return CheckResult(
-                    check_id=self.check_id,
-                    category=self.category,
-                    severity=CheckSeverity.INFO,
-                    passed=True,
-                    title=self.title,
-                    current="not installed",
-                    expected="installed",
-                    message="TensorRT not detected",
-                )
-
-        return self._check_version("tensorrt", current)
+            from core.version_check import VersionDB
+            _version_db_instance = VersionDB()
+            _version_db_instance.load()
+        except Exception:
+            _version_db_instance = None
+    return _version_db_instance
 
 
-@register_check
-class JetPackVersionCheck(AIVersionCheck):
-    """Check JetPack version (Jetson devices)"""
+# ── 版本比对 helper（函数式 check 调用）────────────────────────────────────────
 
-    check_id = "jetpack_version"
-    title = "JetPack Version"
-    description = "Check JetPack version on NVIDIA Jetson devices"
+def _cmd_exists(cmd: str) -> bool:
+    import subprocess
+    try:
+        subprocess.run(f"which {cmd}", shell=True,
+                       capture_output=True, timeout=5)
+        return True
+    except Exception:
+        return False
 
-    def run(self) -> CheckResult:
-        # Check if Jetson
-        jetson_model = ""
-        try:
-            with open("/proc/device-tree/model", "r") as f:
-                jetson_model = f.read().strip().lower()
-        except Exception as e:
-            pass  # TODO: 添加日志
 
-        if "jetson" not in jetson_model:
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
-                severity=CheckSeverity.INFO,
-                passed=True,
-                title=self.title,
-                current="n/a",
-                expected="n/a",
-                message="Not a Jetson device",
-            )
+def _run_cmd(cmd: str) -> str:
+    import subprocess
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True,
+                               text=True, timeout=10)
+        return result.stdout + result.stderr
+    except Exception:
+        return ""
 
-        # Get JetPack version
-        current = "unknown"
 
-        # Method 1: jetson-release
-        output = self._run_command("jetson-release 2>/dev/null | grep 'JetPack' | awk '{print $2}'")
+def _compare_versions(current: str, latest: str) -> int:
+    """Compare versions. Returns -1/0/1 (lt/eq/gt)."""
+    def parse(v: str) -> tuple:
+        parts = re.sub(r"[^\d.]", "", v).split(".")
+        return tuple(int(p) for p in parts if p)
+    try:
+        c, l = parse(current), parse(latest)
+        # Pad to same length
+        max_len = max(len(c), len(l))
+        c = c + (0,) * (max_len - len(c))
+        l = l + (0,) * (max_len - len(l))
+        if c < l:
+            return -1
+        elif c > l:
+            return 1
+        return 0
+    except Exception:
+        return 0
+
+
+def _check_version_helper(
+    ctx: "CheckContext",
+    check_id: str,
+    title: str,
+    current: str,
+    component: str,
+    device_model: Optional[str] = None,
+) -> CheckResult:
+    """
+    版本比对核心逻辑（AIVersionCheck._check_version 的函数版本）。
+    供所有函数式 check 调用。
+    """
+    vdb = _get_version_db()
+    if vdb is None:
+        return ctx.result(
+            passed=True, current=current, expected="unknown",
+            message=f"{title} {current} installed (version DB unavailable)",
+            details={"component": component, "current": current},
+        )
+
+    version_info = vdb.get_version(component)
+    if not version_info:
+        return ctx.result(
+            passed=True, current=current, expected="unknown",
+            message=f"{title} {current} (version database not available)",
+            details={"component": component},
+        )
+
+    latest = version_info.latest
+    min_recommended = version_info.min_recommended
+
+    # Device compatibility cap
+    max_version = None
+    if device_model and version_info.compatibility:
+        compat = version_info.compatibility.get(device_model, {})
+        max_version = compat.get("max")
+
+    cmp_latest = _compare_versions(current, latest)
+    cmp_min = _compare_versions(current, min_recommended)
+
+    if cmp_min < 0:
+        severity = CheckSeverity.CRITICAL
+        passed = False
+        message = f"{component} {current} below minimum recommended {min_recommended}"
+    elif cmp_latest < 0:
+        severity = CheckSeverity.WARNING
+        passed = True
+        message = f"{component} {current} — upgrade to {latest} available"
+    else:
+        severity = CheckSeverity.PASSED
+        passed = True
+        message = f"{component} {current} is up to date"
+
+    if max_version and _compare_versions(current, max_version) > 0:
+        severity = CheckSeverity.WARNING
+        message = (f"{component} {current} may not be fully compatible with "
+                   f"{device_model} (max: {max_version})")
+
+    return ctx.result(
+        passed=passed, current=current,
+        expected=f">= {min_recommended}",
+        message=message,
+        severity=severity,
+        fix_available=cmp_latest < 0,
+        fix_description=f"Upgrade {component} to {latest}",
+        fix_risk="medium",
+        details={
+            "latest": latest,
+            "min_recommended": min_recommended,
+            "release_notes": getattr(version_info, "release_notes", ""),
+            "release_date": getattr(version_info, "release_date", ""),
+        },
+    )
+
+
+# ── Check 函数（@check 装饰）──────────────────────────────────────────────────
+
+@check(id="nvidia_driver_version", class_name="NvidiaDriverVersionCheck",
+       category="AI", title="NVIDIA Driver Version",
+       description="检查 NVIDIA 驱动是否为最新版本")
+def nvidia_driver_version(ctx: "CheckContext"):
+    """检测 NVIDIA 驱动版本"""
+    if not _cmd_exists("nvidia-smi"):
+        return ctx.result(
+            passed=True, current="not installed", expected="installed",
+            message="NVIDIA driver not detected",
+            severity=CheckSeverity.INFO,
+        )
+    output = _run_cmd(
+        "nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1"
+    )
+    if not output.strip():
+        output = _run_cmd(
+            "nvidia-smi 2>/dev/null | grep 'Driver Version' | awk '{print $6}'"
+        )
+    current = output.strip() if output.strip() else "unknown"
+    if current == "unknown":
+        return ctx.result(
+            passed=True, current="unknown", expected="detectable",
+            message="NVIDIA driver installed but version undetermined",
+            severity=CheckSeverity.WARNING,
+        )
+    return _check_version_helper(
+        ctx, "nvidia_driver_version", "NVIDIA Driver", current, "nvidia_driver"
+    )
+
+
+@check(id="cuda_version", class_name="CudaVersionCheck",
+       category="AI", title="CUDA Version",
+       description="检查 CUDA 是否安装且为最新版本")
+def cuda_version(ctx: "CheckContext"):
+    """检测 CUDA 版本"""
+    if not _cmd_exists("nvcc"):
+        return ctx.result(
+            passed=True, current="not installed", expected="installed",
+            message="CUDA toolkit not detected (nvcc not found)",
+            severity=CheckSeverity.INFO,
+        )
+    output = _run_cmd("nvcc --version 2>/dev/null | grep 'release' | awk '{print $5}' | tr -d ','")
+    current = output.strip() if output.strip() else "unknown"
+    if current == "unknown":
+        output = _run_cmd("cat /usr/local/cuda/version.txt 2>/dev/null | awk '{print $3}'")
+        current = output.strip() if output.strip() else "unknown"
+    return _check_version_helper(
+        ctx, "cuda_version", "CUDA", current, "cuda"
+    )
+
+
+@check(id="tensorrt_version", class_name="TensorRTVersionCheck",
+       category="AI", title="TensorRT Version",
+       description="检查 TensorRT 是否安装且为最新版本")
+def tensorrt_version(ctx: "CheckContext"):
+    """检测 TensorRT 版本"""
+    current = "not installed"
+    try:
+        import tensorrt
+        current = tensorrt.__version__
+    except ImportError:
+        output = _run_cmd("trtexec --version 2>/dev/null | head -1")
         if output:
+            match = re.search(r"(\d+\.\d+\.\d+)", output)
+            if match:
+                current = match.group(1)
+        if current == "not installed":
+            return ctx.result(
+                passed=True, current="not installed", expected="installed",
+                message="TensorRT not detected",
+                severity=CheckSeverity.INFO,
+            )
+    return _check_version_helper(
+        ctx, "tensorrt_version", "TensorRT", current, "tensorrt"
+    )
+
+
+@check(id="jetpack_version", class_name="JetPackVersionCheck",
+       category="AI", title="JetPack Version",
+       description="检查 NVIDIA Jetson 设备的 JetPack 版本")
+def jetpack_version(ctx: "CheckContext"):
+    """检测 JetPack 版本（Jetson 设备）"""
+    jetson_model = ""
+    try:
+        with open("/proc/device-tree/model", "r") as f:
+            jetson_model = f.read().strip().lower()
+    except Exception:
+        pass
+
+    if "jetson" not in jetson_model:
+        return ctx.result(
+            passed=True, current="n/a", expected="n/a",
+            message="Not a Jetson device",
+            severity=CheckSeverity.INFO,
+        )
+
+    current = "unknown"
+
+    # Method 1: jetson-release
+    output = _run_cmd("jetson-release 2>/dev/null | grep 'JetPack' | awk '{print $2}'")
+    if output.strip():
+        current = output.strip()
+    else:
+        output = _run_cmd("cat /etc/nv_tegra_release 2>/dev/null | head -1")
+        if output:
+            l4t_to_jp = {
+                "35.1": "5.0.2", "35.2": "5.1", "35.3": "5.1.1",
+                "35.4": "5.1.2", "35.5": "5.1.3",
+                "36.2": "6.0",   "36.3": "6.1",   "36.4": "6.2",
+            }
+            for l4t, jp in l4t_to_jp.items():
+                if l4t in output:
+                    current = jp
+                    break
+
+    # Map device model
+    device_model = "jetson-unknown"
+    if "nano" in jetson_model:
+        device_model = "jetson-nano"
+    elif "xavier-nx" in jetson_model:
+        device_model = "jetson-xavier-nx"
+    elif "agx-xavier" in jetson_model:
+        device_model = "jetson-agx-xavier"
+    elif "tx2" in jetson_model:
+        device_model = "jetson-tx2"
+    elif "orin-nx" in jetson_model:
+        device_model = "jetson-orin-nx"
+    elif "orin-nano" in jetson_model:
+        device_model = "jetson-orin-nano"
+    elif "agx-orin" in jetson_model:
+        device_model = "jetson-agx-orin"
+
+    return _check_version_helper(
+        ctx, "jetpack_version", "JetPack", current, "jetpack", device_model
+    )
+
+
+@check(id="rknn_version", class_name="RKNNVersionCheck",
+       category="AI", title="RKNN SDK Version",
+       description="检查 Rockchip 设备的 RKNN SDK 版本")
+def rknn_version(ctx: "CheckContext"):
+    """检测 RKNN SDK 版本（Rockchip 设备）"""
+    is_rockchip = False
+    try:
+        with open("/proc/device-tree/compatible", "r") as f:
+            compat = f.read().lower()
+            is_rockchip = "rockchip" in compat or "rk35" in compat
+    except Exception:
+        pass
+
+    if not is_rockchip:
+        try:
+            with open("/dev/rknpu", "r"):
+                is_rockchip = True
+        except Exception:
+            pass
+
+    if not is_rockchip:
+        return ctx.result(
+            passed=True, current="n/a", expected="n/a",
+            message="Not a Rockchip NPU device",
+            severity=CheckSeverity.INFO,
+        )
+
+    current = "unknown"
+    try:
+        from rknn.api import RKNN
+        rknn = RKNN()
+        current = rknn.get_sdk_version().decode("utf-8").split(" ")[-1]
+    except ImportError:
+        output = _run_cmd("cat /usr/local/rknpu2/version.txt 2>/dev/null || echo ''")
+        if output.strip():
             current = output.strip()
         else:
-            # Method 2: check L4T version
-            output = self._run_command("cat /etc/nv_tegra_release 2>/dev/null | head -1")
-            if output:
-                # Map L4T to JetPack
-                l4t_to_jp = {
-                    "35.1": "5.0.2",
-                    "35.2": "5.1",
-                    "35.3": "5.1.1",
-                    "35.4": "5.1.2",
-                    "35.5": "5.1.3",
-                    "36.2": "6.0",
-                    "36.3": "6.1",
-                    "36.4": "6.2",
-                }
-                for l4t, jp in l4t_to_jp.items():
-                    if l4t in output:
-                        current = jp
-                        break
-
-        # Determine device model
-        device_model = "jetson-unknown"
-        if "nano" in jetson_model:
-            device_model = "jetson-nano"
-        elif "xavier-nx" in jetson_model:
-            device_model = "jetson-xavier-nx"
-        elif "agx-xavier" in jetson_model:
-            device_model = "jetson-agx-xavier"
-        elif "tx2" in jetson_model:
-            device_model = "jetson-tx2"
-        elif "orin-nx" in jetson_model:
-            device_model = "jetson-orin-nx"
-        elif "orin-nano" in jetson_model:
-            device_model = "jetson-orin-nano"
-        elif "agx-orin" in jetson_model:
-            device_model = "jetson-agx-orin"
-
-        return self._check_version("jetpack", current, device_model)
-
-
-@register_check
-class RKNNVersionCheck(AIVersionCheck):
-    """Check RKNN SDK version (Rockchip devices)"""
-
-    check_id = "rknn_version"
-    title = "RKNN SDK Version"
-    description = "Check RKNN SDK version on Rockchip devices"
-
-    def run(self) -> CheckResult:
-        # Check if Rockchip device
-        is_rockchip = False
-        try:
-            with open("/proc/device-tree/compatible", "r") as f:
-                compat = f.read().lower()
-                is_rockchip = "rockchip" in compat or "rk35" in compat
-        except Exception as e:
-            pass  # TODO: 添加日志
-
-        if not is_rockchip and not self._file_exists("/dev/rknpu"):
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
-                severity=CheckSeverity.INFO,
-                passed=True,
-                title=self.title,
-                current="n/a",
-                expected="n/a",
-                message="Not a Rockchip NPU device",
-            )
-
-        # Try Python import
-        try:
-            from rknn.api import RKNN
-
-            rknn = RKNN()
-            current = rknn.get_sdk_version().decode("utf-8").split(" ")[-1]
-        except ImportError:
-            # Check via file
-            output = self._run_command("cat /usr/local/rknpu2/version.txt 2>/dev/null || echo ''")
-            if output:
-                current = output.strip()
-            else:
-                return CheckResult(
-                    check_id=self.check_id,
-                    category=self.category,
-                    severity=CheckSeverity.WARNING,
-                    passed=True,
-                    title=self.title,
-                    current="installed",
-                    expected="version detectable",
-                    message="RKNN SDK installed but version could not be determined",
-                )
-
-        return self._check_version("rknn_sdk", current)
-
-
-@register_check
-class PyTorchVersionCheck(AIVersionCheck):
-    """Check PyTorch version"""
-
-    check_id = "pytorch_version"
-    title = "PyTorch Version"
-    description = "Check PyTorch version"
-
-    def run(self) -> CheckResult:
-        try:
-            import torch
-
-            current = torch.__version__
-        except ImportError:
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
+            return ctx.result(
+                passed=True, current="installed", expected="version detectable",
+                message="RKNN SDK installed but version undetermined",
                 severity=CheckSeverity.WARNING,
-                passed=True,
-                title=self.title,
-                current="not installed",
-                expected="installed",
-                message="PyTorch not installed",
-                fix_available=True,
-                fix_command="pip install torch",
-                fix_description="Install PyTorch",
-                fix_risk="low",
             )
 
-        return self._check_version("pytorch", current)
+    return _check_version_helper(
+        ctx, "rknn_version", "RKNN SDK", current, "rknn_sdk"
+    )
 
 
-@register_check
-class ONNXRuntimeVersionCheck(AIVersionCheck):
-    """Check ONNX Runtime version"""
-
-    check_id = "onnxruntime_version"
-    title = "ONNX Runtime Version"
-    description = "Check ONNX Runtime version"
-
-    def run(self) -> CheckResult:
-        try:
-            import onnxruntime as ort
-
-            current = ort.__version__
-        except ImportError:
-            return CheckResult(
-                check_id=self.check_id,
-                category=self.category,
-                severity=CheckSeverity.INFO,
-                passed=True,
-                title=self.title,
-                current="not installed",
-                expected="installed",
-                message="ONNX Runtime not installed",
-                fix_available=True,
-                fix_command="pip install onnxruntime",
-                fix_description="Install ONNX Runtime",
-                fix_risk="low",
-            )
-
-        return self._check_version("onnxruntime", current)
+@check(id="pytorch_version", class_name="PyTorchVersionCheck",
+       category="AI", title="PyTorch Version",
+       description="检查 PyTorch 是否安装且为最新版本")
+def pytorch_version(ctx: "CheckContext"):
+    """检测 PyTorch 版本"""
+    try:
+        import torch
+        current = torch.__version__
+    except ImportError:
+        return ctx.result(
+            passed=True, current="not installed", expected="installed",
+            message="PyTorch not installed",
+            severity=CheckSeverity.WARNING,
+            fix_available=True,
+            fix_command="pip install torch",
+            fix_description="Install PyTorch",
+            fix_risk="low",
+        )
+    return _check_version_helper(
+        ctx, "pytorch_version", "PyTorch", current, "pytorch"
+    )
 
 
-# Backward compat: VersionCheckerCheck -> AIVersionCheck
+@check(id="onnxruntime_version", class_name="ONNXRuntimeVersionCheck",
+       category="AI", title="ONNX Runtime Version",
+       description="检查 ONNX Runtime 是否安装且为最新版本")
+def onnxruntime_version(ctx: "CheckContext"):
+    """检测 ONNX Runtime 版本"""
+    try:
+        import onnxruntime as ort
+        current = ort.__version__
+    except ImportError:
+        return ctx.result(
+            passed=True, current="not installed", expected="installed",
+            message="ONNX Runtime not installed",
+            severity=CheckSeverity.INFO,
+            fix_available=True,
+            fix_command="pip install onnxruntime",
+            fix_description="Install ONNX Runtime",
+            fix_risk="low",
+        )
+    return _check_version_helper(
+        ctx, "onnxruntime_version", "ONNX Runtime", current, "onnxruntime"
+    )
+
+
+# ── Backward compatibility aliases ────────────────────────────────────────────
+
+# 类名兼容：模块导出原类名
+NvidiaDriverVersionCheck = nvidia_driver_version
+CudaVersionCheck = cuda_version
+TensorRTVersionCheck = tensorrt_version
+JetPackVersionCheck = jetpack_version
+RKNNVersionCheck = rknn_version
+PyTorchVersionCheck = pytorch_version
+ONNXRuntimeVersionCheck = onnxruntime_version
+
+# __getattr__ 兜底（旧的 VersionCheckerCheck 名称）
 def __getattr__(name):
     if name == "VersionCheckerCheck":
-        return AIVersionCheck
+        return nvidia_driver_version
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# ── AIVersionCheck 保留（复杂场景备用）────────────────────────────────────────
+# 如需自定义 run() 逻辑，可继承此类：
+#
+# class MyVersionCheck(AIVersionCheck):
+#     check_id = "my_version"
+#     def run(self):
+#         current = self._get_my_version()
+#         return self._check_version("my_tool", current)

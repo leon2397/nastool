@@ -114,7 +114,7 @@ def list_available_checks() -> Dict[str, dict]:
         instance = check_class()
         result[instance.check_id] = {
             "id": instance.check_id,
-            "category": instance.category.value,
+            "category": instance.category.value if hasattr(instance.category, "value") else instance.category,
             "title": instance.title,
             "description": instance.description,
         }
