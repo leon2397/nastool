@@ -20,16 +20,17 @@ logger = get_logger(__name__)
 
 
 # Essential checks for quick diagnosis
+# NOTE: Use registry check_id (pure ID, not "category.check" format)
 QUICK_CHECKS = [
     # System essentials
-    "system.python_version",
-    "system.memory",
-    "system.disk_space",
+    "python_version",
+    "memory_check",
+    "system_disk",
     # Network essentials
-    "network.dns",
-    "network.internet",
+    "dns_cache",
+    "internet_access",
     # Storage essentials
-    "storage.paths",
+    "path_exists",
 ]
 
 # Checks to skip in quick mode
@@ -93,10 +94,10 @@ def quick_diagnose(checks: List[str] = None, offline: bool = False) -> QuickResu
                 )
             )
 
-    # Calculate score
-    passed = sum(1 for r in results if r.severity == CheckSeverity.PASSED)
-    warnings_list = [r for r in results if r.severity == CheckSeverity.WARNING]
-    critical = [r for r in results if r.severity == CheckSeverity.CRITICAL]
+    # Calculate score - use r.passed (bool), not severity enum
+    passed = sum(1 for r in results if r.passed)
+    warnings_list = [r for r in results if not r.passed and r.severity == CheckSeverity.WARNING]
+    critical = [r for r in results if not r.passed and r.severity == CheckSeverity.CRITICAL]
 
     total = len(results)
     if total == 0:

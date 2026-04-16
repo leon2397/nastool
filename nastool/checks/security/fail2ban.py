@@ -13,12 +13,12 @@ def fail2ban(ctx):
         r = subprocess.run(["pgrep", "-f", "fail2ban"],
                           capture_output=True, timeout=5)
         if r.returncode == 0:
-            return ctx.result(passed=True, current="running",
+            return ctx.passed(current="running",
                             expected="running",
                             message="Fail2ban is running")
     except Exception:
         pass
-    return ctx.result(passed=True, current="not running",
+    return ctx.passed(current="not running",
                     expected="running",
                     message="Fail2ban not running",
                     severity="INFO",

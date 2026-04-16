@@ -30,7 +30,7 @@ def inode_check(ctx):
     except Exception:
         pass
     if issues:
-        return ctx.result(passed=False, current="high inode",
+        return ctx.failed(current="high inode",
                         expected="<80%",
                         message="; ".join(issues[:3]),
                         severity="CRITICAL" if any("CRITICAL" in i for i in issues) else "WARNING",
@@ -39,10 +39,10 @@ def inode_check(ctx):
                         fix_description="Clean up small files or increase inode count",
                         fix_risk="medium")
     if ok_parts:
-        return ctx.result(passed=True, current="normal",
+        return ctx.passed(current="normal",
                         expected="<80%",
                         message=f"Inode OK: {ok_parts[0]}")
-    return ctx.result(passed=True, current="unknown",
+    return ctx.passed(current="unknown",
                     expected="<80%",
                     message="Could not get inode info",
                     severity="INFO")

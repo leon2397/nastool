@@ -24,7 +24,7 @@ def write_speed(ctx):
         os.unlink(path)
         mbps = (100 * 1024 * 1024 / elapsed) / (1024 * 1024)
         if mbps < 10:
-            return ctx.result(passed=False, current=f"{mbps:.1f} MB/s",
+            return ctx.failed(current=f"{mbps:.1f} MB/s",
                             expected=">=50 MB/s",
                             message=f"Too slow: {mbps:.1f} MB/s (< 10 MB/s)",
                             severity="CRITICAL",
@@ -32,18 +32,18 @@ def write_speed(ctx):
                             fix_description="Use SSD or check disk health",
                             fix_risk="high")
         if mbps < 50:
-            return ctx.result(passed=True, current=f"{mbps:.1f} MB/s",
+            return ctx.passed(current=f"{mbps:.1f} MB/s",
                             expected=">=50 MB/s",
                             message=f"Slow: {mbps:.1f} MB/s",
                             severity="WARNING",
                             fix_available=True, fix_id="upgrade_disk",
                             fix_description="Consider SSD for better performance",
                             fix_risk="medium")
-        return ctx.result(passed=True, current=f"{mbps:.1f} MB/s",
+        return ctx.passed(current=f"{mbps:.1f} MB/s",
                         expected=">=50 MB/s",
                         message=f"{mbps:.1f} MB/s write speed OK")
     except Exception as e:
-        return ctx.result(passed=False, current="error",
+        return ctx.failed(current="error",
                         expected=">=50 MB/s",
                         message=f"Write test failed: {e}",
                         severity="CRITICAL")

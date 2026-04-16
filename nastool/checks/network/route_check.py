@@ -14,12 +14,12 @@ def route_check(ctx):
                           capture_output=True, text=True, timeout=5)
         if r.returncode == 0 and ("default" in r.stdout.lower()
                                     or "0.0.0.0" in r.stdout):
-            return ctx.result(passed=True, current="configured",
+            return ctx.passed(current="configured",
                             expected="configured",
                             message="Default route configured")
     except Exception:
         pass
-    return ctx.result(passed=False, current="missing",
+    return ctx.failed(current="missing",
                     expected="configured",
                     message="No default route configured",
                     severity="CRITICAL",

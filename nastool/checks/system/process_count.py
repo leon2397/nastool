@@ -19,7 +19,7 @@ def process_count(ctx):
                                capture_output=True, text=True, timeout=5)
             count = int(r.stdout.strip()) - 1  # subtract header
     except Exception:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                           expected="detectable",
                           message="Could not determine process count",
                           severity="INFO")
@@ -27,15 +27,15 @@ def process_count(ctx):
     max_normal = 500
     warn = 300
     if count > max_normal:
-        return ctx.result(passed=False, current=str(count),
+        return ctx.failed(current=str(count),
                           expected=f"< {max_normal}",
                           message=f"Too many processes ({count}), possible fork bomb",
                           severity="WARNING")
     elif count > warn:
-        return ctx.result(passed=True, current=str(count),
+        return ctx.passed(current=str(count),
                           expected=f"< {max_normal}",
                           message=f"High process count ({count}), monitoring",
                           severity="WARNING")
-    return ctx.result(passed=True, current=str(count),
+    return ctx.passed(current=str(count),
                       expected=f"< {max_normal}",
                       message=f"{count} processes running")

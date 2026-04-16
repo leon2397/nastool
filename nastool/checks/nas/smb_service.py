@@ -11,7 +11,7 @@ def smb_service(ctx):
         r = subprocess.run(["pgrep", "-f", "smbd"], capture_output=True, timeout=5)
         if r.returncode == 0:
             cnt = len(r.stdout.strip().splitlines())
-            return ctx.result(passed=True, current="running", expected="running",
+            return ctx.passed(current="running", expected="running",
                             message=f"SMB running ({cnt} processes)")
     except Exception:
         pass
@@ -19,9 +19,9 @@ def smb_service(ctx):
         r = subprocess.run(["sc", "query", "LanmanServer"],
                           capture_output=True, text=True, timeout=10)
         if "RUNNING" in r.stdout or "START_PENDING" in r.stdout:
-            return ctx.result(passed=True, current="running", expected="running",
+            return ctx.passed(current="running", expected="running",
                             message="SMB running (Windows Server service)")
     except Exception:
         pass
-    return ctx.result(passed=True, current="not running", expected="running",
+    return ctx.passed(current="not running", expected="running",
                     message="SMB not running", severity="INFO")

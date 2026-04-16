@@ -14,12 +14,12 @@ def clamav_check(ctx):
                           capture_output=True, timeout=10)
         if r.returncode == 0:
             ver = r.stdout.splitlines()[0][:60]
-            return ctx.result(passed=True, current="installed",
+            return ctx.passed(current="installed",
                             expected="installed",
                             message=f"ClamAV: {ver}")
     except Exception:
         pass
-    return ctx.result(passed=True, current="not installed",
+    return ctx.passed(current="not installed",
                     expected="installed",
                     message="ClamAV not installed",
                     severity="INFO",

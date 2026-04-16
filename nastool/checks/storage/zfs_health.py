@@ -13,14 +13,14 @@ def zfs_health(ctx):
         r = subprocess.run(["zpool", "status"],
                           capture_output=True, text=True, timeout=15)
         if r.returncode != 0:
-            return ctx.result(passed=True, current="not ZFS",
+            return ctx.passed(current="not ZFS",
                             expected="ZFS healthy",
                             message="Not using ZFS storage",
                             severity="INFO")
         issues = [kw for kw in ["DEGRADED", "FAULTED", "UNAVAIL"]
                   if kw in r.stdout]
         if issues:
-            return ctx.result(passed=False, current="error",
+            return ctx.failed(current="error",
                             expected="healthy",
                             message="ZFS issues: " + "; ".join(issues),
                             severity="CRITICAL",
@@ -28,16 +28,16 @@ def zfs_health(ctx):
                             fix_command="zpool status",
                             fix_description="Check ZFS pool status",
                             fix_risk="high")
-        return ctx.result(passed=True, current="healthy",
+        return ctx.passed(current="healthy",
                         expected="healthy",
                         message="ZFS pool healthy")
     except FileNotFoundError:
-        return ctx.result(passed=True, current="not ZFS",
+        return ctx.passed(current="not ZFS",
                         expected="ZFS healthy",
                         message="Not using ZFS",
                         severity="INFO")
     except Exception as e:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                         expected="ZFS healthy",
                         message=f"Could not check ZFS: {e}",
                         severity="INFO")

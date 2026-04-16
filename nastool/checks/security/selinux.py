@@ -14,15 +14,15 @@ def selinux(ctx):
                           capture_output=True, text=True, timeout=5)
         status = r.stdout.strip().lower()
         if status == "disabled":
-            return ctx.result(passed=True, current="Disabled",
+            return ctx.passed(current="Disabled",
                             expected="Permissive or Disabled",
                             message="SELinux is disabled")
         if status == "permissive":
-            return ctx.result(passed=True, current="Permissive",
+            return ctx.passed(current="Permissive",
                             expected="Permissive for NAS",
                             message="SELinux is permissive (logging only)")
         if status == "enforcing":
-            return ctx.result(passed=False, current="Enforcing",
+            return ctx.failed(current="Enforcing",
                             expected="Permissive for NAS",
                             message="SELinux enforcing - may block NAS operations",
                             severity="WARNING",
@@ -30,15 +30,15 @@ def selinux(ctx):
                             fix_command="setenforce 0",
                             fix_description="Set SELinux to permissive",
                             fix_risk="medium")
-        return ctx.result(passed=True, current=status,
+        return ctx.passed(current=status,
                         expected="Permissive or Disabled",
                         message=f"SELinux status: {status}")
     except FileNotFoundError:
-        return ctx.result(passed=True, current="not installed",
+        return ctx.passed(current="not installed",
                         expected="Not required",
                         message="SELinux not installed")
     except Exception as e:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                         expected="Permissive or Disabled",
                         message=f"Could not check SELinux: {e}",
                         severity="INFO")

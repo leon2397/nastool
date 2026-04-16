@@ -17,13 +17,11 @@ def ssh_root(ctx):
             if line.startswith("PermitRootLogin"):
                 val = line.split()[-1].lower()
                 if val in ("no", "prohibit-password"):
-                    return ctx.result(passed=True,
-                                    current=val,
+                    return ctx.passed(current=val,
                                     expected="no or prohibit-password",
                                     message=f"Root login is {val}")
                 if val == "yes":
-                    return ctx.result(passed=False,
-                                    current="yes",
+                    return ctx.failed(current="yes",
                                     expected="no or prohibit-password",
                                     message="Root login is enabled (security risk)",
                                     severity="WARNING",
@@ -31,8 +29,7 @@ def ssh_root(ctx):
                                     fix_command="sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config",
                                     fix_description="Disable SSH root login",
                                     fix_risk="low")
-        return ctx.result(passed=False,
-                        current="not set (default yes)",
+        return ctx.failed(current="not set (default yes)",
                         expected="no or prohibit-password",
                         message="PermitRootLogin not set (default: yes)",
                         severity="WARNING",
@@ -41,12 +38,12 @@ def ssh_root(ctx):
                         fix_description="Set PermitRootLogin no",
                         fix_risk="low")
     except FileNotFoundError:
-        return ctx.result(passed=True, current="n/a",
+        return ctx.passed(current="n/a",
                         expected="n/a",
                         message="sshd_config not found (not an SSH server)",
                         severity="INFO")
     except Exception as e:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                         expected="no or prohibit-password",
                         message=f"Could not check SSH config: {e}",
                         severity="INFO")

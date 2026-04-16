@@ -21,14 +21,14 @@ def pip_installed(ctx):
         ver = subprocess.run(ver_cmd, shell=True,
                              capture_output=True, text=True, timeout=5).stdout
         ver_str = ver.split()[1] if ver and len(ver.split()) > 1 else "unknown"
-        return ctx.result(passed=True, current="installed",
+        return ctx.passed(current="installed",
                           expected="installed",
                           message=f"pip available: {ver_str}")
     else:
         apt_ok = subprocess.run("apt --version", shell=True,
                                 capture_output=True, timeout=5).returncode == 0
         fix_cmd = "apt install python3-pip" if apt_ok else "Install pip"
-        return ctx.result(passed=False, current="not installed",
+        return ctx.failed(current="not installed",
                           expected="installed",
                           message="pip is not installed, cannot install Python packages",
                           fix_available=True, fix_id="install_pip",

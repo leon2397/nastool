@@ -14,7 +14,7 @@ def storage_disk(ctx):
         free_gb = free / (1024**3)
         free_pct = (free / total) * 100
         if free_gb < 10:
-            return ctx.result(passed=False, current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
+            return ctx.failed(current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
                             expected=">=10GB or >=10%",
                             message=f"Critical: only {free_gb:.1f}GB free",
                             severity="CRITICAL",
@@ -23,7 +23,7 @@ def storage_disk(ctx):
                             fix_description="Clean up disk space",
                             fix_risk="medium")
         if free_gb < 50:
-            return ctx.result(passed=True, current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
+            return ctx.passed(current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
                             expected=">=50GB or >=10%",
                             message=f"Low disk space: {free_gb:.1f}GB free",
                             severity="WARNING",
@@ -31,11 +31,11 @@ def storage_disk(ctx):
                             fix_command="docker system prune -af",
                             fix_description="Clean up old files",
                             fix_risk="low")
-        return ctx.result(passed=True, current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
+        return ctx.passed(current=f"{free_gb:.1f}GB ({free_pct:.0f}%)",
                         expected=">=50GB",
                         message=f"{free_gb:.1f}GB free ({free_pct:.0f}%)")
     except Exception as e:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                         expected="detectable",
                         message=f"Could not check disk space: {e}",
                         severity="INFO")

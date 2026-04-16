@@ -1,5 +1,32 @@
 # nastools 更新日志
 
+## v7.1.0（2026-04-16）
+
+> 主题：测试流程优化 × 诊断体验增强
+
+### Bug 修复
+
+**BUG-FIX-001 — --quick 显示 Passed: 0/0**
+- 根因 1：`quick_diagnose.py` 的 `QUICK_CHECKS` 使用旧格式 `system.python_version`，registry 用纯 ID `python_version`，全部匹配失败
+- 根因 2：统计用 `r.severity == CheckSeverity.PASSED`，但应改用 `r.passed` 布尔值
+- 修复：更新 `QUICK_CHECKS` 为纯 ID；统计改用 `r.passed`
+- 修复：批量迁移 43 个检查文件 `ctx.result(passed=X, ...)` → `ctx.passed()/ctx.failed()`
+
+**BUG-FIX-007 — HTML 报告不生成**
+- 根因：`--quick` 模式在 `return` 前提前退出，未执行 `--output` 处理逻辑
+- 修复：在 `--quick` 分支末尾添加 `--output` 处理（与 full mode 相同的逻辑）
+- 修复：`file_reporter.py` 接受字符串 severity（`'INFO'`）而非只接受枚举
+
+### 功能增强
+
+**F1 — --version 输出增强**
+- 新增 `--version-json` 输出机器可读 JSON
+- 版本信息包含：git hash / branch / date / dirty flag / check count / category 分布
+- `nastool/core/version_info.py`：统一版本信息获取模块
+
+**版本号修复**
+- `arm_diagnose.py __version__` 从 `"5.0.4"` → `"7.1.0-beta"`（与 CHANGELOG 一致）
+
 ## v7.0（2026-04-16）
 
 > 主题：引擎升级 — 并行执行 × 声明式检查 × Pydantic 配置 × 统一修复

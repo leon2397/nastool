@@ -10,10 +10,10 @@ def afp_service(ctx):
     try:
         r = subprocess.run(["pgrep", "-f", "afpd"], capture_output=True, timeout=5)
         if r.returncode == 0:
-            return ctx.result(passed=True, current="running", expected="running",
+            return ctx.passed(current="running", expected="running",
                             message="AFP service running")
     except Exception:
         pass
-    return ctx.result(passed=True, current="not running", expected="running",
+    return ctx.passed(current="not running", expected="running",
                     message="AFP not running (Mac users only)",
                     severity="INFO")

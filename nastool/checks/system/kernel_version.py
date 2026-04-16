@@ -17,7 +17,7 @@ def kernel_version(ctx):
         kernel = "unknown"
 
     if kernel == "unknown":
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                           expected="detectable",
                           message="Could not determine kernel version",
                           severity="WARNING")
@@ -26,7 +26,7 @@ def kernel_version(ctx):
     try:
         major = int(kernel.split("-")[0].split(".")[0])
         if major < 4:
-            return ctx.result(passed=False, current=kernel,
+            return ctx.failed(current=kernel,
                               expected=">= 4.0",
                               message=f"Kernel {kernel} is outdated (< 4.0)",
                               severity="WARNING",
@@ -38,6 +38,6 @@ def kernel_version(ctx):
     except Exception:
         pass
 
-    return ctx.result(passed=True, current=kernel,
+    return ctx.passed(current=kernel,
                       expected=">= 4.0",
                       message=f"Kernel {kernel}")

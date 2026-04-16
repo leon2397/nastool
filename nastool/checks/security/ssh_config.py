@@ -31,7 +31,7 @@ def ssh_config(ctx):
         except Exception:
             pass
     if warnings:
-        return ctx.result(passed=False, current="insecure",
+        return ctx.failed(current="insecure",
                         expected="secure",
                         message="; ".join(warnings),
                         severity="WARNING",
@@ -39,6 +39,6 @@ def ssh_config(ctx):
                         fix_command="sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config",
                         fix_description="Disable password auth, use SSH keys",
                         fix_risk="medium")
-    return ctx.result(passed=True, current="secure",
+    return ctx.passed(current="secure",
                     expected="secure",
                     message="SSH configuration is secure")

@@ -35,7 +35,7 @@ def dns_coverage(ctx):
     nameservers = _parse_resolv()
 
     if nameservers is None:
-        return ctx.result(passed=False, current="unreadable",
+        return ctx.failed(current="unreadable",
                          expected=f">= {MIN_NS} nameservers",
                          message="Could not read /etc/resolv.conf",
                          severity="CRITICAL",
@@ -48,7 +48,7 @@ def dns_coverage(ctx):
     used_rec = [ns for ns in nameservers if ns in RECOMMENDED_DNS]
 
     if count == 0:
-        return ctx.result(passed=False, current="0 nameservers",
+        return ctx.failed(current="0 nameservers",
                          expected=f">= {MIN_NS}",
                          message="No DNS servers configured",
                          severity="CRITICAL",
@@ -61,7 +61,7 @@ def dns_coverage(ctx):
     details = {"nameservers": nameservers, "speeds": [(n, str(s)) for n, s in speeds]}
 
     if count == 1:
-        return ctx.result(passed=False, current="1 nameserver",
+        return ctx.failed(current="1 nameserver",
                          expected=f">= {MIN_NS}",
                          message=f"Only 1 DNS server ({nameservers[0]}) - single point of failure",
                          severity="WARNING",

@@ -16,7 +16,7 @@ def openssl_version(ctx):
         r = subprocess.run(["openssl", "version"],
                           capture_output=True, text=True, timeout=5)
         if r.returncode != 0:
-            return ctx.result(passed=True, current="unavailable",
+            return ctx.passed(current="unavailable",
                             expected="1.1.1+",
                             message="OpenSSL command not available",
                             severity="INFO")
@@ -24,7 +24,7 @@ def openssl_version(ctx):
         version = m.group(1) if m else "unknown"
         for bad in BAD_PREFIXES:
             if version.startswith(bad):
-                return ctx.result(passed=False, current=version,
+                return ctx.failed(current=version,
                                 expected="1.1.1+",
                                 message=f"OpenSSL {version} has known vulnerabilities",
                                 severity="CRITICAL",
@@ -32,11 +32,11 @@ def openssl_version(ctx):
                                 fix_command="apt update && apt upgrade openssl",
                                 fix_description="Update OpenSSL to latest",
                                 fix_risk="high")
-        return ctx.result(passed=True, current=version,
+        return ctx.passed(current=version,
                         expected="1.1.1+",
                         message=f"OpenSSL {version}")
     except Exception as e:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                         expected="1.1.1+",
                         message=f"Could not check OpenSSL: {e}",
                         severity="INFO")

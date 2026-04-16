@@ -21,14 +21,14 @@ def system_disk(ctx):
             stat = os.statvfs("/")
             free_gb = stat.f_bavail * stat.f_frsize / (1024**3)
     except Exception:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                           expected="detectable",
                           message="Could not determine disk space",
                           severity="INFO")
 
     min_free = 10.0  # GB
     if free_gb < min_free:
-        return ctx.result(passed=False, current=f"{free_gb:.1f}GB",
+        return ctx.failed(current=f"{free_gb:.1f}GB",
                           expected=f">= {min_free:.0f}GB free",
                           message=f"Only {free_gb:.1f}GB free, minimum {min_free:.0f}GB required",
                           severity="CRITICAL",
@@ -37,6 +37,6 @@ def system_disk(ctx):
                           fix_command="docker system prune -af && rm -rf /tmp/*",
                           fix_description="Clean up disk space",
                           fix_risk="medium")
-    return ctx.result(passed=True, current=f"{free_gb:.1f}GB",
+    return ctx.passed(current=f"{free_gb:.1f}GB",
                       expected=f">= {min_free:.0f}GB free",
                       message=f"{free_gb:.1f}GB free on system disk")

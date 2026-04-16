@@ -25,7 +25,7 @@ def port_scan(ctx):
         except Exception:
             pass
     if found:
-        return ctx.result(passed=False, current="suspicious",
+        return ctx.failed(current="suspicious",
                         expected="clean",
                         message=f"Suspicious ports found: {', '.join(found)}",
                         severity="WARNING",
@@ -33,6 +33,6 @@ def port_scan(ctx):
                         fix_command=f"ss -tlnp | grep {found[0]}",
                         fix_description="Investigate and close suspicious ports",
                         fix_risk="high")
-    return ctx.result(passed=True, current="clean",
+    return ctx.passed(current="clean",
                     expected="clean",
                     message="No suspicious listening ports detected")

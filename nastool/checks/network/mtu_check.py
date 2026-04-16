@@ -31,7 +31,7 @@ def mtu_check(ctx):
         pass
 
     if issues:
-        return ctx.result(passed=False, current="MTU too small",
+        return ctx.failed(current="MTU too small",
                          expected="1400+",
                          message="; ".join(issues),
                          severity="WARNING",
@@ -40,10 +40,10 @@ def mtu_check(ctx):
                          fix_description="Adjust MTU to 1500",
                          fix_risk="medium")
     if ok_nics:
-        return ctx.result(passed=True, current="normal",
+        return ctx.passed(current="normal",
                          expected="1400+",
                          message=", ".join(ok_nics[:3]))
-    return ctx.result(passed=True, current="unknown",
+    return ctx.passed(current="unknown",
                      expected="1400+",
                      message="Could not determine MTU",
                      severity="INFO")

@@ -15,7 +15,7 @@ def webdav_service(ctx):
                 with open(path) as f:
                     c = f.read()
                 if "dav_methods" in c or "webdav" in c.lower():
-                    return ctx.result(passed=True, current="configured", expected="configured",
+                    return ctx.passed(current="configured", expected="configured",
                                     message="WebDAV configured (nginx)")
             except Exception:
                 pass
@@ -23,11 +23,11 @@ def webdav_service(ctx):
         try:
             r = subprocess.run(["pgrep", "-f", proc], capture_output=True, timeout=5)
             if r.returncode == 0:
-                return ctx.result(passed=True, current="possible", expected="configured",
+                return ctx.passed(current="possible", expected="configured",
                                 message=f"{proc} running, WebDAV may be enabled")
         except Exception:
             pass
-    return ctx.result(passed=True, current="not configured", expected="configured",
+    return ctx.passed(current="not configured", expected="configured",
                     message="WebDAV not configured", severity="INFO",
                     fix_available=True, fix_id="setup_webdav",
                     fix_command="nginx with dav模块",

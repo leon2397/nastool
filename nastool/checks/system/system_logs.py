@@ -17,7 +17,7 @@ def system_logs(ctx):
             break
 
     if not found_dir:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                           expected="detectable",
                           message="No standard log directory found",
                           severity="INFO")
@@ -32,13 +32,13 @@ def system_logs(ctx):
                 if size_mb > 100:
                     large_files.append(f"{entry.name} ({size_mb:.0f}MB)")
     except PermissionError:
-        return ctx.result(passed=True, current="no access",
+        return ctx.passed(current="no access",
                           expected="readable",
                           message="No permission to read log directory",
                           severity="INFO")
 
     if large_files:
-        return ctx.result(passed=True, current=f"{total_mb:.0f}MB total",
+        return ctx.passed(current=f"{total_mb:.0f}MB total",
                           expected="< 1GB",
                           message=f"Large log files: {', '.join(large_files[:3])}",
                           severity="WARNING",
@@ -49,7 +49,7 @@ def system_logs(ctx):
                           fix_risk="low",
                           details={"large_files": large_files, "total_mb": round(total_mb)})
 
-    return ctx.result(passed=True, current=f"{total_mb:.0f}MB",
+    return ctx.passed(current=f"{total_mb:.0f}MB",
                       expected="< 1GB",
                       message=f"Log directory size normal: {total_mb:.0f}MB",
                       details={"total_mb": round(total_mb)})

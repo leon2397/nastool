@@ -15,7 +15,7 @@ def io_wait(ctx):
         total = sum(int(f) for f in fields[1:8])
         pct = (iowait / total * 100) if total > 0 else 0
         if pct >= 50:
-            return ctx.result(passed=False, current=f"{pct:.1f}%",
+            return ctx.failed(current=f"{pct:.1f}%",
                             expected="<20%",
                             message=f"IO Wait {pct:.1f}% - disk bottleneck",
                             severity="CRITICAL",
@@ -24,15 +24,15 @@ def io_wait(ctx):
                             fix_description="Check disk performance",
                             fix_risk="medium")
         if pct >= 20:
-            return ctx.result(passed=False, current=f"{pct:.1f}%",
+            return ctx.failed(current=f"{pct:.1f}%",
                             expected="<20%",
                             message=f"IO Wait {pct:.1f}% elevated",
                             severity="WARNING")
-        return ctx.result(passed=True, current=f"{pct:.1f}%",
+        return ctx.passed(current=f"{pct:.1f}%",
                         expected="<20%",
                         message=f"IO Wait normal: {pct:.1f}%")
     except Exception:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                         expected="<20%",
                         message="IO Wait check skipped",
                         severity="INFO")

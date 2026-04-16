@@ -13,7 +13,7 @@ def bandwidth_check(ctx):
         r = subprocess.run(["ip", "link", "show"],
                           capture_output=True, text=True, timeout=5)
         if r.returncode != 0:
-            return ctx.result(passed=True, current="unknown",
+            return ctx.passed(current="unknown",
                             expected="1Gbps+",
                             message="Could not get interface info",
                             severity="INFO")
@@ -25,12 +25,12 @@ def bandwidth_check(ctx):
                 if iface not in ("lo", "docker0") and "state UP" in line:
                     active.append(iface)
         if active:
-            return ctx.result(passed=True, current=", ".join(active[:3]),
+            return ctx.passed(current=", ".join(active[:3]),
                             expected="active",
                             message=f"Active interfaces: {', '.join(active[:3])}")
     except Exception:
         pass
-    return ctx.result(passed=True, current="unknown",
+    return ctx.passed(current="unknown",
                     expected="active",
                     message="Could not determine bandwidth",
                     severity="INFO")

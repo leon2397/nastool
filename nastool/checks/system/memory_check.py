@@ -29,17 +29,17 @@ def memory_check(ctx):
             total = 0
 
     if total == 0:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                           expected="detectable",
                           message="Could not determine memory",
                           severity="INFO")
 
     min_required = 1.0   # GB
     if total < min_required:
-        return ctx.result(passed=False, current=f"{total:.1f}GB",
+        return ctx.failed(current=f"{total:.1f}GB",
                           expected=f">= {min_required:.0f}GB",
                           message=f"Memory {total:.1f}GB below minimum {min_required:.0f}GB",
                           severity="WARNING")
-    return ctx.result(passed=True, current=f"{total:.1f}GB",
+    return ctx.passed(current=f"{total:.1f}GB",
                       expected=f">= {min_required:.0f}GB",
                       message=f"Memory {total:.1f}GB available")

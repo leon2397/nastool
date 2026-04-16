@@ -17,12 +17,12 @@ def docker_info(ctx):
             if "Server Version" in line or "Server:" in line:
                 version = line.split(":")[-1].strip()
                 break
-        return ctx.result(passed=True, current="running",
+        return ctx.passed(current="running",
                           expected="running",
                           message=f"Docker running{': ' + version if version else ''}",
                           details={"version": version})
     else:
-        return ctx.result(passed=False, current="not running",
+        return ctx.failed(current="not running",
                           expected="running",
                           message="Docker service not running",
                           fix_available=True,

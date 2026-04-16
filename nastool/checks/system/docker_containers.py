@@ -12,14 +12,14 @@ def docker_containers(ctx):
     r = subprocess.run("docker ps --format '{{.Names}}|{{.Status}}'", shell=True,
                        capture_output=True, text=True, timeout=15)
     if r.returncode != 0:
-        return ctx.result(passed=True, current="no docker",
+        return ctx.passed(current="no docker",
                           expected="n/a",
                           message="Docker not available",
                           severity="INFO")
 
     lines = [l for l in r.stdout.strip().split("\n") if l]
     if not lines:
-        return ctx.result(passed=True, current="0 running",
+        return ctx.passed(current="0 running",
                           expected="any",
                           message="No running containers",
                           details={"count": 0})
@@ -30,12 +30,12 @@ def docker_containers(ctx):
             running += 1
 
     if running == 0:
-        return ctx.result(passed=True, current="0 running",
+        return ctx.passed(current="0 running",
                           expected="any",
                           message="All containers stopped",
                           severity="WARNING",
                           details={"total": len(lines)})
-    return ctx.result(passed=True, current=f"{running} running",
+    return ctx.passed(current=f"{running} running",
                       expected="running",
                       message=f"{running}/{len(lines)} containers running",
                       details={"running": running, "total": len(lines),

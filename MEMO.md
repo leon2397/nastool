@@ -1,7 +1,54 @@
 ﻿# nastools 发布备忘录
 
-**当前版本：v5.0.2（2026-04-15）**
-**下一个版本：v5.0.4 — Mock 覆盖率提升**
+**当前版本：v7.1.0-beta（2026-04-16）**
+**项目目录：D:\tools416**（已迁移，2026-04-16）
+**原目录：D:\nas\armtool415**（保留至确认新目录正常后删除）
+
+---
+
+## ✅ v7.1.0-beta 核心修复（2026-04-16 12:54）
+
+> 主题：测试流程优化 × 诊断体验增强
+
+### 完成的功能
+
+| 任务 | 状态 | 关键改动 |
+|------|------|---------|
+| 版本号修复 | ✅ | `__version__` 从 `"5.0.4"` → `"7.1.0-beta"` |
+| **BUG-001** | ✅ | `--quick` 显示 `Passed: 0/0` → 正确 `5/6 / 83/100` |
+| **BUG-007** | ✅ | HTML/JSON 报告不生成 → 正常生成（HTML 6648B / JSON 1545B）|
+| F1 --version增强 | ✅ | 新增 `core/version_info.py`；`--version` 输出 git hash / check分布 / `--version-json` |
+
+### BUG-001 修复详情
+
+**根因 1：** `quick_diagnose.py` 的 `QUICK_CHECKS` 用旧格式 `system.python_version`，registry 用纯 ID `python_version`，全部匹配失败 → 6 个 None
+
+**根因 2：** 统计用 `r.severity == CheckSeverity.PASSED`，但应改用 `r.passed` 布尔值
+
+**根因 3：** 44 个检查文件用了不存在的 `ctx.result()` API → 批量迁移 43 个文件：
+`ctx.result(passed=True, ...)` → `ctx.passed(...)` / `ctx.failed(...)`
+
+**结果：** `Passed: 5/6, Score: 83/100`（1 个失败是 Windows 路径问题，符合预期）
+
+### BUG-007 修复详情
+
+**根因 1：** `--quick` 模式提前 `return`，未执行 `--output` 处理代码
+
+**根因 2：** `FileReporter` 里 `result.severity` 有时是字符串 `'INFO'` 有时是枚举 → KeyError
+
+**修复：** 在 `--quick` 分支末尾添加 `--output` 处理；`file_reporter.py` 添加 `_norm_severity()` 规范化函数
+
+### v7.1.0 剩余 4 项
+
+| 任务 | 估计工时 | 依赖 |
+|------|---------|------|
+| F2 首次运行设备就绪检查 | 3-4h | F1 ✅ |
+| F4 BUG 分类标准化 | 1h | 无 |
+| F3 通用测试运行器 | 4-6h | F1 ✅ |
+| F5 Jetson 测试集（JSON） | 3-4h | F3 |
+| F6 版本更新提示 | 降级 P3 | F1 ✅ |
+
+**剩余总工时：约 11-15h**
 
 ---
 

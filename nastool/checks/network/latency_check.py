@@ -45,7 +45,7 @@ def latency_check(ctx):
             pass
 
     if not results:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                          expected="<200ms",
                          message="Could not measure latency",
                          severity="INFO")
@@ -54,13 +54,13 @@ def latency_check(ctx):
     best = min(results, key=lambda x: x[2])
 
     if issues:
-        return ctx.result(passed=False, current=f"{avg_all:.0f}ms",
+        return ctx.failed(current=f"{avg_all:.0f}ms",
                          expected="<200ms",
                          message=f"Avg {avg_all:.0f}ms, best {best[0]} {best[2]:.0f}ms",
                          severity="WARNING",
                          details={"results": [(n, t, str(v)) for n, t, v in results]})
 
-    return ctx.result(passed=True, current=f"{avg_all:.0f}ms",
+    return ctx.passed(current=f"{avg_all:.0f}ms",
                      expected="<200ms",
                      message=f"Latency OK: avg {avg_all:.0f}ms, best {best[0]} {best[2]:.0f}ms",
                      details={"results": [(n, t, str(v)) for n, t, v in results]})

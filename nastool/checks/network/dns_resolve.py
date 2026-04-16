@@ -27,11 +27,11 @@ def dns_resolve(ctx):
             failed.append(domain)
 
     if not failed:
-        return ctx.result(passed=True, current="working",
+        return ctx.passed(current="working",
                          expected="working",
                          message=f"DNS resolution working ({len(resolved)}/{len(domains)})",
                          details={"resolved": resolved, "dns_servers": dns_servers})
-    return ctx.result(passed=False, current="failed",
+    return ctx.failed(current="failed",
                       expected="working",
                       message=f"DNS failed for: {', '.join(failed)}",
                       severity="CRITICAL",

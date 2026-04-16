@@ -14,13 +14,13 @@ def dns_cache(ctx):
             r = subprocess.run(["pgrep", "-f", svc],
                               capture_output=True, timeout=5)
             if r.returncode == 0:
-                return ctx.result(passed=True, current="running",
+                return ctx.passed(current="running",
                                  expected="running",
                                  message=f"DNS cache service: {svc}",
                                  severity="PASSED")
         except Exception:
             pass
-    return ctx.result(passed=True, current="not running",
+    return ctx.passed(current="not running",
                       expected="running",
                       message="No DNS cache service detected",
                       severity="INFO",

@@ -23,10 +23,10 @@ def system_libs(ctx):
                 missing.append(lib)
 
     if missing:
-        return ctx.result(passed=False, current="some missing",
+        return ctx.failed(current="some missing",
                           expected="all present",
                           message=f"Missing libs: {', '.join(missing)}",
                           severity="WARNING")
-    return ctx.result(passed=True, current="all present",
+    return ctx.passed(current="all present",
                       expected="all present",
                       message="All required system libraries present")

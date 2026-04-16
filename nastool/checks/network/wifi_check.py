@@ -14,13 +14,13 @@ def wifi_check(ctx):
         if r.returncode == 0 and "ESSID" in r.stdout:
             for line in r.stdout.splitlines():
                 if "ESSID" in line:
-                    return ctx.result(passed=True, current="connected",
+                    return ctx.passed(current="connected",
                                     expected="connected or not used",
                                     message=line.strip()[:80],
                                     severity="INFO")
     except Exception:
         pass
-    return ctx.result(passed=True, current="not connected",
+    return ctx.passed(current="not connected",
                     expected="connected or not used",
                     message="WiFi not connected or unavailable",
                     severity="INFO")

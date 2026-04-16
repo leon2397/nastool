@@ -34,13 +34,11 @@ def internet_access(ctx):
             unreachable.append(host)
 
     if reachable:
-        return ctx.result(passed=True,
-                         current="connected",
+        return ctx.passed(current="connected",
                          expected="connected",
                          message=f"Internet reachable via: {', '.join(reachable)}",
                          details={"reachable": reachable, "unreachable": unreachable})
-    return ctx.result(passed=False,
-                    current="disconnected",
+    return ctx.failed(current="disconnected",
                     expected="connected",
                     message="No internet access detected",
                     severity="CRITICAL",

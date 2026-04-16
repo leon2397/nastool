@@ -19,14 +19,12 @@ def path_exists(ctx, paths=None):
         else:
             missing.append(p)
     if not missing:
-        return ctx.result(passed=True,
-                        current=f"{len(existing)}/{len(paths)} paths",
+        return ctx.passed(current=f"{len(existing)}/{len(paths)} paths",
                         expected="All paths exist",
                         message=f"All {len(existing)} paths exist")
     msg = f"Missing {len(missing)}/{len(paths)}: {', '.join(missing[:3])}"
     sev = "CRITICAL" if not existing else "WARNING"
-    return ctx.result(passed=False,
-                    current=f"{len(existing)}/{len(paths)} paths",
+    return ctx.failed(current=f"{len(existing)}/{len(paths)} paths",
                     expected="All paths exist",
                     message=msg,
                     severity=sev,

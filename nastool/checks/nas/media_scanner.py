@@ -17,7 +17,7 @@ def media_scanner(ctx):
         except Exception:
             pass
     if found:
-        return ctx.result(passed=True, current="running", expected="running",
+        return ctx.passed(current="running", expected="running",
                         message=f"Media indexer: {', '.join(found)}")
-    return ctx.result(passed=True, current="not running", expected="running",
+    return ctx.passed(current="not running", expected="running",
                     message="No media indexer detected", severity="INFO")

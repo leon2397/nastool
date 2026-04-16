@@ -15,7 +15,7 @@ def firewall(ctx):
         r = subprocess.run(["ufw", "status"],
                           capture_output=True, text=True, timeout=5)
         if "inactive" in r.stdout:
-            return ctx.result(passed=True, current="inactive",
+            return ctx.passed(current="inactive",
                             expected="active with NAS ports allowed",
                             message="Firewall is inactive (all ports open)",
                             severity="WARNING",
@@ -26,12 +26,10 @@ def firewall(ctx):
         allowed = [p for p in NAS_PORTS if str(p) in r.stdout]
         missing = [p for p in NAS_PORTS if p not in allowed]
         if not missing:
-            return ctx.result(passed=True,
-                            current=f"Ports {allowed} allowed",
+            return ctx.passed(current=f"Ports {allowed} allowed",
                             expected="All NAS ports allowed",
                             message=f"All NAS ports allowed: {allowed}")
-        return ctx.result(passed=False,
-                        current=f"Ports {allowed} allowed",
+        return ctx.failed(current=f"Ports {allowed} allowed",
                         expected="All NAS ports allowed",
                         message=f"Missing: {missing}",
                         severity="WARNING",
@@ -40,12 +38,12 @@ def firewall(ctx):
                         fix_description=f"Allow port {missing[0]}",
                         fix_risk="low")
     except FileNotFoundError:
-        return ctx.result(passed=True, current="not installed",
+        return ctx.passed(current="not installed",
                         expected="Firewall recommended",
                         message="ufw not installed",
                         severity="INFO")
     except Exception as e:
-        return ctx.result(passed=True, current="unknown",
+        return ctx.passed(current="unknown",
                         expected="Firewall recommended",
                         message=f"Could not check firewall: {e}",
                         severity="INFO")

@@ -28,10 +28,10 @@ def cron_jobs(ctx):
             total += 1
 
     if total > 30:
-        return ctx.result(passed=False, current=f"{total} jobs",
+        return ctx.failed(current=f"{total} jobs",
                           expected="< 30",
                           message=f"Too many cron jobs ({total})",
                           severity="WARNING")
-    return ctx.result(passed=True, current=f"{total} jobs",
+    return ctx.passed(current=f"{total} jobs",
                       expected="< 30",
                       message=f"{total} cron jobs configured")

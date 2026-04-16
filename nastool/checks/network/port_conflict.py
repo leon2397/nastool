@@ -39,12 +39,11 @@ def port_conflict(ctx):
             available.append(port)
 
     if not conflicts:
-        return ctx.result(passed=True,
-                         current=f"{len(available)} available",
+        return ctx.passed(current=f"{len(available)} available",
                          expected="all available",
                          message=f"All ports free: {available}")
     ports = [c["port"] for c in conflicts]
-    return ctx.result(passed=True, current=f"{len(available)} free, {len(conflicts)} used",
+    return ctx.passed(current=f"{len(available)} free, {len(conflicts)} used",
                       expected="all available",
                       message=f"Ports in use: {ports}",
                       severity="WARNING",

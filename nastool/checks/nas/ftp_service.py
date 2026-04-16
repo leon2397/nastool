@@ -11,10 +11,10 @@ def ftp_service(ctx):
         try:
             r = subprocess.run(["pgrep", "-f", proc], capture_output=True, timeout=5)
             if r.returncode == 0:
-                return ctx.result(passed=True, current="running", expected="running",
+                return ctx.passed(current="running", expected="running",
                                 message=f"{proc} running")
         except Exception:
             pass
-    return ctx.result(passed=True, current="not running", expected="running",
+    return ctx.passed(current="not running", expected="running",
                     message="FTP not running",
                     severity="INFO")

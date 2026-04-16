@@ -44,7 +44,19 @@ from utils.config_validator import ConfigValidator
 from utils.quick_diagnose import quick_diagnose, print_quick_report
 from utils.history import HistoryTracker
 
-__version__ = "5.0.4"
+__version__ = "7.1.0-beta"
+
+# Import version info helpers
+try:
+    from core.version_info import get_version_info, format_version_text, format_version_json
+except ImportError:
+    # Graceful fallback if version_info not available
+    def get_version_info():
+        return {"version": __version__, "git_hash": "", "checks_total": 0, "checks_parts": "?"}
+    def format_version_text(info=None):
+        return f"nastool {__version__}"
+    def format_version_json(info=None):
+        import json; return json.dumps(get_version_info(), indent=2)
 logger = get_logger(__name__)
 
 
@@ -159,6 +171,7 @@ Examples:
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--version", action="store_true", help="Show version")
+    parser.add_argument("--version-json", action="store_true", help="Show version as JSON")
 
     # Output options (v3.0.4)
     parser.add_argument(
@@ -201,7 +214,10 @@ def main() -> int:
 
     # Version
     if args.version:
-        print(f"nastool {__version__}")
+        print(format_version_text())
+        return 0
+    if args.version_json:
+        print(format_version_json())
         return 0
 
     # List profiles (v3.0)
@@ -340,8 +356,31 @@ def main() -> int:
             profile=profile.id if profile else None,
         )
 
-        # Show comparison
+# Show comparison
         history_tracker.print_comparison(quick_result.score)
+
+        # BUG-007 fix (v7.1.0): --output was missing in --quick mode
+        if args.output:
+            print()
+            file_reporter = FileReporter(
+                device_info={
+                    "profile": profile.id if profile else "unknown",
+                    "name": profile.name if profile else "Unknown Device",
+                }
+            )
+            output_format = args.format
+            if args.output.endswith(".html"):
+                output_format = "html"
+            elif args.output.endswith(".json"):
+                output_format = "json"
+            try:
+                report_data = quick_result.details
+                saved_path = file_reporter.save_report(report_data, args.output, format=output_format)
+                print(f"Report saved to: {saved_path}")
+                logger.info(f"Report saved to {saved_path}")
+            except Exception as e:
+                print(f"Failed to save report: {e}")
+                logger.error(f"Failed to save report: {e}")
 
         return 0 if quick_result.status == "healthy" else 1
 

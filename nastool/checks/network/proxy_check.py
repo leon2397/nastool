@@ -12,10 +12,10 @@ def proxy_check(ctx):
     for var in ["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"]:
         val = os.environ.get(var, "")
         if val:
-            return ctx.result(passed=True, current="configured",
+            return ctx.passed(current="configured",
                              expected="none or configured",
                              message=f"Proxy set: {var}={val[:60]}",
                              severity="INFO")
-    return ctx.result(passed=True, current="none",
+    return ctx.passed(current="none",
                      expected="none",
                      message="No proxy configured")

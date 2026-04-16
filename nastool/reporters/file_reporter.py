@@ -19,6 +19,26 @@ from typing import List, Dict, Any, Optional
 
 from checks import CheckResult, CheckSeverity
 
+# String-to-enum cache for robustness
+_SEVERITY_CACHE = {_s.value: _s for _s in CheckSeverity}
+
+
+def _norm_severity(sev) -> CheckSeverity:
+    """Normalize severity: accept enum, string (case-insensitive), or 'INFO'/'passed'."""
+    if isinstance(sev, CheckSeverity):
+        return sev
+    if isinstance(sev, str):
+        s = sev.strip().lower()
+        # Try exact value match first (CheckSeverity.INFO.value = 'info')
+        if s in _SEVERITY_CACHE:
+            return _SEVERITY_CACHE[s]
+        # Try name match (CheckSeverity.WARNING.name = 'WARNING')
+        for _e in CheckSeverity:
+            if _e.name.lower() == s:
+                return _e
+    # Default fallback
+    return CheckSeverity.INFO
+
 
 class FileReporter:
     """
@@ -89,11 +109,12 @@ class FileReporter:
 
         # Add check results
         for result in results:
+            sev = _norm_severity(result.severity)
             check_data = {
                 "id": result.check_id,
-                "category": result.category.name if hasattr(result.category, "name") else str(result.category),
-                "severity": result.severity.name,
-                "passed": result.severity == CheckSeverity.PASSED,
+                "category": str(result.category) if isinstance(result.category, str) else result.category.name,
+                "severity": sev.name,
+"passed": sev == CheckSeverity.PASSED,
                 "message": result.message,
             }
 
@@ -157,7 +178,7 @@ class FileReporter:
         }
 
         for result in results:
-            counts[result.severity] += 1
+            counts[_norm_severity(result.severity)] += 1
 
         # Calculate health score
         ok_weight = 100
@@ -201,6 +222,7 @@ class FileReporter:
         # Build check rows
         check_rows = []
         for result in results:
+            sev = _norm_severity(result.severity)
             severity_colors = {
                 CheckSeverity.PASSED: "#10b981",
                 CheckSeverity.WARNING: "#f59e0b",
@@ -214,13 +236,13 @@ class FileReporter:
                 CheckSeverity.INFO: "⏭️",
             }
 
-            color = severity_colors[result.severity]
-            icon = severity_icons[result.severity]
+            color = severity_colors[sev]
+            icon = severity_icons[sev]
 
             row = f"""
             <tr>
                 <td><span style="color: {color};">{icon}</span></td>
-                <td>{result.category}</td>
+                <td>{str(result.category)}</td>
                 <td><code>{result.check_id}</code></td>
                 <td>{result.message}</td>
             </tr>
