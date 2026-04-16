@@ -1,46 +1,38 @@
 # -*- coding: utf-8 -*-
 """异常端口检测"""
+from __future__ import annotations
+
 import subprocess
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+from checks.decorators import check
 
-@register_check
-class PortScanCheck(Check):
-    check_id = "suspicious_ports"
-    title = "异常端口"
-    description = "检测监听端口，排除可疑端口"
-    category = CheckCategory.SECURITY
+SUSPICIOUS = ["31337", "12345", "54321", "1337", "4444", "5555"]
 
-    SUSPICIOUS = ["31337", "12345", "54321", "1337", "4444", "5555"]
 
-    def run(self) -> CheckResult:
-        suspicious_found = []
+@check(id="suspicious_ports", category="SECURITY", title="Suspicious Ports",
+       description="检测监听端口，排除可疑端口")
+def port_scan(ctx):
+    found = []
+    for cmd in ["ss -tlnp", "netstat -tlnp"]:
         try:
-            result = subprocess.run(["ss", "-tlnp"], capture_output=True, text=True, timeout=10)
-            if result.returncode != 0:
-                result = subprocess.run(["netstat", "-tlnp"], capture_output=True, text=True, timeout=10)
-            if result.returncode == 0:
-                for port in self.SUSPICIOUS:
-                    if f":{port}" in result.stdout:
-                        suspicious_found.append(port)
+            r = subprocess.run(cmd, shell=True,
+                             capture_output=True, text=True, timeout=10)
+            if r.returncode == 0:
+                for port in SUSPICIOUS:
+                    if f":{port}" in r.stdout:
+                        found.append(port)
+                if found:
+                    break
         except Exception:
             pass
-
-        if suspicious_found:
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=False,
-                severity=CheckSeverity.WARNING,
-                message=f"发现可疑端口: {', '.join(suspicious_found)}",
-                current="suspicious", expected="clean",
-                fix_available=True, fix_id="investigate_ports",
-                fix_description="调查并关闭可疑端口",
-                fix_risk="high",
-            )
-        return CheckResult(
-            check_id=self.check_id, title=self.title,
-            category=self.category, passed=True,
-            severity=CheckSeverity.PASSED,
-            message="未发现可疑监听端口",
-            current="clean", expected="clean",
-        )
+    if found:
+        return ctx.result(passed=False, current="suspicious",
+                        expected="clean",
+                        message=f"Suspicious ports found: {', '.join(found)}",
+                        severity="WARNING",
+                        fix_available=True, fix_id="investigate_ports",
+                        fix_command=f"ss -tlnp | grep {found[0]}",
+                        fix_description="Investigate and close suspicious ports",
+                        fix_risk="high")
+    return ctx.result(passed=True, current="clean",
+                    expected="clean",
+                    message="No suspicious listening ports detected")

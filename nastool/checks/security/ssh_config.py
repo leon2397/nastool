@@ -1,59 +1,44 @@
-from typing import Dict
 # -*- coding: utf-8 -*-
 """SSH 安全配置检测"""
+from __future__ import annotations
+
 import os
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+from checks.decorators import check
 
-@register_check
-class SSHConfigCheck(Check):
-    check_id = "ssh_config"
-    title = "SSH 安全配置"
-    description = "检测 SSH 配置安全性（密码登录/密钥/端口）"
-    category = CheckCategory.SECURITY
 
-    def run(self) -> CheckResult:
-        warnings_found = []
-
-        for cfg in ["/etc/ssh/sshd_config", "/etc/sshd_config"]:
-            if not os.path.exists(cfg):
-                continue
-            try:
-                with open(cfg) as f:
-                    lines = [l.strip() for l in f.readlines()
-                             if l.strip() and not l.strip().startswith("#")]
-                cfg_dict = {}
-                for line in lines:
-                    parts = line.split(None, 1)
-                    if len(parts) >= 2:
-                        cfg_Dict[parts[0].lower()] = parts[1].lower()
-
-                if cfg_dict.get("passwordauthentication", "yes") == "yes":
-                    warnings_found.append("允许密码登录（建议改为密钥）")
-                root = cfg_dict.get("permitrootlogin", "prohibit-password")
-                if root not in ("no", "without-password"):
-                    warnings_found.append("允许 root 直接登录")
-                if cfg_dict.get("port", "22") == "22":
-                    warnings_found.append("使用默认端口 22")
-                break
-            except Exception:
-                pass
-
-        if warnings_found:
-            return CheckResult(
-                check_id=self.check_id, title=self.title,
-                category=self.category, passed=False,
-                severity=CheckSeverity.WARNING,
-                message="; ".join(warnings_found),
-                current="insecure", expected="secure",
-                fix_available=True, fix_id="harden_ssh",
-                fix_description="禁用密码登录，使用密钥认证",
-                fix_risk="medium",
-            )
-        return CheckResult(
-            check_id=self.check_id, title=self.title,
-            category=self.category, passed=True,
-            severity=CheckSeverity.PASSED,
-            message="SSH 配置安全",
-            current="secure", expected="secure",
-        )
+@check(id="ssh_config", category="SECURITY", title="SSH Security Config",
+       description="检测 SSH 配置安全性（密码登录/密钥/端口）")
+def ssh_config(ctx):
+    warnings = []
+    for cfg in ["/etc/ssh/sshd_config", "/etc/ssh/sshd_config"]:
+        if not os.path.exists(cfg):
+            continue
+        try:
+            lines = [l.strip() for l in open(cfg).readlines()
+                    if l.strip() and not l.strip().startswith("#")]
+            cd = {}
+            for line in lines:
+                parts = line.split(None, 1)
+                if len(parts) >= 2:
+                    cd[parts[0].lower()] = parts[1].lower()
+            if cd.get("passwordauthentication", "yes") == "yes":
+                warnings.append("Password auth enabled (use key-based)")
+            if cd.get("permitrootlogin", "prohibit-password") not in ("no", "without-password"):
+                warnings.append("Root login allowed")
+            if cd.get("port", "22") == "22":
+                warnings.append("Using default port 22")
+            break
+        except Exception:
+            pass
+    if warnings:
+        return ctx.result(passed=False, current="insecure",
+                        expected="secure",
+                        message="; ".join(warnings),
+                        severity="WARNING",
+                        fix_available=True, fix_id="harden_ssh",
+                        fix_command="sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config",
+                        fix_description="Disable password auth, use SSH keys",
+                        fix_risk="medium")
+    return ctx.result(passed=True, current="secure",
+                    expected="secure",
+                    message="SSH configuration is secure")

@@ -1,70 +1,42 @@
-"""
-checks/network/dns_resolve.py - DNS resolution check
-"""
+# -*- coding: utf-8 -*-
+"""DNS 解析检测"""
+from __future__ import annotations
 
 import socket
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+from checks.decorators import check
 
 
-@register_check
-class DNSResolveCheck(Check):
-    """Check DNS resolution capability"""
-
-    check_id = "dns_resolve"
-    category = CheckCategory.NETWORK
-    title = "DNS Resolution"
-    description = "Check if DNS resolution works"
-
-    TEST_DOMAINS = ["baidu.com", "google.com", "github.com"]
-
-    def run(self) -> CheckResult:
-        resolved = []
-        failed = []
-
-        for domain in self.TEST_DOMAINS:
-            try:
-                ip = socket.gethostbyname(domain)
-                resolved.append({"domain": domain, "ip": ip})
-            except socket.gaierror:
-                failed.append(domain)
-
-        # Check DNS config
-        dns_servers = []
+@check(id="dns_resolve", category="NETWORK", title="DNS Resolution",
+       description="检查 DNS 解析是否正常")
+def dns_resolve(ctx):
+    domains = ["baidu.com", "google.com", "github.com"]
+    resolved, failed = [], []
+    dns_servers = []
+    try:
+        with open("/etc/resolv.conf") as f:
+            for line in f:
+                if line.startswith("nameserver"):
+                    dns_servers.append(line.split()[1])
+    except Exception:
+        pass
+    for domain in domains:
         try:
-            with open("/etc/resolv.conf", "r") as f:
-                for line in f:
-                    if line.startswith("nameserver"):
-                        dns_servers.append(line.split()[1])
-        except Exception as e:
-            pass  # TODO: 添加日志
+            ip = socket.gethostbyname(domain)
+            resolved.append({"domain": domain, "ip": ip})
+        except socket.gaierror:
+            failed.append(domain)
 
-        if not failed:
-            severity = CheckSeverity.PASSED
-            passed = True
-            message = f"DNS resolution working for all test domains"
-        else:
-            severity = CheckSeverity.CRITICAL
-            passed = False
-            message = f"DNS resolution failed for: {', '.join(failed)}"
-
-        return CheckResult(
-            check_id=self.check_id,
-            category=self.category,
-            severity=severity,
-            passed=passed,
-            title=self.title,
-            current="working" if passed else "failed",
-            expected="working",
-            message=message,
-            fix_available=not passed,
-            fix_id="fix_dns",
-            fix_command="echo 'nameserver 8.8.8.8' | sudo tee /etc/resolv.conf",
-            fix_description="Configure DNS to use 8.8.8.8 (Google DNS)",
-            fix_risk="low",
-            details={
-                "resolved": resolved,
-                "failed": failed,
-                "dns_servers": dns_servers,
-            },
-        )
+    if not failed:
+        return ctx.result(passed=True, current="working",
+                         expected="working",
+                         message=f"DNS resolution working ({len(resolved)}/{len(domains)})",
+                         details={"resolved": resolved, "dns_servers": dns_servers})
+    return ctx.result(passed=False, current="failed",
+                      expected="working",
+                      message=f"DNS failed for: {', '.join(failed)}",
+                      severity="CRITICAL",
+                      fix_available=True, fix_id="fix_dns",
+                      fix_command="echo 'nameserver 8.8.8.8' >> /etc/resolv.conf",
+                      fix_description="Configure DNS (e.g. 8.8.8.8)",
+                      fix_risk="low",
+                      details={"failed": failed, "dns_servers": dns_servers})

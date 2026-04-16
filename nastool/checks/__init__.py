@@ -12,13 +12,13 @@ from .system import (
     CPUTempCheck, UptimeCheck, DockerContainersCheck,
 )
 
-# Network checks
-from .network.internet_access import InternetAccessCheck
-from .network.dns_resolve import DNSResolveCheck
-from .network.nas_backend import NASBackendCheck
-from .network.port_conflict import PortConflictCheck
-from .network.nic_speed import NICSpeedCheck
-from .network.dns_coverage import DNSCoverageCheck
+# Network checks (from sub-package __init__ for backward compat aliases)
+from .network import (
+    InternetAccessCheck, DNSCacheCheck, DNSResolveCheck,
+    DNSCoverageCheck, MTUCheck, ProxyCheck, WiFiCheck,
+    BandwidthCheck, LatencyCheck, RouteCheck, PortConflictCheck,
+    NASBackendCheck, NICSpeedCheck, NetworkLatencyCheck,
+)
 
 # Storage checks
 from .storage.storage_disk import DiskSpaceCheck
@@ -51,12 +51,13 @@ from .ai.tensorflow_serving_checker import TensorFlowServingCheck
 from .ai.kubeflow_checker import KubeflowCheck
 from .ai.model_format_checker import ModelFormatCheck
 
-# Security checks
-from .security.firewall import FirewallCheck
-from .security.selinux import SELinuxCheck
-from .security.ssh_root import SSHRootCheck
-from .security.login_failures import LoginFailuresCheck
-from .security.ssl_cert import SSLCertCheck
+# Security checks (from sub-package __init__)
+from .security import (
+    OpenSSLVersionCheck, FirewallCheck, SSHRootCheck,
+    SSHConfigCheck, Fail2banCheck, ClamAVCheck,
+    PortScanCheck, SELinuxCheck,
+    SSLCertCheck, SSLCertCheckDays, LoginFailuresCheck,
+)
 
 # NAS system checks (v4.0.2)
 from .nas.dsm_version import DSMVersionCheck

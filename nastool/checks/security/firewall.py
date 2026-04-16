@@ -1,96 +1,51 @@
-"""
-checks/security/firewall.py - Check firewall configuration
-"""
+# -*- coding: utf-8 -*-
+"""Firewall configuration check"""
+from __future__ import annotations
 
 import subprocess
-from ..base import Check, CheckResult, CheckSeverity, CheckCategory
-from ..registry import register_check
+from checks.decorators import check
+
+NAS_PORTS = [8000, 443, 80]
 
 
-@register_check
-class FirewallCheck(Check):
-    """Check firewall allows NAS ports"""
-
-    check_id = "firewall"
-    title = "Firewall Configuration"
-    description = "Check firewall allows NAS service ports"
-    category = CheckCategory.SECURITY
-
-    NAS_PORTS = [8000, 443, 80]
-
-    def run(self) -> CheckResult:
-        """Run firewall check"""
-        # Check if ufw is available
-        try:
-            result = subprocess.run(["ufw", "status"], capture_output=True, text=True, timeout=5)
-
-            if "inactive" in result.stdout:
-                return CheckResult(
-                    check_id=self.check_id,
-                    title=self.title,
-                    category=self.category,
-                    passed=True,
-                    severity=CheckSeverity.WARNING,
-                    message="Firewall is inactive (all ports open)",
-                    current="ufw inactive",
-                    expected="ufw active with NAS ports allowed",
-                    fix_available=True,
-                    fix_description="Enable firewall and allow NAS ports",
-                    fix_command="ufw allow 8000/tcp && ufw allow 443/tcp && ufw allow 80/tcp && ufw enable",
-                )
-
-            # Check if NAS ports are allowed
-            allowed_ports = []
-            for port in self.NAS_PORTS:
-                if f"{port}" in result.stdout:
-                    allowed_ports.append(port)
-
-            if len(allowed_ports) == len(self.NAS_PORTS):
-                return CheckResult(
-                    check_id=self.check_id,
-                    title=self.title,
-                    category=self.category,
-                    passed=True,
-                    severity=CheckSeverity.PASSED,
-                    message=f"All NAS ports allowed: {allowed_ports}",
-                    current=f"Ports {allowed_ports} allowed",
-                    expected="NAS ports allowed",
-                )
-            else:
-                missing = [p for p in self.NAS_PORTS if p not in allowed_ports]
-                return CheckResult(
-                    check_id=self.check_id,
-                    title=self.title,
-                    category=self.category,
-                    passed=False,
-                    severity=CheckSeverity.WARNING,
-                    message=f"Missing ports: {missing}",
-                    current=f"Ports {allowed_ports} allowed",
-                    expected="All NAS ports allowed",
-                    fix_available=True,
-                    fix_description=f"Allow ports: {missing}",
-                )
-
-        except FileNotFoundError:
-            # ufw not installed
-            return CheckResult(
-                check_id=self.check_id,
-                title=self.title,
-                category=self.category,
-                passed=True,
-                severity=CheckSeverity.INFO,
-                message="ufw not installed (no firewall detected)",
-                current="No firewall",
-                expected="Firewall recommended for production",
-            )
-        except Exception as e:
-            return CheckResult(
-                check_id=self.check_id,
-                title=self.title,
-                category=self.category,
-                passed=True,
-                severity=CheckSeverity.INFO,
-                message=f"Could not check firewall: {str(e)}",
-                current="Unknown",
-                expected="Firewall recommended",
-            )
+@check(id="firewall", category="SECURITY", title="Firewall Configuration",
+       description="检查防火墙是否允许 NAS 服务端口")
+def firewall(ctx):
+    try:
+        r = subprocess.run(["ufw", "status"],
+                          capture_output=True, text=True, timeout=5)
+        if "inactive" in r.stdout:
+            return ctx.result(passed=True, current="inactive",
+                            expected="active with NAS ports allowed",
+                            message="Firewall is inactive (all ports open)",
+                            severity="WARNING",
+                            fix_available=True, fix_id="enable_firewall",
+                            fix_command="ufw allow 8000/tcp && ufw allow 443/tcp && ufw enable",
+                            fix_description="Enable firewall and allow NAS ports",
+                            fix_risk="medium")
+        allowed = [p for p in NAS_PORTS if str(p) in r.stdout]
+        missing = [p for p in NAS_PORTS if p not in allowed]
+        if not missing:
+            return ctx.result(passed=True,
+                            current=f"Ports {allowed} allowed",
+                            expected="All NAS ports allowed",
+                            message=f"All NAS ports allowed: {allowed}")
+        return ctx.result(passed=False,
+                        current=f"Ports {allowed} allowed",
+                        expected="All NAS ports allowed",
+                        message=f"Missing: {missing}",
+                        severity="WARNING",
+                        fix_available=True, fix_id="allow_ports",
+                        fix_command=f"ufw allow {missing[0]}/tcp",
+                        fix_description=f"Allow port {missing[0]}",
+                        fix_risk="low")
+    except FileNotFoundError:
+        return ctx.result(passed=True, current="not installed",
+                        expected="Firewall recommended",
+                        message="ufw not installed",
+                        severity="INFO")
+    except Exception as e:
+        return ctx.result(passed=True, current="unknown",
+                        expected="Firewall recommended",
+                        message=f"Could not check firewall: {e}",
+                        severity="INFO")

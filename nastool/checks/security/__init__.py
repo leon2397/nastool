@@ -1,18 +1,27 @@
 # Security checks module
-from .firewall import FirewallCheck
-from .selinux import SELinuxCheck
-from .ssh_root import SSHRootCheck
+# After @check() decoration: function name IS the class.
+from . import (
+    openssl_version, firewall, ssh_root, ssh_config,
+    fail2ban, clamav_check, port_scan, selinux,
+)
 
-from .openssl_version import OpenSSLVersionCheck
-from .ssh_config import SSHConfigCheck
-from .fail2ban import Fail2banCheck
-from .clamav_check import ClamAVCheck
-from .port_scan import PortScanCheck
-from .ssl_cert_check import SSLCertCheck
-__all__ = ["FirewallCheck", "SELinuxCheck", "SSHRootCheck",
-    "OpenSSLVersionCheck",
-    "SSHConfigCheck",
-    "Fail2banCheck",
-    "ClamAVCheck",
-    "PortScanCheck",
-    "SSLCertCheck"]
+OpenSSLVersionCheck = openssl_version
+FirewallCheck      = firewall
+SSHRootCheck       = ssh_root
+SSHConfigCheck     = ssh_config
+Fail2banCheck      = fail2ban
+ClamAVCheck        = clamav_check
+PortScanCheck      = port_scan
+SELinuxCheck       = selinux
+
+# Complex checks preserved as classes
+from .ssl_cert import SSLCertCheck
+from .ssl_cert_check import SSLCertCheck as SSLCertCheckDays
+from .login_failures import LoginFailuresCheck
+
+__all__ = [
+    "OpenSSLVersionCheck", "FirewallCheck", "SSHRootCheck",
+    "SSHConfigCheck", "Fail2banCheck", "ClamAVCheck",
+    "PortScanCheck", "SELinuxCheck",
+    "SSLCertCheck", "SSLCertCheckDays", "LoginFailuresCheck",
+]

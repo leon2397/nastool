@@ -1,74 +1,51 @@
-"""
-checks/network/port_conflict.py - Port conflict check
-"""
+# -*- coding: utf-8 -*-
+"""端口冲突检测"""
+from __future__ import annotations
 
 import socket
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+import subprocess
+from checks.decorators import check
 
 
-@register_check
-class PortConflictCheck(Check):
-    """Check for port conflicts"""
+@check(id="port_conflict", category="NETWORK", title="Port Conflict",
+       description="检查 NAS 常用端口是否被占用")
+def port_conflict(ctx):
+    check_ports = [9999, 8000]
+    conflicts, available = [], []
 
-    check_id = "port_conflict"
-    category = CheckCategory.NETWORK
-    title = "Port Conflict"
-    description = "Check if required ports are available"
-
-    CHECK_PORTS = [9999, 8000]  # Default ports for NAS
-
-    def _port_in_use(self, port: int) -> tuple:
-        """Check if port is in use, return (in_use, process_info)"""
+    for port in check_ports:
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1.0)
-            result = sock.connect_ex(("127.0.0.1", port))
+            r = sock.connect_ex(("127.0.0.1", port))
             sock.close()
-
-            if result == 0:
-                # Port is in use, try to get process info
-                process_info = self._run_command(
-                    f"netstat -tlnp 2>/dev/null | grep :{port} || ss -tlnp 2>/dev/null | grep :{port}"
-                )
-                return True, process_info.strip()
-            return False, ""
-        except Exception as e:
-            return False, ""
-
-    def run(self) -> CheckResult:
-        conflicts = []
-        available = []
-
-        for port in self.CHECK_PORTS:
-            in_use, process_info = self._port_in_use(port)
-            if in_use:
-                conflicts.append({"port": port, "info": process_info})
+            if r == 0:
+                # Port in use
+                info = ""
+                for cmd in ["netstat -tlnp", "ss -tlnp"]:
+                    try:
+                        pr = subprocess.run(cmd, shell=True,
+                                          capture_output=True, text=True, timeout=5)
+                        for line in (pr.stdout + pr.stderr).splitlines():
+                            if str(port) in line:
+                                info = line.strip()
+                                break
+                    except Exception:
+                        pass
+                conflicts.append({"port": port, "info": info})
             else:
                 available.append(port)
+        except Exception:
+            available.append(port)
 
-        if not conflicts:
-            severity = CheckSeverity.PASSED
-            passed = True
-            message = f"All required ports available: {available}"
-        else:
-            conflict_ports = [c["port"] for c in conflicts]
-            severity = CheckSeverity.WARNING
-            passed = True  # Warning, not critical - maybe intentional
-            message = f"Ports in use: {conflict_ports}. May need to stop conflicting service or use different port."
-
-        return CheckResult(
-            check_id=self.check_id,
-            category=self.category,
-            severity=severity,
-            passed=passed,
-            title=self.title,
-            current=f"{len(available)} available, {len(conflicts)} in use",
-            expected="all available",
-            message=message,
-            fix_available=len(conflicts) > 0,
-            fix_id="stop_port_process",
-            fix_description="Stop conflicting process or change port configuration",
-            fix_risk="medium",
-            details={"conflicts": conflicts, "available": available},
-        )
+    if not conflicts:
+        return ctx.result(passed=True,
+                         current=f"{len(available)} available",
+                         expected="all available",
+                         message=f"All ports free: {available}")
+    ports = [c["port"] for c in conflicts]
+    return ctx.result(passed=True, current=f"{len(available)} free, {len(conflicts)} used",
+                      expected="all available",
+                      message=f"Ports in use: {ports}",
+                      severity="WARNING",
+                      details={"conflicts": conflicts, "available": available})

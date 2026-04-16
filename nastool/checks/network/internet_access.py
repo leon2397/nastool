@@ -1,69 +1,51 @@
-"""
-checks/network/internet_access.py - Internet connectivity check
-"""
+# -*- coding: utf-8 -*-
+"""Internet connectivity check"""
+from __future__ import annotations
 
 import socket
-from ..base import Check, CheckResult, CheckCategory, CheckSeverity
-from ..registry import register_check
+from checks.decorators import check
+
+TEST_HOSTS = [
+    ("baidu.com", 80),
+    ("google.com", 80),
+    ("github.com", 443),
+]
 
 
-@register_check
-class InternetAccessCheck(Check):
-    """Check internet connectivity"""
+def _can_reach(host: str, port: int, timeout: float = 5.0) -> bool:
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except Exception:
+        return False
 
-    check_id = "internet_access"
-    category = CheckCategory.NETWORK
-    title = "Internet Access"
-    description = "Check if device can reach the internet"
 
-    TEST_HOSTS = [
-        ("baidu.com", 80),
-        ("google.com", 80),
-        ("github.com", 443),
-    ]
-
-    def _can_reach(self, host: str, port: int, timeout: float = 5.0) -> bool:
-        """Test if we can reach a host:port"""
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(timeout)
-            result = sock.connect_ex((host, port))
-            sock.close()
-            return result == 0
-        except Exception as e:
-            return False
-
-    def run(self) -> CheckResult:
-        reachable = []
-        unreachable = []
-
-        for host, port in self.TEST_HOSTS:
-            if self._can_reach(host, port):
-                reachable.append(host)
-            else:
-                unreachable.append(host)
-
-        if reachable:
-            severity = CheckSeverity.PASSED
-            passed = True
-            message = f"Internet reachable via: {', '.join(reachable)}"
+@check(id="internet_access", category="NETWORK", title="Internet Access",
+       description="检查设备是否能访问互联网")
+def internet_access(ctx):
+    reachable, unreachable = [], []
+    for host, port in TEST_HOSTS:
+        if _can_reach(host, port):
+            reachable.append(host)
         else:
-            severity = CheckSeverity.CRITICAL
-            passed = False
-            message = "No internet access detected"
+            unreachable.append(host)
 
-        return CheckResult(
-            check_id=self.check_id,
-            category=self.category,
-            severity=severity,
-            passed=passed,
-            title=self.title,
-            current="connected" if passed else "disconnected",
-            expected="connected",
-            message=message,
-            fix_available=not passed,
-            fix_id="fix_network",
-            fix_description="Check network gateway, DNS, or firewall settings",
-            fix_risk="medium",
-            details={"reachable": reachable, "unreachable": unreachable},
-        )
+    if reachable:
+        return ctx.result(passed=True,
+                         current="connected",
+                         expected="connected",
+                         message=f"Internet reachable via: {', '.join(reachable)}",
+                         details={"reachable": reachable, "unreachable": unreachable})
+    return ctx.result(passed=False,
+                    current="disconnected",
+                    expected="connected",
+                    message="No internet access detected",
+                    severity="CRITICAL",
+                    fix_available=True, fix_id="fix_network",
+                    fix_command="Check gateway, DNS, and firewall settings",
+                    fix_description="Check network configuration",
+                    fix_risk="medium",
+                    details={"unreachable": unreachable})

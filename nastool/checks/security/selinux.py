@@ -1,98 +1,44 @@
-"""
-checks/security/selinux.py - Check SELinux configuration
-"""
+# -*- coding: utf-8 -*-
+"""SELinux configuration check"""
+from __future__ import annotations
 
 import subprocess
-from ..base import Check, CheckResult, CheckSeverity, CheckCategory
-from ..registry import register_check
+from checks.decorators import check
 
 
-@register_check
-class SELinuxCheck(Check):
-    """Check SELinux is configured for NAS"""
-
-    check_id = "selinux"
-    title = "SELinux Configuration"
-    description = "Check SELinux allows NAS operations"
-    category = CheckCategory.SECURITY
-
-    def run(self) -> CheckResult:
-        """Run SELinux check"""
-        try:
-            result = subprocess.run(["getenforce"], capture_output=True, text=True, timeout=5)
-
-            status = result.stdout.strip().lower()
-
-            if status == "disabled":
-                return CheckResult(
-                    check_id=self.check_id,
-                    title=self.title,
-                    category=self.category,
-                    passed=True,
-                    severity=CheckSeverity.INFO,
-                    message="SELinux is disabled",
-                    current="Disabled",
-                    expected="Permissive or Disabled for NAS",
-                )
-
-            if status == "permissive":
-                return CheckResult(
-                    check_id=self.check_id,
-                    title=self.title,
-                    category=self.category,
-                    passed=True,
-                    severity=CheckSeverity.PASSED,
-                    message="SELinux is permissive (logs only)",
-                    current="Permissive",
-                    expected="Permissive for NAS compatibility",
-                )
-
-            if status == "enforcing":
-                return CheckResult(
-                    check_id=self.check_id,
-                    title=self.title,
-                    category=self.category,
-                    passed=False,
-                    severity=CheckSeverity.WARNING,
-                    message="SELinux is enforcing (may block NAS operations)",
-                    current="Enforcing",
-                    expected="Permissive for NAS compatibility",
-                    fix_available=True,
-                    fix_description="Set SELinux to permissive",
-                    fix_command="setenforce 0",
-                )
-
-            return CheckResult(
-                check_id=self.check_id,
-                title=self.title,
-                category=self.category,
-                passed=True,
-                severity=CheckSeverity.INFO,
-                message=f"SELinux status: {status}",
-                current=status,
-                expected="Permissive or Disabled",
-            )
-
-        except FileNotFoundError:
-            # SELinux not installed
-            return CheckResult(
-                check_id=self.check_id,
-                title=self.title,
-                category=self.category,
-                passed=True,
-                severity=CheckSeverity.PASSED,
-                message="SELinux not installed",
-                current="Not installed",
-                expected="Not required",
-            )
-        except Exception as e:
-            return CheckResult(
-                check_id=self.check_id,
-                title=self.title,
-                category=self.category,
-                passed=True,
-                severity=CheckSeverity.INFO,
-                message=f"Could not check SELinux: {str(e)}",
-                current="Unknown",
-                expected="Permissive or Disabled",
-            )
+@check(id="selinux", category="SECURITY", title="SELinux Configuration",
+       description="检查 SELinux 是否允许 NAS 操作")
+def selinux(ctx):
+    try:
+        r = subprocess.run(["getenforce"],
+                          capture_output=True, text=True, timeout=5)
+        status = r.stdout.strip().lower()
+        if status == "disabled":
+            return ctx.result(passed=True, current="Disabled",
+                            expected="Permissive or Disabled",
+                            message="SELinux is disabled")
+        if status == "permissive":
+            return ctx.result(passed=True, current="Permissive",
+                            expected="Permissive for NAS",
+                            message="SELinux is permissive (logging only)")
+        if status == "enforcing":
+            return ctx.result(passed=False, current="Enforcing",
+                            expected="Permissive for NAS",
+                            message="SELinux enforcing - may block NAS operations",
+                            severity="WARNING",
+                            fix_available=True, fix_id="set_permissive",
+                            fix_command="setenforce 0",
+                            fix_description="Set SELinux to permissive",
+                            fix_risk="medium")
+        return ctx.result(passed=True, current=status,
+                        expected="Permissive or Disabled",
+                        message=f"SELinux status: {status}")
+    except FileNotFoundError:
+        return ctx.result(passed=True, current="not installed",
+                        expected="Not required",
+                        message="SELinux not installed")
+    except Exception as e:
+        return ctx.result(passed=True, current="unknown",
+                        expected="Permissive or Disabled",
+                        message=f"Could not check SELinux: {e}",
+                        severity="INFO")
