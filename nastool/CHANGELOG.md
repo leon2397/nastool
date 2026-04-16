@@ -52,6 +52,47 @@ python -m adapters.hw_jet --full --benchmark --output report.html
 
 - 鏂板鏂囦欢锛?2 涓?- 鏂板浠ｇ爜锛殈5000 琛?- 鏀寔璁惧锛?0 娆?- 寮€鍙戝懆鏈燂細15 澶?
 ---
+## [7.0.0-beta] - 2026-04-16
+
+### Added — Phase B Migration Complete + Decorator Fix
+
+**Phase B batch 3 — Storage + NAS @check() 迁移** (17 files):
+- NAS: afp_service/ftp_service/sftp_service/smb_service/snmp_service/
+  webdav_service/media_scanner/nfs_service (8 new @check())
+- Storage: inode_check/io_wait/path_exists/storage_disk/
+  write_speed/zfs_health (6 new @check())
+- `__init__.py` 统一使用 module-import + alias 模式
+
+**Phase B now complete across all categories** (System/Network/Security/Storage/NAS):
+- System: 14 checks | Network: 14 checks | Security: 11 checks
+- Storage: 11 checks | NAS: 16 checks | USB: 4 checks (class-based)
+- Total: **93 checks registered** via @check() decorator
+
+**@check() decorator 修复** (decorators.py):
+- 新增 `_normalize_category()`: 接受 `CheckCategory.AI` (enum) 或
+  `"AI"/"NAS"/"storage"` (string, 大小写不敏感)
+- Phase A (AI checks) 用 enum，Phase B 用 string，现已统一
+- `CheckContext` 和 `check()` 装饰器均支持
+
+**Bug fixes**:
+- `python_version.py`: 移除 `core.config_loader` 依赖（Windows 路径不兼容）
+- `core/__init__.py`: 导出 `get_config`
+- `usb/__init__.py`: 修复截断损坏的文件
+- `nas/__init__.py`: 修复 `DSMBVersionCheck` typo → `DSMVersionCheck`
+- `.gitignore`: 新增 `nastool/data/history.json`（运行时数据）
+
+**Architecture status (V7.0 plan)**:
+| Task | Status | Commit |
+|------|--------|--------|
+| 3.1 异步并行引擎 | ✅ | af86e42 |
+| 3.2 @check() 重构 | ✅ Phase B | db7bca9…56a67f4 |
+| 3.3 Pydantic 配置 | ✅ | 257b42f |
+| 3.4 Fix 引擎统一 | ✅ | 07bee8b |
+
+### Stats
+- 本次提交: 3 commits (73368af, 8291181, 56a67f4)
+- Phase B 完成度: 93/93 checks registered
+- 新增代码: +585 lines | 删除: -777 lines
 
 ## [5.0.4] - 2026-04-15
 
@@ -259,4 +300,3 @@ python -m adapters.hw_jet --full --benchmark --output report.html
 - 缁熶竴 meta_keys 杩囨护闆嗭紙鏂板 `total_new_devices`锛?
 **璁惧鎬昏鐩?*锛?1 娆撅紙缇ゆ櫀 13 + Jetson 9 + SOPHON 12 + RK3588 6 + QNAP 5 + 鍗庣 3 + 閾佸▉椹?2 + 鍏朵粬 1锛?
 ---
-
