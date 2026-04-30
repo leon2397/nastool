@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>NASTool 测试报告</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #4CAF50; color: white; padding: 20px; }
+        .summary { margin: 20px 0; }
+        .status { padding: 10px; margin: 5px; border-radius: 5px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        .error { background: #fff3cd; color: #856404; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NASTool 测试报告</h1>
+        <p>设备: 测试设备 (192.168.1.123)</p>
+        <p>模式: full | 时间: 2026-04-29T18:25:41.474521 | 耗时: 1.83秒</p>
+    </div>
+    
+    <div class="summary">
+        <h2>测试汇总</h2>
+        <p>通过: 10 | 失败: 0 | 错误: 0 | 总计: 10</p>
+    </div>
+    
+    <h2>测试详情</h2>
+    <table>
+        <tr><th>测试项</th><th>状态</th><th>详情</th></tr>
+<tr><td>网络连接性</td><td class='status pass'>✅ 通过</td><td>5个连接正常</td></tr><tr><td>系统基础信息</td><td class='status pass'>✅ 通过</td><td>{'system': 'Windows', 'release': '10', 'version': '10.0.19045', 'machine': 'AMD64'}</td></tr><tr><td>依赖检查</td><td class='status pass'>✅ 通过</td><td>Python版本检查</td></tr><tr><td>网络接口</td><td class='status pass'>✅ 通过</td><td>发现0个网络接口</td></tr><tr><td>网络质量</td><td class='status pass'>✅ 通过</td><td>下载: 0.0030059814453125 Mbps</td></tr><tr><td>DNS诊断</td><td class='status pass'>✅ 通过</td><td>配置检查完成，5项</td></tr><tr><td>路由检查</td><td class='status pass'>✅ 通过</td><td>路由表检查完成</td></tr><tr><td>CPU信息</td><td class='status pass'>✅ 通过</td><td>CPU核心数: 4</td></tr><tr><td>内存检查</td><td class='status pass'>✅ 通过</td><td>可用内存: 45.6%</td></tr><tr><td>存储检查</td><td class='status pass'>✅ 通过</td><td>可用空间: 78.3%</td></tr>
+    </table>
+</body>
+</html>

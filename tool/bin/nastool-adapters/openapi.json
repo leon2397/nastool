@@ -1,0 +1,498 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NASTool Relay Server API",
+    "version": "2.0.0",
+    "description": "REST API for NASTool Relay Server. Manage devices, execute commands, and access diagnosis reports.",
+    "contact": {
+      "name": "NASTool Community",
+      "url": "https://github.com/your-repo/nastool"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://120.77.249.3:18888",
+      "description": "Relay Server (ECS)"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Health check",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "version": { "type": "string", "example": "2.0.0" },
+                    "connections": {
+                      "type": "object",
+                      "properties": {
+                        "agents": { "type": "integer" },
+                        "gui_clients": { "type": "integer" }
+                      }
+                    },
+                    "queue": {
+                      "type": "object",
+                      "properties": {
+                        "pending_commands": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices": {
+      "get": {
+        "operationId": "listDevices",
+        "summary": "List all devices",
+        "tags": ["Devices"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["online", "offline"] }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "devices": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Device" }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": { "type": "integer" },
+                        "limit": { "type": "integer" },
+                        "offset": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}": {
+      "get": {
+        "operationId": "getDevice",
+        "summary": "Get device by ID",
+        "tags": ["Devices"],
+        "parameters": [
+          { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Device" }
+              }
+            }
+          },
+          "404": {
+            "description": "Device not found"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteDevice",
+        "summary": "Remove a device",
+        "tags": ["Devices"],
+        "parameters": [
+          { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Device removed" },
+          "404": { "description": "Device not found" }
+        }
+      }
+    },
+    "/devices/{deviceId}/commands": {
+      "get": {
+        "operationId": "listCommands",
+        "summary": "Get command history",
+        "tags": ["Commands"],
+        "parameters": [
+          { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Command history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "commands": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Command" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "sendCommand",
+        "summary": "Send a command to device",
+        "tags": ["Commands"],
+        "parameters": [
+          { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["cmd"],
+                "properties": {
+                  "cmd": { "type": "string", "description": "Command to execute" },
+                  "timeout_ms": { "type": "integer", "default": 30000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Command sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CommandResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/commands/{commandId}": {
+      "get": {
+        "operationId": "getCommandResult",
+        "summary": "Get command result",
+        "tags": ["Commands"],
+        "parameters": [
+          { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "commandId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Command result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CommandResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/reports/latest": {
+      "get": {
+        "operationId": "getLatestReport",
+        "summary": "Get latest diagnosis report",
+        "tags": ["Diagnosis"],
+        "parameters": [
+          { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest report",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DiagnosisReport" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/reports": {
+      "get": {
+        "operationId": "getReportHistory",
+        "summary": "Get diagnosis report history",
+        "tags": ["Diagnosis"],
+        "parameters": [
+          { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reports": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/DiagnosisReport" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/diagnosis/batch": {
+      "post": {
+        "operationId": "batchDiagnosis",
+        "summary": "Trigger batch diagnosis on multiple devices",
+        "tags": ["Diagnosis"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["device_ids"],
+                "properties": {
+                  "device_ids": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Device IDs (max 50)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "object",
+                      "additionalProperties": { "$ref": "#/components/schemas/DiagnosisReport" }
+                    },
+                    "total": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/diagnosis/compare": {
+      "get": {
+        "operationId": "compareDevices",
+        "summary": "Compare two devices' diagnosis reports",
+        "tags": ["Diagnosis"],
+        "parameters": [
+          { "name": "device_id_1", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "device_id_2", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comparison result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "device_1": {
+                      "type": "object",
+                      "properties": {
+                        "device_id": { "type": "string" },
+                        "score": { "type": "integer" }
+                      }
+                    },
+                    "device_2": {
+                      "type": "object",
+                      "properties": {
+                        "device_id": { "type": "string" },
+                        "score": { "type": "integer" }
+                      }
+                    },
+                    "score_diff": { "type": "integer" },
+                    "categories": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "device_1": { "type": "integer" },
+                          "device_2": { "type": "integer" },
+                          "delta": { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/diagnosis/baseline/{deviceType}": {
+      "get": {
+        "operationId": "getBaseline",
+        "summary": "Get ideal baseline for a device type",
+        "tags": ["Diagnosis"],
+        "parameters": [
+          { "name": "deviceType", "in": "path", "required": true, "schema": { "type": "string", "enum": ["rk3588", "rk3568", "jetson", "nas"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Baseline scores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "device_type": { "type": "string" },
+                    "baseline": {
+                      "type": "object",
+                      "additionalProperties": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/status": {
+      "get": {
+        "operationId": "getApiStatus",
+        "summary": "API v2 status",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "API v2 system status"
+          }
+        }
+      }
+    },
+    "/api/v2/agents/batch/commands": {
+      "post": {
+        "operationId": "batchCommandV2",
+        "summary": "Send command to multiple devices (API v2)",
+        "tags": ["Commands"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["device_ids", "cmd"],
+                "properties": {
+                  "device_ids": { "type": "array", "items": { "type": "string" } },
+                  "cmd": { "type": "string" },
+                  "timeout_ms": { "type": "integer", "default": 30000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch command results"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Device": {
+        "type": "object",
+        "properties": {
+          "device_id": { "type": "string" },
+          "device_name": { "type": "string" },
+          "device_type": { "type": "string" },
+          "status": { "type": "string", "enum": ["online", "offline", "unknown"] },
+          "version": { "type": "string" },
+          "hostname": { "type": "string" },
+          "ip_local": { "type": "string" },
+          "ip_public": { "type": "string" },
+          "last_seen": { "type": "string", "format": "date-time" },
+          "registered_at": { "type": "string", "format": "date-time" },
+          "group": { "type": "string" }
+        }
+      },
+      "CommandResult": {
+        "type": "object",
+        "properties": {
+          "command_id": { "type": "string" },
+          "device_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["queued", "sent", "completed", "failed", "timeout"] },
+          "cmd": { "type": "string" },
+          "stdout": { "type": "string" },
+          "stderr": { "type": "string" },
+          "exit_code": { "type": "integer" },
+          "duration_ms": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "completed_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "DiagnosisReport": {
+        "type": "object",
+        "properties": {
+          "device_id": { "type": "string" },
+          "report_id": { "type": "string" },
+          "reported_at": { "type": "string", "format": "date-time" },
+          "overall_score": { "type": "integer" },
+          "categories": {
+            "type": "object",
+            "additionalProperties": { "type": "integer" }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "check_id": { "type": "string" },
+                "name": { "type": "string" },
+                "severity": { "type": "string" },
+                "passed": { "type": "boolean" },
+                "value": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

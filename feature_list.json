@@ -1,0 +1,1845 @@
+{
+  "total": 190,
+  "categories": {
+    "checkers": {
+      "name": "检测器",
+      "count": 92,
+      "items": [
+        {
+          "id": "ai.ascend_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Ascend Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.ascend_checker",
+            "classes": [
+              "AscendChecker"
+            ]
+          }
+        },
+        {
+          "id": "ai.cudnn_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Cudnn Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.cudnn_checker",
+            "classes": [
+              "CUDNNVersionCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.gpu_detected",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Gpu Detected",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.gpu_detected",
+            "classes": [
+              "GPUDetectedCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.gpu_memory_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Gpu Memory Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.gpu_memory_checker",
+            "classes": [
+              "GPUMemoryCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.gpu_utilization_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Gpu Utilization Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.gpu_utilization_checker",
+            "classes": [
+              "GPUUtilizationCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.keras_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Keras Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.keras_checker",
+            "classes": [
+              "KerasVersionCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.kubeflow_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Kubeflow Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.kubeflow_checker",
+            "classes": [
+              "KubeflowCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.mlflow_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Mlflow Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.mlflow_checker",
+            "classes": [
+              "MLflowCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.model_format_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Model Format Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.model_format_checker",
+            "classes": [
+              "ModelFormatCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.nvidia_container_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Nvidia Container Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.nvidia_container_checker",
+            "classes": [
+              "NVIDIAContainerToolkitCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.onednn_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Onednn Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.onednn_checker",
+            "classes": [
+              "OneDNNVersionCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.onnx_model_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Onnx Model Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.onnx_model_checker",
+            "classes": [
+              "ONNXModelCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.openvino_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Openvino Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.openvino_checker",
+            "classes": [
+              "OpenVINOVersionCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.paddlepaddle_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Paddlepaddle Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.paddlepaddle_checker",
+            "classes": [
+              "PaddlePaddleCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.tensorflow_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Tensorflow Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.tensorflow_checker",
+            "classes": [
+              "TensorFlowVersionCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.tensorflow_serving_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Tensorflow Serving Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.tensorflow_serving_checker",
+            "classes": [
+              "TensorFlowServingCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.torchserve_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Torchserve Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.torchserve_checker",
+            "classes": [
+              "TorchServeCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.triton_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Triton Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.triton_checker",
+            "classes": [
+              "TritonServerCheck"
+            ]
+          }
+        },
+        {
+          "id": "ai.version_checker",
+          "category": "ai",
+          "category_name": "AI/机器学习",
+          "name": "Version Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.ai.version_checker",
+            "classes": [
+              "CudaVersionCheck",
+              "JetPackVersionCheck",
+              "NvidiaDriverVersionCheck",
+              "ONNXRuntimeVersionCheck",
+              "PyTorchVersionCheck",
+              "RKNNVersionCheck",
+              "TensorRTVersionCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.afp_service",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Afp Service",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.afp_service",
+            "function": "afp_service"
+          }
+        },
+        {
+          "id": "nas.backup_status",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Backup Status",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.backup_status",
+            "classes": [
+              "BackupStatusCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.cron_conflicts",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Cron Conflicts",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.cron_conflicts",
+            "classes": [
+              "CronConflictsCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.dsm_version",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Dsm Version",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.dsm_version",
+            "classes": [
+              "DSMVersionCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.ftp_service",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Ftp Service",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.ftp_service",
+            "function": "ftp_service"
+          }
+        },
+        {
+          "id": "nas.log_disk",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Log Disk",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.log_disk",
+            "classes": [
+              "LogDiskCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.media_scanner",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Media Scanner",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.media_scanner",
+            "function": "media_scanner"
+          }
+        },
+        {
+          "id": "nas.nas_temp",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Nas Temp",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.nas_temp",
+            "classes": [
+              "NASTemperatureCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.nfs_service",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Nfs Service",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.nfs_service",
+            "function": "nfs_service"
+          }
+        },
+        {
+          "id": "nas.sftp_service",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Sftp Service",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.sftp_service",
+            "function": "sftp_service"
+          }
+        },
+        {
+          "id": "nas.shared_perms",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Shared Perms",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.shared_perms",
+            "classes": [
+              "SharedPermsCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.smb_service",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Smb Service",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.smb_service",
+            "function": "smb_service"
+          }
+        },
+        {
+          "id": "nas.snmp_service",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Snmp Service",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.snmp_service",
+            "function": "snmp_service"
+          }
+        },
+        {
+          "id": "nas.ups_status",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Ups Status",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.ups_status",
+            "classes": [
+              "UPSStatusCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.user_stats",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "User Stats",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.user_stats",
+            "classes": [
+              "UserStatsCheck"
+            ]
+          }
+        },
+        {
+          "id": "nas.webdav_service",
+          "category": "nas",
+          "category_name": "NAS服务",
+          "name": "Webdav Service",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.nas.webdav_service",
+            "function": "webdav_service"
+          }
+        },
+        {
+          "id": "network.bandwidth_check",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Bandwidth Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.bandwidth_check",
+            "function": "bandwidth_check"
+          }
+        },
+        {
+          "id": "network.dns_cache",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Dns Cache",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.dns_cache",
+            "function": "dns_cache"
+          }
+        },
+        {
+          "id": "network.dns_coverage",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Dns Coverage",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.dns_coverage",
+            "function": "dns_coverage"
+          }
+        },
+        {
+          "id": "network.dns_diagnostic",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Dns Diagnostic",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.dns_diagnostic",
+            "classes": [
+              "DNSDiagnostic"
+            ]
+          }
+        },
+        {
+          "id": "network.dns_resolve",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Dns Resolve",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.dns_resolve",
+            "function": "dns_resolve"
+          }
+        },
+        {
+          "id": "network.internet_access",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Internet Access",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.internet_access",
+            "function": "internet_access"
+          }
+        },
+        {
+          "id": "network.latency_check",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Latency Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.latency_check",
+            "function": "latency_check"
+          }
+        },
+        {
+          "id": "network.mtu_check",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Mtu Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.mtu_check",
+            "function": "mtu_check"
+          }
+        },
+        {
+          "id": "network.nas_backend",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Nas Backend",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.nas_backend",
+            "classes": [
+              "NASBackendCheck"
+            ]
+          }
+        },
+        {
+          "id": "network.network_latency",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Network Latency",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.network_latency",
+            "classes": [
+              "NetworkLatencyCheck"
+            ]
+          }
+        },
+        {
+          "id": "network.network_quality_checker",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Network Quality Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.network_quality_checker",
+            "classes": [
+              "NetworkQualityChecker"
+            ]
+          }
+        },
+        {
+          "id": "network.network_status_checker",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Network Status Checker",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.network_status_checker",
+            "classes": [
+              "NetworkStatusChecker"
+            ]
+          }
+        },
+        {
+          "id": "network.nic_speed",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Nic Speed",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.nic_speed",
+            "classes": [
+              "NICSpeedCheck"
+            ]
+          }
+        },
+        {
+          "id": "network.port_conflict",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Port Conflict",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.port_conflict",
+            "function": "port_conflict"
+          }
+        },
+        {
+          "id": "network.proxy_check",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Proxy Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.proxy_check",
+            "function": "proxy_check"
+          }
+        },
+        {
+          "id": "network.route_check",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Route Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.route_check",
+            "function": "route_check"
+          }
+        },
+        {
+          "id": "network.wifi_check",
+          "category": "network",
+          "category_name": "网络",
+          "name": "Wifi Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.network.wifi_check",
+            "function": "wifi_check"
+          }
+        },
+        {
+          "id": "security.clamav_check",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Clamav Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.clamav_check",
+            "function": "clamav_check"
+          }
+        },
+        {
+          "id": "security.fail2ban",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Fail2Ban",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.fail2ban",
+            "function": "fail2ban"
+          }
+        },
+        {
+          "id": "security.firewall",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Firewall",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.firewall",
+            "function": "firewall"
+          }
+        },
+        {
+          "id": "security.login_failures",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Login Failures",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.login_failures",
+            "classes": [
+              "LoginFailuresCheck"
+            ]
+          }
+        },
+        {
+          "id": "security.openssl_version",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Openssl Version",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.openssl_version",
+            "function": "openssl_version"
+          }
+        },
+        {
+          "id": "security.port_scan",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Port Scan",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.port_scan",
+            "function": "port_scan"
+          }
+        },
+        {
+          "id": "security.selinux",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Selinux",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.selinux",
+            "function": "selinux"
+          }
+        },
+        {
+          "id": "security.ssh_config",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Ssh Config",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.ssh_config",
+            "function": "ssh_config"
+          }
+        },
+        {
+          "id": "security.ssh_root",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Ssh Root",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.ssh_root",
+            "function": "ssh_root"
+          }
+        },
+        {
+          "id": "security.ssl_cert",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Ssl Cert",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.ssl_cert",
+            "classes": [
+              "SSLCertCheck"
+            ]
+          }
+        },
+        {
+          "id": "security.ssl_cert_check",
+          "category": "security",
+          "category_name": "安全",
+          "name": "Ssl Cert Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.security.ssl_cert_check",
+            "classes": [
+              "SSLCertCheck"
+            ]
+          }
+        },
+        {
+          "id": "storage.docker_images",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Docker Images",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.docker_images",
+            "classes": [
+              "DockerImagesCheck"
+            ]
+          }
+        },
+        {
+          "id": "storage.hdd_temp",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Hdd Temp",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.hdd_temp",
+            "classes": [
+              "HDDTempCheck"
+            ]
+          }
+        },
+        {
+          "id": "storage.inode_check",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Inode Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.inode_check",
+            "function": "inode_check"
+          }
+        },
+        {
+          "id": "storage.io_wait",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Io Wait",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.io_wait",
+            "function": "io_wait"
+          }
+        },
+        {
+          "id": "storage.path_exists",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Path Exists",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.path_exists",
+            "function": "path_exists"
+          }
+        },
+        {
+          "id": "storage.raid_status",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Raid Status",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.raid_status",
+            "classes": [
+              "RAIDStatusCheck"
+            ]
+          }
+        },
+        {
+          "id": "storage.smart_health",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Smart Health",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.smart_health",
+            "classes": [
+              "SMARTHealthCheck"
+            ]
+          }
+        },
+        {
+          "id": "storage.storage_disk",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Storage Disk",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.storage_disk",
+            "function": "storage_disk"
+          }
+        },
+        {
+          "id": "storage.storage_trend",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Storage Trend",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.storage_trend",
+            "classes": [
+              "StorageTrendCheck"
+            ]
+          }
+        },
+        {
+          "id": "storage.write_speed",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Write Speed",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.write_speed",
+            "function": "write_speed"
+          }
+        },
+        {
+          "id": "storage.zfs_health",
+          "category": "storage",
+          "category_name": "存储",
+          "name": "Zfs Health",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.storage.zfs_health",
+            "function": "zfs_health"
+          }
+        },
+        {
+          "id": "system.cpu_temp",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Cpu Temp",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.cpu_temp",
+            "classes": [
+              "CPUTempCheck"
+            ]
+          }
+        },
+        {
+          "id": "system.cron_jobs",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Cron Jobs",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.cron_jobs",
+            "function": "cron_jobs"
+          }
+        },
+        {
+          "id": "system.docker_containers",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Docker Containers",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.docker_containers",
+            "function": "docker_containers"
+          }
+        },
+        {
+          "id": "system.docker_service",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Docker Service",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.docker_service",
+            "function": "check"
+          }
+        },
+        {
+          "id": "system.kernel_version",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Kernel Version",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.kernel_version",
+            "function": "kernel_version"
+          }
+        },
+        {
+          "id": "system.memory_check",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Memory Check",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.memory_check",
+            "function": "memory_check"
+          }
+        },
+        {
+          "id": "system.package_updates",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Package Updates",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.package_updates",
+            "function": "package_updates"
+          }
+        },
+        {
+          "id": "system.pip_installed",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Pip Installed",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.pip_installed",
+            "function": "pip_installed"
+          }
+        },
+        {
+          "id": "system.process_count",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Process Count",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.process_count",
+            "function": "process_count"
+          }
+        },
+        {
+          "id": "system.python_version",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Python Version",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.python_version",
+            "classes": [
+              "PythonVersionCheck"
+            ]
+          }
+        },
+        {
+          "id": "system.system_disk",
+          "category": "system",
+          "category_name": "系统",
+          "name": "System Disk",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.system_disk",
+            "function": "system_disk"
+          }
+        },
+        {
+          "id": "system.system_libs",
+          "category": "system",
+          "category_name": "系统",
+          "name": "System Libs",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.system_libs",
+            "function": "system_libs"
+          }
+        },
+        {
+          "id": "system.system_logs",
+          "category": "system",
+          "category_name": "系统",
+          "name": "System Logs",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.system_logs",
+            "function": "system_logs"
+          }
+        },
+        {
+          "id": "system.uptime",
+          "category": "system",
+          "category_name": "系统",
+          "name": "Uptime",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.system.uptime",
+            "classes": [
+              "UptimeCheck"
+            ]
+          }
+        },
+        {
+          "id": "usb.usb_devices",
+          "category": "usb",
+          "category_name": "USB",
+          "name": "Usb Devices",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.usb.usb_devices",
+            "classes": [
+              "USBDevicesCheck"
+            ]
+          }
+        },
+        {
+          "id": "usb.usb_permissions",
+          "category": "usb",
+          "category_name": "USB",
+          "name": "Usb Permissions",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.usb.usb_permissions",
+            "classes": [
+              "USBPermissionsCheck"
+            ]
+          }
+        },
+        {
+          "id": "usb.usb_power",
+          "category": "usb",
+          "category_name": "USB",
+          "name": "Usb Power",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.usb.usb_power",
+            "classes": [
+              "USBPowerCheck"
+            ]
+          }
+        },
+        {
+          "id": "usb.usb_storage",
+          "category": "usb",
+          "category_name": "USB",
+          "name": "Usb Storage",
+          "available": true,
+          "module_info": {
+            "module": "nastool_core.checks.usb.usb_storage",
+            "classes": [
+              "USBStorageCheck"
+            ]
+          }
+        }
+      ]
+    },
+    "adapters": {
+      "name": "适配器",
+      "count": 30,
+      "items": [
+        {
+          "id": "other.adb_adapter",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.adb_adapter",
+          "class": "AdbAdapter",
+          "name": "Adb Adapter",
+          "available": true
+        },
+        {
+          "id": "other.benchmark",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.benchmark",
+          "class": "Benchmark",
+          "name": "Benchmark",
+          "available": true
+        },
+        {
+          "id": "other.detector",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.detector",
+          "class": "Detector",
+          "name": "Detector",
+          "available": true
+        },
+        {
+          "id": "generic.generic",
+          "category": "generic",
+          "category_name": "通用适配器",
+          "module": "nastool_adapters.generic",
+          "class": "Generic",
+          "name": "Generic",
+          "available": true
+        },
+        {
+          "id": "other.http_backend",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.http_backend",
+          "class": "HttpBackend",
+          "name": "Http Backend",
+          "available": true
+        },
+        {
+          "id": "other.http_detector",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.http_detector",
+          "class": "HttpDetector",
+          "name": "Http Detector",
+          "available": true
+        },
+        {
+          "id": "jetson.hw_jet",
+          "category": "jetson",
+          "category_name": "Jetson适配器",
+          "module": "nastool_adapters.jetson.hw_jet",
+          "class": "HwJet",
+          "name": "Hw Jet",
+          "available": true
+        },
+        {
+          "id": "other.logger",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.logger",
+          "class": "Logger",
+          "name": "Logger",
+          "available": true
+        },
+        {
+          "id": "other.mock_adapter",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.mock_adapter",
+          "class": "MockAdapter",
+          "name": "Mock Adapter",
+          "available": true
+        },
+        {
+          "id": "other.nastool_api_client",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.nastool_api_client",
+          "class": "NastoolApiClient",
+          "name": "Nastool Api Client",
+          "available": true
+        },
+        {
+          "id": "other.nas_client",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.nas_client",
+          "class": "NasClient",
+          "name": "Nas Client",
+          "available": true
+        },
+        {
+          "id": "jetson.nvidia_jetson",
+          "category": "jetson",
+          "category_name": "Jetson适配器",
+          "module": "nastool_adapters.jetson.nvidia_jetson",
+          "class": "NvidiaJetson",
+          "name": "Nvidia Jetson",
+          "available": true
+        },
+        {
+          "id": "qnap.qnap",
+          "category": "qnap",
+          "category_name": "威联通适配器",
+          "module": "nastool_adapters.qnap",
+          "class": "Qnap",
+          "name": "Qnap",
+          "available": true
+        },
+        {
+          "id": "other.registry",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.registry",
+          "class": "Registry",
+          "name": "Registry",
+          "available": true
+        },
+        {
+          "id": "other.relay_detector",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.relay_detector",
+          "class": "RelayDetector",
+          "name": "Relay Detector",
+          "available": true
+        },
+        {
+          "id": "other.reporter",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.reporter",
+          "class": "Reporter",
+          "name": "Reporter",
+          "available": true
+        },
+        {
+          "id": "rockchip.rockchip",
+          "category": "rockchip",
+          "category_name": "瑞芯微适配器",
+          "module": "nastool_adapters.rockchip",
+          "class": "Rockchip",
+          "name": "Rockchip",
+          "available": true
+        },
+        {
+          "id": "sophon.sophon",
+          "category": "sophon",
+          "category_name": "算能适配器",
+          "module": "nastool_adapters.sophon",
+          "class": "Sophon",
+          "name": "Sophon",
+          "available": true
+        },
+        {
+          "id": "synology.synology",
+          "category": "synology",
+          "category_name": "群晖适配器",
+          "module": "nastool_adapters.synology",
+          "class": "Synology",
+          "name": "Synology",
+          "available": true
+        },
+        {
+          "id": "synology.synology_notifier",
+          "category": "synology",
+          "category_name": "群晖适配器",
+          "module": "nastool_adapters.synology_notifier",
+          "class": "SynologyNotifier",
+          "name": "Synology Notifier",
+          "available": true
+        },
+        {
+          "id": "synology.synology_scheduler",
+          "category": "synology",
+          "category_name": "群晖适配器",
+          "module": "nastool_adapters.synology_scheduler",
+          "class": "SynologyScheduler",
+          "name": "Synology Scheduler",
+          "available": true
+        },
+        {
+          "id": "ascend.ascend.common",
+          "category": "ascend",
+          "category_name": "昇腾适配器",
+          "module": "nastool_adapters.ascend.ascend.common",
+          "class": "Ascend.common",
+          "name": "Ascend.Common",
+          "available": true
+        },
+        {
+          "id": "ascend.ascend.npu",
+          "category": "ascend",
+          "category_name": "昇腾适配器",
+          "module": "nastool_adapters.ascend.ascend.npu",
+          "class": "Ascend.npu",
+          "name": "Ascend.Npu",
+          "available": true
+        },
+        {
+          "id": "jetson.jetson.common",
+          "category": "jetson",
+          "category_name": "Jetson适配器",
+          "module": "nastool_adapters.jetson.jetson.common",
+          "class": "Jetson.common",
+          "name": "Jetson.Common",
+          "available": true
+        },
+        {
+          "id": "jetson.jetson.fan",
+          "category": "jetson",
+          "category_name": "Jetson适配器",
+          "module": "nastool_adapters.jetson.jetson.fan",
+          "class": "Jetson.fan",
+          "name": "Jetson.Fan",
+          "available": true
+        },
+        {
+          "id": "jetson.jetson.jetpack",
+          "category": "jetson",
+          "category_name": "Jetson适配器",
+          "module": "nastool_adapters.jetson.jetson.jetpack",
+          "class": "Jetson.jetpack",
+          "name": "Jetson.Jetpack",
+          "available": true
+        },
+        {
+          "id": "jetson.jetson.power",
+          "category": "jetson",
+          "category_name": "Jetson适配器",
+          "module": "nastool_adapters.jetson.jetson.power",
+          "class": "Jetson.power",
+          "name": "Jetson.Power",
+          "available": true
+        },
+        {
+          "id": "other.ssh_detector",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.ssh_detector",
+          "class": "SshDetector",
+          "name": "Ssh Detector",
+          "available": true
+        },
+        {
+          "id": "other.utils.pool",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.utils.pool",
+          "class": "Utils.pool",
+          "name": "Utils.Pool",
+          "available": true
+        },
+        {
+          "id": "other.utils.retry",
+          "category": "other",
+          "category_name": "其他适配器",
+          "module": "nastool_adapters.utils.retry",
+          "class": "Utils.retry",
+          "name": "Utils.Retry",
+          "available": true
+        }
+      ]
+    },
+    "fixes": {
+      "name": "修复引擎",
+      "count": 31,
+      "items": [
+        {
+          "id": "fix.installcudafix",
+          "name": "InstallCUDAFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.ai.install_cuda",
+          "available": true
+        },
+        {
+          "id": "fix.configupsshutdownfix",
+          "name": "ConfigUPSShutdownFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.nas.config_ups_shutdown",
+          "available": true
+        },
+        {
+          "id": "fix.configdnsfix",
+          "name": "ConfigDNSFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.network.config_dns",
+          "available": true
+        },
+        {
+          "id": "fix.disablerootloginfix",
+          "name": "DisableRootLoginFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.security.disable_root_login",
+          "available": true
+        },
+        {
+          "id": "fix.enablefail2banfix",
+          "name": "EnableFail2banFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.security.enable_fail2ban",
+          "available": true
+        },
+        {
+          "id": "fix.enforcepasswordpolicyfix",
+          "name": "EnforcePasswordPolicyFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.security.enforce_password_policy",
+          "available": true
+        },
+        {
+          "id": "fix.renewsslcertfix",
+          "name": "RenewSSLCertFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.security.renew_ssl_cert",
+          "available": true
+        },
+        {
+          "id": "fix.cleanupdockerimagesfix",
+          "name": "CleanupDockerImagesFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.storage.cleanup_docker_images",
+          "available": true
+        },
+        {
+          "id": "fix.cleanuplogsfix",
+          "name": "CleanupLogsFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.storage.cleanup_logs",
+          "available": true
+        },
+        {
+          "id": "fix.cleanuptmpspacefix",
+          "name": "CleanupTmpSpaceFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.storage.cleanup_tmp_space",
+          "available": true
+        },
+        {
+          "id": "fix.raidrecoveryfix",
+          "name": "RAIDRecoveryFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.storage.config_raid_recovery",
+          "available": true
+        },
+        {
+          "id": "fix.createpathsfix",
+          "name": "CreatePathsFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.storage.create_paths",
+          "available": true
+        },
+        {
+          "id": "fix.dockerfix",
+          "name": "DockerFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.system.install_docker",
+          "available": true
+        },
+        {
+          "id": "fix.installpythonfix",
+          "name": "InstallPythonFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.system.install_python",
+          "available": true
+        },
+        {
+          "id": "fix.setuplogrotatefix",
+          "name": "SetupLogrotateFix",
+          "module": "D:.project.nastool7.nastool-fixes.nastool_fixes.system.setup_logrotate",
+          "available": true
+        },
+        {
+          "id": "fix.installcudafix",
+          "name": "InstallCUDAFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.ai.install_cuda",
+          "available": true
+        },
+        {
+          "id": "fix.configupsshutdownfix",
+          "name": "ConfigUPSShutdownFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.nas.config_ups_shutdown",
+          "available": true
+        },
+        {
+          "id": "fix.configdnsfix",
+          "name": "ConfigDNSFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.network.config_dns",
+          "available": true
+        },
+        {
+          "id": "fix.disablerootloginfix",
+          "name": "DisableRootLoginFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.security.disable_root_login",
+          "available": true
+        },
+        {
+          "id": "fix.enablefail2banfix",
+          "name": "EnableFail2banFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.security.enable_fail2ban",
+          "available": true
+        },
+        {
+          "id": "fix.enforcepasswordpolicyfix",
+          "name": "EnforcePasswordPolicyFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.security.enforce_password_policy",
+          "available": true
+        },
+        {
+          "id": "fix.renewsslcertfix",
+          "name": "RenewSSLCertFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.security.renew_ssl_cert",
+          "available": true
+        },
+        {
+          "id": "fix.cleanupdockerimagesfix",
+          "name": "CleanupDockerImagesFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.storage.cleanup_docker_images",
+          "available": true
+        },
+        {
+          "id": "fix.cleanuplogsfix",
+          "name": "CleanupLogsFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.storage.cleanup_logs",
+          "available": true
+        },
+        {
+          "id": "fix.cleanuptmpspacefix",
+          "name": "CleanupTmpSpaceFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.storage.cleanup_tmp_space",
+          "available": true
+        },
+        {
+          "id": "fix.raidrecoveryfix",
+          "name": "RAIDRecoveryFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.storage.config_raid_recovery",
+          "available": true
+        },
+        {
+          "id": "fix.createpathsfix",
+          "name": "CreatePathsFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.storage.create_paths",
+          "available": true
+        },
+        {
+          "id": "fix.dockerfix",
+          "name": "DockerFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.system.install_docker",
+          "available": true
+        },
+        {
+          "id": "fix.installpythonfix",
+          "name": "InstallPythonFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.system.install_python",
+          "available": true
+        },
+        {
+          "id": "fix.setuplogrotatefix",
+          "name": "SetupLogrotateFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.nastool_fixes.system.setup_logrotate",
+          "available": true
+        },
+        {
+          "id": "fix.testfix",
+          "name": "TestFix",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-fixes.tests.test_rollback",
+          "available": true
+        }
+      ]
+    },
+    "reporters": {
+      "name": "报告器",
+      "count": 23,
+      "items": [
+        {
+          "id": "reporter.reporter",
+          "name": "Reporter",
+          "module": "D:.project.nastool7.nastool-adapters.nastool_adapters.reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.filereporter",
+          "name": "FileReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.file_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.friendlyreporter",
+          "name": "FriendlyReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.friendly_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.htmlreporter",
+          "name": "HTMLReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.html_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.jsonreporter",
+          "name": "JSONReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.json_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.pdfreporter",
+          "name": "PDFReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.pdf_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.richreporter",
+          "name": "RichReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.rich_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.rkreporter",
+          "name": "RKReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.rk_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.summaryreporter",
+          "name": "SummaryReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.summary",
+          "available": true
+        },
+        {
+          "id": "reporter.terminalreporter",
+          "name": "TerminalReporter",
+          "module": "D:.project.nastool7.nastool-reporters.nastool_reporters.terminal",
+          "available": true
+        },
+        {
+          "id": "reporter.testterminalreporter",
+          "name": "TestTerminalReporter",
+          "module": "D:.project.nastool7.nastool-reporters.tests.test_reporters_detailed",
+          "available": true
+        },
+        {
+          "id": "reporter.testjsonreporter",
+          "name": "TestJSONReporter",
+          "module": "D:.project.nastool7.nastool-reporters.tests.test_reporters_detailed",
+          "available": true
+        },
+        {
+          "id": "reporter.testhtmlreporter",
+          "name": "TestHTMLReporter",
+          "module": "D:.project.nastool7.nastool-reporters.tests.test_reporters_detailed",
+          "available": true
+        },
+        {
+          "id": "reporter.reporter",
+          "name": "Reporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-adapters.nastool_adapters.reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.filereporter",
+          "name": "FileReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.file_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.friendlyreporter",
+          "name": "FriendlyReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.friendly_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.htmlreporter",
+          "name": "HTMLReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.html_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.jsonreporter",
+          "name": "JSONReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.json_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.pdfreporter",
+          "name": "PDFReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.pdf_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.richreporter",
+          "name": "RichReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.rich_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.rkreporter",
+          "name": "RKReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.rk_reporter",
+          "available": true
+        },
+        {
+          "id": "reporter.summaryreporter",
+          "name": "SummaryReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.summary",
+          "available": true
+        },
+        {
+          "id": "reporter.terminalreporter",
+          "name": "TerminalReporter",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-reporters.nastool_reporters.terminal",
+          "available": true
+        }
+      ]
+    },
+    "cli_commands": {
+      "name": "CLI命令",
+      "count": 4,
+      "items": [
+        {
+          "id": "command.devicecommand",
+          "name": "DeviceCommand",
+          "module": "D:.project.nastool7.nastool-cli.nastool_cli.commands.device",
+          "available": true
+        },
+        {
+          "id": "command.diagnosecommand",
+          "name": "DiagnoseCommand",
+          "module": "D:.project.nastool7.nastool-cli.nastool_cli.commands.diagnose",
+          "available": true
+        },
+        {
+          "id": "command.devicecommand",
+          "name": "DeviceCommand",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-cli.nastool_cli.commands.device",
+          "available": true
+        },
+        {
+          "id": "command.diagnosecommand",
+          "name": "DiagnoseCommand",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-cli.nastool_cli.commands.diagnose",
+          "available": true
+        }
+      ]
+    },
+    "monitors": {
+      "name": "监控器",
+      "count": 4,
+      "items": [
+        {
+          "id": "monitor.resourcemonitor",
+          "name": "ResourceMonitor",
+          "module": "D:.project.nastool7.nastool-core.nastool_core.memory_optimizer",
+          "available": true
+        },
+        {
+          "id": "monitor.websocketmonitor",
+          "name": "WebSocketMonitor",
+          "module": "D:.project.nastool7.nastool-cli.nastool_cli.ws_client",
+          "available": true
+        },
+        {
+          "id": "monitor.resourcemonitor",
+          "name": "ResourceMonitor",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-core.nastool_core.memory_optimizer",
+          "available": true
+        },
+        {
+          "id": "monitor.websocketmonitor",
+          "name": "WebSocketMonitor",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-cli.nastool_cli.ws_client",
+          "available": true
+        }
+      ]
+    },
+    "detectors": {
+      "name": "探测器",
+      "count": 5,
+      "items": [
+        {
+          "id": "detector.remotehttpdetector",
+          "name": "RemoteHTTPDetector",
+          "module": "D:.project.nastool7.nastool-adapters.nastool_adapters.http_detector",
+          "available": true
+        },
+        {
+          "id": "detector.relaydetector",
+          "name": "RelayDetector",
+          "module": "D:.project.nastool7.nastool-adapters.nastool_adapters.relay_detector",
+          "available": true
+        },
+        {
+          "id": "detector.remotehttpdetector",
+          "name": "RemoteHTTPDetector",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-adapters.nastool_adapters.http_detector",
+          "available": true
+        },
+        {
+          "id": "detector.relaydetector",
+          "name": "RelayDetector",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-adapters.nastool_adapters.relay_detector",
+          "available": true
+        },
+        {
+          "id": "detector.remotesshdetector",
+          "name": "RemoteSSHDetector",
+          "module": "D:.project.nastool7.nastool-v4.0.0.nastool-adapters.nastool_adapters.ssh_detector",
+          "available": true
+        }
+      ]
+    },
+    "diagnostics": {
+      "name": "诊断器",
+      "count": 1,
+      "items": [
+        {
+          "id": "diagnostic.dnsdiagnostic",
+          "name": "DNSDiagnostic",
+          "module": "D:.project.nastool7.nastool-core.nastool_core.checks.network.dns_diagnostic",
+          "available": true
+        }
+      ]
+    }
+  }
+}

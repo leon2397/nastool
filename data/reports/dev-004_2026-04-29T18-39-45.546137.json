@@ -1,0 +1,89 @@
+{
+  "device_id": "dev-004",
+  "device_name": "测试设备",
+  "device_ip": "192.168.1.123",
+  "device_type": "linux",
+  "test_mode": "full",
+  "timestamp": "2026-04-29T18:39:45.546137",
+  "duration": 31.04,
+  "results": [
+    {
+      "name": "网络连接性",
+      "status": "pass",
+      "details": "5个连接正常",
+      "duration": 0
+    },
+    {
+      "name": "系统基础信息",
+      "status": "pass",
+      "details": "{'system': 'Windows', 'release': '10', 'version': '10.0.19045', 'machine': 'AMD64'}",
+      "duration": 0
+    },
+    {
+      "name": "依赖检查",
+      "status": "pass",
+      "details": "Python版本检查",
+      "duration": 0
+    },
+    {
+      "name": "网络接口",
+      "status": "pass",
+      "details": "发现0个网络接口",
+      "duration": 0
+    },
+    {
+      "name": "网络质量",
+      "status": "pass",
+      "details": "下载: None Mbps",
+      "duration": 0
+    },
+    {
+      "name": "DNS诊断",
+      "status": "pass",
+      "details": "配置检查完成，5项",
+      "duration": 0
+    },
+    {
+      "name": "路由检查",
+      "status": "pass",
+      "details": "路由表检查完成",
+      "duration": 0
+    },
+    {
+      "name": "CPU信息",
+      "status": "pass",
+      "details": "CPU核心数: 4",
+      "duration": 0
+    },
+    {
+      "name": "内存检查",
+      "status": "pass",
+      "details": "可用内存: 49.2%",
+      "duration": 0
+    },
+    {
+      "name": "存储检查",
+      "status": "pass",
+      "details": "可用空间: 78.3%",
+      "duration": 0
+    },
+    {
+      "name": "温度检测",
+      "status": "info",
+      "details": "Windows系统温度检测不可用",
+      "duration": 0
+    },
+    {
+      "name": "运行时间",
+      "status": "pass",
+      "details": "运行时间: 14天 10小时 15分钟",
+      "duration": 0
+    }
+  ],
+  "summary": {
+    "passed": 11,
+    "failed": 0,
+    "error": 0,
+    "total": 12
+  }
+}

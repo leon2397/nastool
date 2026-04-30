@@ -1,0 +1,77 @@
+{
+  "device_id": "local",
+  "device_name": "本地测试",
+  "device_ip": "localhost",
+  "device_type": "local",
+  "test_mode": "full",
+  "timestamp": "2026-04-29T09:45:55.645025",
+  "duration": 1.57,
+  "results": [
+    {
+      "name": "网络连接性",
+      "status": "pass",
+      "details": "5个连接正常",
+      "duration": 0
+    },
+    {
+      "name": "系统基础信息",
+      "status": "pass",
+      "details": "{'system': 'Windows', 'release': '10', 'version': '10.0.19045', 'machine': 'AMD64'}",
+      "duration": 0
+    },
+    {
+      "name": "依赖检查",
+      "status": "error",
+      "details": "cannot import name 'EnvironmentChecker' from 'nastool_common.utils.env_checker' (D:\\project\\nastool7\\nastool-common\\nastool_common\\utils\\env_checker.py)",
+      "duration": 0
+    },
+    {
+      "name": "网络接口",
+      "status": "pass",
+      "details": "发现0个网络接口",
+      "duration": 0
+    },
+    {
+      "name": "网络质量",
+      "status": "pass",
+      "details": "下载: 0.00266265869140625 Mbps",
+      "duration": 0
+    },
+    {
+      "name": "DNS诊断",
+      "status": "pass",
+      "details": "配置检查完成，5项",
+      "duration": 0
+    },
+    {
+      "name": "路由检查",
+      "status": "pass",
+      "details": "路由表检查完成",
+      "duration": 0
+    },
+    {
+      "name": "CPU信息",
+      "status": "pass",
+      "details": "CPU核心数: 4",
+      "duration": 0
+    },
+    {
+      "name": "内存检查",
+      "status": "pass",
+      "details": "可用内存: 43.2%",
+      "duration": 0
+    },
+    {
+      "name": "存储检查",
+      "status": "pass",
+      "details": "可用空间: 78.3%",
+      "duration": 0
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "error": 1,
+    "total": 10
+  }
+}

@@ -1,0 +1,33 @@
+NASTool 全面验证报告
+======================================================================
+验证时间: 2026-04-29 20:22:02
+
+📊 验证结果:
+总文件数: 949
+验证通过: 949
+完整性错误: 0
+语法错误: 0
+文件可用率: 100.00%
+
+📈 代码统计:
+总行数: 169,088
+函数数: 4,952
+类数: 887
+
+
+⚠️ 警告列表:
+nastool-adapters\nastool_adapters\benchmark.py: 导入模块过多 (28个)
+nastool-cli\nastool_cli\main.py: 代码复杂度较高
+nastool-cli\nastool_cli\main.py: 导入模块过多 (38个)
+nastool-core\nastool_core\checks\__init__.py: 导入模块过多 (36个)
+nastool-v4.0.0\nastool-adapters\nastool_adapters\benchmark.py: 导入模块过多 (28个)
+nastool-v4.0.0\nastool-adapters\nastool_adapters\ssh_detector.py: 代码复杂度较高
+nastool-v4.0.0\nastool-cli\nastool_cli\main.py: 导入模块过多 (32个)
+nastool-v4.0.0\nastool-core\nastool_core\checks\__init__.py: 导入模块过多 (35个)
+nastool-v4.0.0\nastool-core\tests\test_phase1_core_framework.py: 导入模块过多 (33个)
+tool\bin\nastool-adapters\nastool_adapters\benchmark.py: 导入模块过多 (28个)
+tool\bin\nastool-cli\nastool_cli\main.py: 代码复杂度较高
+tool\bin\nastool-cli\nastool_cli\main.py: 导入模块过多 (38个)
+tool\bin\nastool-core\nastool_core\checks\__init__.py: 导入模块过多 (36个)
+tools\feature_validator.py: 导入模块过多 (23个)
+tools\test_engine.py: 导入模块过多 (30个)

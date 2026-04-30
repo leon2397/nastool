@@ -1,0 +1,250 @@
+{
+  "network_full": {
+    "interfaces": [],
+    "links": [],
+    "connectivity": [
+      {
+        "host": "192.168.1.1",
+        "port": 80,
+        "connected": true,
+        "latency_ms": 1.51,
+        "error": null,
+        "name": "内网网关",
+        "type": "local"
+      },
+      {
+        "host": "8.8.8.8",
+        "port": 53,
+        "connected": true,
+        "latency_ms": 169.63,
+        "error": null,
+        "name": "Google DNS",
+        "type": "external"
+      },
+      {
+        "host": "223.5.5.5",
+        "port": 53,
+        "connected": true,
+        "latency_ms": 27.09,
+        "error": null,
+        "name": "阿里DNS",
+        "type": "external"
+      },
+      {
+        "host": "www.baidu.com",
+        "port": 80,
+        "connected": true,
+        "latency_ms": 57.25,
+        "error": null,
+        "name": "百度",
+        "type": "external"
+      },
+      {
+        "host": "www.github.com",
+        "port": 443,
+        "connected": true,
+        "latency_ms": 1157.75,
+        "error": null,
+        "name": "GitHub",
+        "type": "external"
+      }
+    ],
+    "ping_stability": {
+      "target": "8.8.8.8",
+      "sent": 10,
+      "received": 0,
+      "lost": 10,
+      "loss_rate": 100.0,
+      "min_latency": null,
+      "avg_latency": null,
+      "max_latency": null,
+      "latencies": []
+    },
+    "dns": [
+      {
+        "domain": "www.baidu.com",
+        "resolved": true,
+        "ip": "183.2.172.177",
+        "latency_ms": 1.73
+      },
+      {
+        "domain": "www.google.com",
+        "resolved": true,
+        "ip": "104.244.42.197",
+        "latency_ms": 33.43
+      },
+      {
+        "domain": "github.com",
+        "resolved": true,
+        "ip": "20.205.243.166",
+        "latency_ms": 29.57
+      }
+    ],
+    "statistics": {}
+  },
+  "dns": {
+    "configuration": {
+      "resolv_conf": null,
+      "nameservers": [],
+      "search_domains": [],
+      "options": [],
+      "error": "[Errno 2] No such file or directory: '/etc/resolv.conf'"
+    },
+    "servers": [
+      {
+        "server": "8.8.8.8",
+        "reachable": true,
+        "latency_ms": 0.0,
+        "resolution_tests": [
+          {
+            "domain": "www.baidu.com",
+            "resolved": true,
+            "ip": "183.2.172.177",
+            "latency_ms": 6.29
+          },
+          {
+            "domain": "www.google.com",
+            "resolved": true,
+            "ip": "104.244.42.197",
+            "latency_ms": 1.0
+          },
+          {
+            "domain": "github.com",
+            "resolved": true,
+            "ip": "20.205.243.166",
+            "latency_ms": 0.0
+          },
+          {
+            "domain": "www.microsoft.com",
+            "resolved": true,
+            "ip": "61.147.219.124",
+            "latency_ms": 27.76
+          }
+        ]
+      },
+      {
+        "server": "8.8.4.4",
+        "reachable": true,
+        "latency_ms": 0.0,
+        "resolution_tests": [
+          {
+            "domain": "www.baidu.com",
+            "resolved": true,
+            "ip": "183.2.172.177",
+            "latency_ms": 1.07
+          },
+          {
+            "domain": "www.google.com",
+            "resolved": true,
+            "ip": "104.244.42.197",
+            "latency_ms": 0.55
+          },
+          {
+            "domain": "github.com",
+            "resolved": true,
+            "ip": "20.205.243.166",
+            "latency_ms": 0.46
+          },
+          {
+            "domain": "www.microsoft.com",
+            "resolved": true,
+            "ip": "61.147.219.124",
+            "latency_ms": 0.95
+          }
+        ]
+      },
+      {
+        "server": "223.5.5.5",
+        "reachable": true,
+        "latency_ms": 1.02,
+        "resolution_tests": [
+          {
+            "domain": "www.baidu.com",
+            "resolved": true,
+            "ip": "183.2.172.177",
+            "latency_ms": 0.0
+          },
+          {
+            "domain": "www.google.com",
+            "resolved": true,
+            "ip": "104.244.42.197",
+            "latency_ms": 0.0
+          },
+          {
+            "domain": "github.com",
+            "resolved": true,
+            "ip": "20.205.243.166",
+            "latency_ms": 1.52
+          },
+          {
+            "domain": "www.microsoft.com",
+            "resolved": true,
+            "ip": "61.147.219.124",
+            "latency_ms": 0.0
+          }
+        ]
+      },
+      {
+        "server": "114.114.114.114",
+        "reachable": true,
+        "latency_ms": 0.0,
+        "resolution_tests": [
+          {
+            "domain": "www.baidu.com",
+            "resolved": true,
+            "ip": "183.2.172.177",
+            "latency_ms": 0.0
+          },
+          {
+            "domain": "www.google.com",
+            "resolved": true,
+            "ip": "104.244.42.197",
+            "latency_ms": 0.0
+          },
+          {
+            "domain": "github.com",
+            "resolved": true,
+            "ip": "20.205.243.166",
+            "latency_ms": 0.0
+          },
+          {
+            "domain": "www.microsoft.com",
+            "resolved": true,
+            "ip": "61.147.219.124",
+            "latency_ms": 0.0
+          }
+        ]
+      }
+    ],
+    "latency": [
+      {
+        "domain": "www.baidu.com",
+        "min_latency": 0.0,
+        "max_latency": 1.0,
+        "avg_latency": 0.22,
+        "iterations": 5
+      },
+      {
+        "domain": "www.google.com",
+        "min_latency": 0.0,
+        "max_latency": 1.08,
+        "avg_latency": 0.47,
+        "iterations": 5
+      },
+      {
+        "domain": "github.com",
+        "min_latency": 0.0,
+        "max_latency": 1.01,
+        "avg_latency": 0.43,
+        "iterations": 5
+      }
+    ],
+    "cache": {}
+  },
+  "summary": {
+    "overall_score": 100,
+    "issues": [],
+    "duration_ms": 3253.01,
+    "mode": "network"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "device_id": "local",
+  "device_name": "本地测试",
+  "device_ip": "localhost",
+  "device_type": "local",
+  "test_mode": "quick",
+  "timestamp": "2026-04-28T18:08:07.761275",
+  "duration": 0.67,
+  "results": [
+    {
+      "name": "网络连接性",
+      "status": "pass",
+      "details": "5个连接正常",
+      "duration": 0
+    },
+    {
+      "name": "系统基础信息",
+      "status": "pass",
+      "details": "{'system': 'Windows', 'release': '10', 'version': '10.0.19045', 'machine': 'AMD64'}",
+      "duration": 0
+    },
+    {
+      "name": "依赖检查",
+      "status": "error",
+      "details": "cannot import name 'EnvironmentChecker' from 'nastool_common.utils.env_checker' (D:\\project\\nastool7\\nastool-common\\nastool_common\\utils\\env_checker.py)",
+      "duration": 0
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "error": 1,
+    "total": 3
+  }
+}

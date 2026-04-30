@@ -1,0 +1,135 @@
+nastool 4.0.0
+==================================================
+  [Using mock data - real device detection coming in v1.1]
+Running mock diagnosis: healthy
+
++----------------------------------------------------------------+
+|     [*] Health Score  97 / 100      Grade A+  [*] Excellent      |
+|  [OK] 80 Passed    [!] 10 Warning    [X] 0 Critical    [i] 0 Info  |
++----------------------------------------------------------------+
+
+  Category Scores: System 97    Network 97    Data Storage 98    AI Acceleration 98    Security 88    NAS System 98    USB 100
+
+
+--- [S] System -------------------------------------------------- 
+  [!] 系统依赖库: Missing: ffi, zlib。缺少部分可选库，不影响核心功能
+  [OK] Python 版本: 3.12
+  [OK] pip 包管理器: installed
+  [OK] 内存使用率: 2.1GB / 32GB (6.6%)
+  [OK] 定时任务列表: 8 jobs
+  [OK] 系统日志: clean
+  [OK] 进程数量: 127 processes
+  [OK] 系统更新: up to date
+  [OK] 系统盘空间: NVMe 500GB (250GB used, 50%)
+  i Docker Info: mock
+  [OK] Docker 容器: 12 containers (8 running, 4 stopped)
+  [OK] CPU 温度: 58C
+  i 系统运行时间: mock
+
+--- [N] Network ------------------------------------------------- 
+  [!] DNS 配置: 2 of 5 passed。DNS 配置偏少，建议增加备用 DNS
+  [OK] 互联网连接: connected
+  [OK] DNS 缓存: running
+  [OK] DNS 解析: working
+  [OK] MTU 数据包大小: eth0: 1500
+  [OK] 代理配置: none
+  i WiFi 连接状态: not connected
+  i Latency Check: mock
+  [OK] 默认路由: configured
+  [OK] 端口冲突: 2 available
+  [OK] NAS 后端连接: 120.77.249.3:8000
+  [OK] 网络延迟: 32ms
+
+--- [D] Data Storage -------------------------------------------- 
+  [!] Docker 镜像清理: 15.3GB。存在可清理的镜像，释放后可恢复磁盘空间
+  [OK] 磁盘空间: 1.2TB / 8TB (15%)
+  [OK] Inode 使用率: /: 12% inode
+  [OK] IO 等待时间: 2.1%
+  [OK] 存储路径: /data:/backup:/media configured
+  i ZFS 存储池: not ZFS
+  [OK] 硬盘健康状态: PASSED
+  [OK] 硬盘温度: 38C
+  [OK] RAID 阵列状态: healthy
+  [OK] 存储空间趋势: stable
+
+--- [A] AI Acceleration ----------------------------------------- 
+  [!] PaddlePaddle 版本: 2.6.1。PaddlePaddle 版本偏低
+  [!] TorchServe 推理服务: installed。TorchServe 未运行
+  [OK] AI 加速芯片: 1 GPU (NVIDIA)
+  [OK] NVIDIA 驱动版本: 535.54.03
+  [OK] Cuda Version: 12.6
+  [OK] Tensorrt Version: 10.3.0.26
+  [OK] Jetpack Version: 6.1
+  [OK] Rknn Version: 2.5.0
+  [OK] Pytorch Version: 2.4.0+cu124
+  [OK] Onnxruntime Version: 1.19.0
+  [OK] TensorFlow 版本: 2.18.0
+  [OK] Keras 版本: 3.8.0
+  [OK] cuDNN 版本: 9.5.1
+  [OK] OpenVINO 版本: 2024.5.0
+  [OK] Triton 推理服务器: running
+  [OK] MLflow 实验追踪: v2.16.1
+  [OK] GPU 显存使用率: 6144MB / 32768MB (18.7%, 26724MB free)
+  [OK] GPU 计算利用率: GPU0: GPU 35%, Memory 18%
+  [OK] NVIDIA Container Toolkit: v1.16.2
+  [OK] ONNX 模型检测: 8 models
+  [OK] OneDNN 版本: available via PyTorch
+  i TensorFlow Serving: not installed
+  [OK] Kubeflow 平台: 12/15 pods running
+  [OK] 模型格式检测: 15 models
+
+--- [X] Security ------------------------------------------------ 
+  [!] SSL 证书: 18 days。证书将在 30 天内过期，请及时续期
+  [!] SSL 证书有效期: 18 days。SSL 证书即将过期，请提前续期
+  [!] 登录失败检测: 3 failed logins (root, 192.168.1.50)。有少量登录失败，可能是用户输错密码
+  [OK] OpenSSL 版本: 3.0.15
+  [OK] 防火墙状态: enabled (iptables)
+  [OK] SSH Root 登录: disabled
+  [OK] SSH 配置安全: secure
+  [OK] Fail2ban 入侵防护: running
+  [OK] ClamAV 病毒扫描: installed
+  [OK] 异常端口检测: clean
+  i SELinux 状态: Not installed
+
+--- [N] NAS System ---------------------------------------------- 
+  [!] FTP 文件传输: not running。FTP 服务未运行
+  [!] WebDAV 服务: not configured。WebDAV 服务未运行
+  i AFP 文件共享: not running
+  [OK] 备份状态: 3 backup tasks
+  [OK] 定时任务冲突: no conflicts
+  [OK] NAS 系统版本: DSM 7.2.2-72806
+  [OK] 日志存储空间: 2.1GB used (21%)
+  [OK] 媒体索引服务: running
+  [OK] NFS 文件共享: running
+  [OK] NAS 设备温度: sda: 38C, hdd: 41C
+  [OK] SFTP 安全传输: running
+  [OK] 共享权限设置: 6 shared folders
+  [OK] SMB 文件共享: running
+  [OK] SNMP 监控服务: running
+  [OK] UPS 不间断电源: connected, 85% battery
+  [OK] NAS 用户账号: 5 users
+
+--- [U] USB ----------------------------------------------------- 
+  i USB 设备检测: mock
+  i USB 设备权限: mock
+  i USB 端口供电: mock
+  i USB 存储挂载: mock
+
+--- Suggestions  ------------------------------------------------
+
+  [!] System Libs
+     System libraries missing: ffi, zlib
+
+  [!] Dns Coverage
+     DNS 2/5: google.com and cloudflare DNS failed
+
+  [!] Docker Images
+     Docker images占用 15.3GB, 建议清理
+
+  [!] Paddlepaddle Version
+     PaddlePaddle 2.6.1 installed, consider upgrading to 3.0
+
+  [!] Torchserve
+     TorchServe installed but not running
+
+Completed in 0.0s

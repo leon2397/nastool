@@ -1,0 +1,8 @@
+诊断输出:
+============================================================
+
+错误输出:
+============================================================
+Traceback (most recent call last):
+  File "<string>", line 10, in <module>
+ModuleNotFoundError: No module named 'nastool_cli'

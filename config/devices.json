@@ -1,0 +1,81 @@
+{
+  "version": "1.0",
+  "devices": [
+    {
+      "id": "dev-001",
+      "name": "昇腾测试设备1",
+      "ip": "192.168.1.100",
+      "port": 22,
+      "username": "root",
+      "password": "linaro123",
+      "type": "ascend",
+      "status": "offline",
+      "last_test": null,
+      "notes": "SSH端口关闭"
+    },
+    {
+      "id": "dev-002",
+      "name": "昇腾测试设备2",
+      "ip": "192.168.1.104",
+      "port": 22,
+      "username": "root",
+      "password": "linaro123",
+      "type": "ascend",
+      "status": "error",
+      "last_test": null,
+      "notes": "SSH连接失败"
+    },
+    {
+      "id": "dev-003",
+      "name": "昇腾测试设备3",
+      "ip": "192.168.1.103",
+      "port": 22,
+      "username": "root",
+      "password": "linaro123",
+      "type": "ascend",
+      "status": "unavailable",
+      "last_test": "2026-04-27",
+      "notes": "已卸载"
+    },
+    {
+      "id": "local",
+      "name": "本地测试",
+      "ip": "localhost",
+      "port": 22,
+      "username": null,
+      "password": null,
+      "type": "local",
+      "status": "online",
+      "last_test": "2026-04-29T18:15:52.340927",
+      "notes": "本地测试环境"
+    },
+    {
+      "id": "dev-004",
+      "name": "测试设备",
+      "ip": "192.168.1.123",
+      "port": 22,
+      "username": "root",
+      "password": "linaro123",
+      "type": "linux",
+      "status": "unknown",
+      "last_test": "2026-04-29T18:39:45.788238",
+      "notes": ""
+    }
+  ],
+  "groups": [
+    {
+      "name": "昇腾设备组",
+      "devices": [
+        "dev-001",
+        "dev-002",
+        "dev-003"
+      ]
+    },
+    {
+      "name": "本地测试",
+      "devices": [
+        "local"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# NASTool ruff 配置
+# 使用方法: ruff check . --fix
+
+line-length = 120
+target-version = "py38"
+
+# 忽略规则
+ignore = [
+    "E501",   # 行长度（项目中文注释多，放宽）
+    "E402",   # 模块级导入不在文件顶部（部分延迟导入是设计选择）
+    "F541",   # f-string 无占位符
+    "E741",   # 变量名含 l/I/O（硬件检测代码常见）
+]
+
+# 选择检查规则集
+[lint]
+select = ["E", "F", "W"]

@@ -1,0 +1,24 @@
+{
+  "round": 2,
+  "test_date": "2026-04-25",
+  "target_device": "192.168.1.123",
+  "environment": {
+    "test_date": "2026-04-25",
+    "target_device": "192.168.1.123",
+    "target_port": 8000,
+    "python_version": "",
+    "working_directory": "D:\project\nastool7",
+    "ping_status": "",
+    "http_status": ""
+  },
+  "bugs": [],
+  "summary": {
+    "total_bugs": 0,
+    "p0": 0,
+    "p1": 0,
+    "p2": 0,
+    "p3": 0,
+    "fixed_bugs": 0,
+    "open_bugs": 0
+  }
+}

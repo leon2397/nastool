@@ -1,171 +1,155 @@
-# nastools
+# NASTool v4.2
 
-> Windows 端 ARM NAS 一键检测与部署工具
-> 当前版本：**v4.2.0**（2026-04-14）
-> 项目定位：免费、傻瓜、覆盖广的 NAS 体检专家
+NASTool是一款面向昇腾及边缘AI设备的诊断工具，提供全面的系统检测、网络诊断、硬件诊断和性能评估功能。
 
----
+## ✨ 主要功能
 
-## 一句话介绍
+### 📦 依赖管理优化
+- 离线依赖包管理机制，支持跨平台依赖检测和安装
+- 统一依赖清单管理，支持核心依赖和可选依赖分离
 
-nastools 是一款 Windows 端 ARM NAS 一键检测与部署工具，让普通用户也能轻松了解自己的 NAS 健不健康，并支持一键部署 ARM NAS 管理系统。
+### 🚀 一键部署
+- 支持本地和远程部署
+- 自动处理目录结构创建、模块复制、依赖安装
+- 生成启动脚本和卸载脚本
 
----
+### 🔍 环境自检
+- Python版本检测
+- 系统信息收集
+- 兼容性检测
+- 网络连接检测
+- 依赖完整性检查
+- 磁盘空间检测
+- AI硬件检测
 
-## 核心功能
+### 🌐 网络诊断增强
+- 网络接口状态检测
+- 链路状态检测
+- 连接性检测
+- ping稳定性检测
+- DNS解析诊断
+- 网络统计分析
+- 带宽测试
+- 网络性能指标检测
 
-### 🛠️ 检测功能（35 项硬件检测 + 100+ 健康检测）
+### 🤖 硬件诊断增强
+- 昇腾芯片检测
+- CANN版本检测
+- 驱动版本检测
+- 固件版本检测
+- ACL可用性检测
+- 设备健康状态检测
 
-| 类别 | 检测项 |
-|------|--------|
-| 系统 | Python 版本 / pip / 内存 / 磁盘 / CPU 温度 / 系统库 / Docker / 运行时间 |
-| 网络 | DNS 解析 / 互联网 / 端口 / 网卡速率 / DNS 覆盖 / NAS 后端 |
-| 存储 | 磁盘空间 / 读写速度 / SMART 健康 / HDD温度 / RAID / Docker镜像 / 路径 / 趋势 |
-| AI | GPU / CUDA |
-| 安全 | 防火墙 / SELinux / SSH root / 登录失败 / SSL 证书 |
-| NAS | DSM/QTS 版本 / 用户账号 / 共享权限 / UPS / 日志磁盘 / 定时任务 |
+### 📊 报告输出优化
+- 可视化HTML报告生成
+- 诊断摘要统计
+- 系统信息展示
+- 网络信息展示
+- 硬件信息展示
+- 依赖信息展示
 
-### 🔧 自动修复（15+ 种）
+### ⚡ 测试模式优化
+| 模式 | 描述 | 适用场景 |
+|------|------|----------|
+| `quick` | 快速模式，只运行核心检测项 | 快速获取系统状态 |
+| `full` | 完整模式，运行所有检测项 | 全面系统诊断 |
+| `network` | 网络专项，专注网络诊断 | 网络问题排查 |
+| `hardware` | 硬件专项，专注硬件诊断 | 硬件问题排查 |
+| `simulate` | 模拟模式，使用模拟数据 | 功能演示 |
 
-- Python 3.11 一键安装
-- DNS 修复（追加模式，不覆盖）
-- 路径环境变量修复
-- CUDA / TensorRT 一键安装
-- Docker 一键安装
-- ...更多
+## 🚀 快速开始
 
-### 📊 健康评分系统
-
-- 综合评分 0-100 分
-- 分级显示：健康(80+)/警告(60-79)/问题(<60)
-- 自动归类问题项
-- 每个问题给出具体修复建议
-
-### 📦 部署能力
-
-- SFTP 上传部署
-- 部署后自动验证
-- 一键回滚
-- 安全卸载
-
-### 🔌 连接方式
-
-| 方式 | 说明 |
-|------|------|
-| SSH | 传统局域网连接 |
-| USB/ADB | 即插即用直连 |
-| **Relay** | **跨网远程中继（无需公网IP）** |
-
----
-
-## 支持设备（37+ 款）
-
-| 品牌 | 数量 | 型号 |
-|------|------|------|
-| 群晖 Synology | 12 款 | DS220+/DS920+/DS1520+/DS1821+... |
-| 威联通 QNAP | 12 款 | TS-251D/TS-453D/TS-464/TS-873A... |
-| NVIDIA Jetson | 16 款 | Xavier NX/Orin Nano/Nano/AGX Orin... |
-| Rockchip | 5 款 | OrangePi 5/Rock 5B/NanoPi R6S... |
-| 树莓派 | 2 款 | Pi 4 / Pi 5 |
-| SOPHON | 12 款 | BM1688/BM1684/BM1690/SE5/SE7... |
-
----
-
-## 版本演进
-
-```
-v4.2.0  跨网远程管理 ✅ ← 当前
-v4.1.0  部署能力强化 ✅
-v4.0.2  工具属性强化 ✅
-v4.0.1  代码质量 ✅
-v4.0.0  架构重构 ✅
-v3.0.0  Relay/Agent 基础 ✅
-```
-
----
-
-## 快速开始
-
-### 1. 下载安装
-
+### 安装依赖
 ```bash
-# 方式一：直接下载发布包
-下载 nastools-v4.2.0.zip 并解压
-
-# 方式二：克隆仓库
-git clone https://github.com/your-repo/nastools.git
+pip install -r requirements-full.txt
 ```
 
-### 2. 运行
-
+### 运行快速诊断
 ```bash
-# 方式一：双击运行
-nastools.exe
-
-# 方式二：命令行
-python -m nastools
+python -c "from nastool_core.quick_diagnose import QuickDiagnose; d = QuickDiagnose('quick'); results = d.run(); print(d.generate_report())"
 ```
 
-### 3. 连接 NAS
+### 使用不同模式
+```bash
+# 完整模式
+python -c "from nastool_core.quick_diagnose import QuickDiagnose; d = QuickDiagnose('full'); d.run()"
 
-- 输入 NAS 的 IP、端口、用户名、密码
-- 或使用 USB/ADB 直连
-- **或通过 Relay 远程连接（无需在同一网络）**
+# 网络专项
+python -c "from nastool_core.quick_diagnose import QuickDiagnose; d = QuickDiagnose('network'); d.run()"
 
-### 4. 一键检测
+# 硬件专项
+python -c "from nastool_core.quick_diagnose import QuickDiagnose; d = QuickDiagnose('hardware'); d.run()"
 
-点击「开始检测」，查看健康报告
-
-### 5. 一键修复
-
-对异常项，点击「一键修复」
-
----
-
-## 技术栈
-
-- **GUI**: Python + customtkinter
-- **诊断引擎**: Python（CLI）
-- **Relay Server**: Node.js + WebSocket
-- **ARM Agent**: Python + asyncio
-- **Web Dashboard**: Vue 3
-
----
-
-## 项目结构
-
-```
-nastools/
-├── nastool/           # ARM 端核心库（214 文件）
-│   ├── adapters/      # NAS 适配器（14 个）
-│   ├── checks/        # 检测模块（35 项）
-│   ├── fixes/         # 修复模块（15+ 种）
-│   ├── core/          # 核心功能
-│   └── utils/         # 工具函数（16 个）
-├── nastools_pkg/      # Windows GUI（32 文件）
-├── relay_server/      # 中继服务器
-│   ├── src/           # Node.js 服务器（4 文件）
-│   ├── agent/         # Python Agent（10 文件）
-│   └── web_dashboard/ # Vue 3 面板（18 文件）
-└── dist/              # 发布包
+# 模拟模式
+python -c "from nastool_core.quick_diagnose import QuickDiagnose; d = QuickDiagnose('simulate'); d.run()"
 ```
 
----
+## 📁 项目结构
 
-## 文档
+```
+nastool7/
+├── nastool-common/          # 公共工具模块
+│   └── nastool_common/
+│       └── utils/
+│           ├── offline_deps.py    # 离线依赖包管理器
+│           ├── env_checker.py     # 环境自检模块
+│           └── progress.py        # 进度可视化模块
+├── nastool-core/             # 核心检测模块
+│   └── nastool_core/
+│       ├── checks/
+│       │   ├── network/           # 网络诊断模块
+│       │   └── ai/ascend_checker.py  # 昇腾芯片检测
+│       └── quick_diagnose.py      # 快速诊断模块
+├── nastool-reporters/        # 报告输出模块
+│   └── nastool_reporters/
+│       └── html_reporter.py       # HTML报告生成器
+├── deploy_v4.2.py            # 一键部署脚本
+└── requirements-full.txt     # 完整依赖清单
+```
 
-- [用户手册](nastools_README.md)
-- [版本路线图](nastools_ROADMAP.md)
-- [更新日志](CHANGELOG.md)
-- [技术备忘录](MEMO.md)
+## 🛠️ 模块说明
 
----
+### QuickDiagnose (快速诊断)
+支持多种诊断模式，提供快速、完整、专项等不同级别的检测能力。
 
-## 许可证
+### NetworkStatusChecker (网络状态检测)
+检测网络接口、链路状态、连接性、ping稳定性、DNS解析和网络统计。
+
+### NetworkQualityChecker (网络质量检测)
+评估网络带宽、稳定性、TCP连接和网络性能指标。
+
+### DNSDiagnostic (DNS诊断)
+检测DNS配置、服务器可用性、缓存和解析延迟。
+
+### AscendChecker (昇腾芯片检测)
+检测昇腾硬件、CANN版本、驱动版本、固件版本、ACL可用性和设备健康状态。
+
+### HTMLReporter (HTML报告生成)
+生成可视化的诊断报告，包含诊断摘要、系统信息、网络信息、硬件信息和依赖信息。
+
+### Progress (进度可视化)
+提供美观的进度条显示，支持任务状态跟踪和时间统计。
+
+## 📝 版本历史
+
+### v4.2.0
+- ✅ 依赖管理优化：创建离线依赖包机制
+- ✅ 部署流程优化：实现一键部署脚本
+- ✅ 环境自检：添加设备兼容性检测
+- ✅ 网络诊断增强：添加网络断网检测功能
+- ✅ 硬件诊断增强：添加昇腾芯片检测模块
+- ✅ 报告输出优化：实现可视化HTML报告
+- ✅ 测试模式优化：添加快速诊断模式
+- ✅ 用户体验优化：添加进度可视化
+
+## 📄 许可证
 
 MIT License
 
+## 🤝 贡献
+
+欢迎提交Issue和Pull Request！
+
 ---
 
-*项目版本：v4.2.0*
-*更新日期：2026-04-14*
+*NASTool - 让AI设备诊断更简单*

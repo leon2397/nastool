@@ -1,0 +1,49 @@
+{
+  "enabled": true,
+  "data_fusion": {
+    "enabled": true,
+    "method": "weighted_average",
+    "confidence_weight": 0.3,
+    "source_count_weight": 0.4,
+    "consistency_weight": 0.3,
+    "outlier_detection": {
+      "enabled": true,
+      "method": "IQR",
+      "threshold": 1.5,
+      "min_samples": 3
+    },
+    "time_consistency": {
+      "enabled": true,
+      "max_time_diff": 30.0,
+      "strict_mode": false
+    }
+  },
+  "consistency": {
+    "time_consistency": {
+      "enabled": true,
+      "max_time_diff": 30.0,
+      "strict_mode": false
+    },
+    "value_consistency": {
+      "enabled": true,
+      "max_value_diff": 10.0,
+      "allow_relative_diff": true
+    },
+    "trend_consistency": {
+      "enabled": true,
+      "min_trend_points": 3,
+      "trend_window": 5
+    },
+    "source_consistency": {
+      "enabled": true,
+      "min_sources": 2,
+      "required_sources": []
+    }
+  },
+  "thresholds": {
+    "minimum_confidence": 0.7,
+    "warning_confidence": 0.85,
+    "critical_confidence": 0.5,
+    "data_freshness_seconds": 60.0
+  }
+}

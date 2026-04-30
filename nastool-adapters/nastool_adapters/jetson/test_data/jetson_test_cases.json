@@ -1,0 +1,225 @@
+{
+  "description": "Jetson 设备测试用例集",
+  "version": "1.0",
+  "devices": [
+    {
+      "name": "Jetson AGX Orin",
+      "model": "AGX Orin",
+      "soc": "Orin",
+      "arch": "aarch64",
+      "cuda_version": "11.4",
+      "jetpack_version": "5.0.2",
+      "expected_results": {
+        "gpu_detected": true,
+        "gpu_memory": 32,
+        "cuda_available": true,
+        "tensorrt_available": true,
+        "power_mode": "MAXN"
+      }
+    },
+    {
+      "name": "Jetson Xavier NX",
+      "model": "Xavier NX",
+      "soc": "Xavier",
+      "arch": "aarch64",
+      "cuda_version": "11.4",
+      "jetpack_version": "5.0.2",
+      "expected_results": {
+        "gpu_detected": true,
+        "gpu_memory": 8,
+        "cuda_available": true,
+        "tensorrt_available": true,
+        "power_mode": "MAXN"
+      }
+    },
+    {
+      "name": "Jetson Nano",
+      "model": "Nano",
+      "soc": "Tegra X1",
+      "arch": "aarch64",
+      "cuda_version": "10.2",
+      "jetpack_version": "4.6",
+      "expected_results": {
+        "gpu_detected": true,
+        "gpu_memory": 4,
+        "cuda_available": true,
+        "tensorrt_available": true,
+        "power_mode": "MAXP"
+      }
+    },
+    {
+      "name": "Jetson TX2",
+      "model": "TX2",
+      "soc": "Tegra X2",
+      "arch": "aarch64",
+      "cuda_version": "10.2",
+      "jetpack_version": "4.6",
+      "expected_results": {
+        "gpu_detected": true,
+        "gpu_memory": 8,
+        "cuda_available": true,
+        "tensorrt_available": true,
+        "power_mode": "MAXN"
+      }
+    },
+    {
+      "name": "Jetson AGX Xavier",
+      "model": "AGX Xavier",
+      "soc": "Xavier",
+      "arch": "aarch64",
+      "cuda_version": "10.2",
+      "jetpack_version": "4.6",
+      "expected_results": {
+        "gpu_detected": true,
+        "gpu_memory": 32,
+        "cuda_available": true,
+        "tensorrt_available": true,
+        "power_mode": "MAXN"
+      }
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "jetson_model_detection",
+      "name": "Jetson 型号检测",
+      "description": "测试 Jetson 设备型号检测功能",
+      "test_type": "unit",
+      "data_source": "jetson_info",
+      "validation": {
+        "type": "regex_match",
+        "pattern": "^(AGX Orin|Xavier NX|Nano|TX2|AGX Xavier)$"
+      }
+    },
+    {
+      "id": "jetson_cuda_check",
+      "name": "CUDA 可用性检查",
+      "description": "测试 CUDA 运行时可用性",
+      "test_type": "integration",
+      "data_source": "cuda_info",
+      "validation": {
+        "type": "value_check",
+        "expected": true,
+        "field": "available"
+      }
+    },
+    {
+      "id": "jetson_tensorrt_check",
+      "name": "TensorRT 可用性检查",
+      "description": "测试 TensorRT 可用性",
+      "test_type": "integration",
+      "data_source": "tensorrt_info",
+      "validation": {
+        "type": "value_check",
+        "expected": true,
+        "field": "available"
+      }
+    },
+    {
+      "id": "jetson_memory_check",
+      "name": "GPU 内存检查",
+      "description": "测试 GPU 内存检测",
+      "test_type": "unit",
+      "data_source": "gpu_memory",
+      "validation": {
+        "type": "range_check",
+        "min": 1,
+        "max": 48
+      }
+    },
+    {
+      "id": "jetson_power_mode",
+      "name": "电源模式检查",
+      "description": "测试电源模式检测",
+      "test_type": "unit",
+      "data_source": "power_mode",
+      "validation": {
+        "type": "enum_check",
+        "allowed_values": ["MAXN", "MAXP", "NVDEC", "NVENC", "AUTO"]
+      }
+    },
+    {
+      "id": "jetson_jetpack_version",
+      "name": "JetPack 版本检测",
+      "description": "测试 JetPack 版本检测",
+      "test_type": "unit",
+      "data_source": "jetpack_version",
+      "validation": {
+        "type": "version_check",
+        "min_version": "4.0",
+        "max_version": "6.0"
+      }
+    },
+    {
+      "id": "jetson_cuda_version",
+      "name": "CUDA 版本检测",
+      "description": "测试 CUDA 版本检测",
+      "test_type": "unit",
+      "data_source": "cuda_version",
+      "validation": {
+        "type": "version_check",
+        "min_version": "10.0",
+        "max_version": "12.0"
+      }
+    },
+    {
+      "id": "jetson_multiprocess_service",
+      "name": "多进程服务检查",
+      "description": "测试多进程服务状态",
+      "test_type": "integration",
+      "data_source": "multiprocess_service",
+      "validation": {
+        "type": "value_check",
+        "expected": "running",
+        "field": "status"
+      }
+    },
+    {
+      "id": "jetson_thermal_check",
+      "name": "温度检测",
+      "description": "测试温度传感器读取",
+      "test_type": "unit",
+      "data_source": "thermal",
+      "validation": {
+        "type": "range_check",
+        "min": 0,
+        "max": 100,
+        "field": "temperature"
+      }
+    },
+    {
+      "id": "jetson_fan_control",
+      "name": "风扇控制检查",
+      "description": "测试风扇控制功能",
+      "test_type": "integration",
+      "data_source": "fan",
+      "validation": {
+        "type": "value_check",
+        "expected": true,
+        "field": "controllable"
+      }
+    }
+  ],
+  "test_scenarios": [
+    {
+      "id": "cold_boot",
+      "name": "冷启动场景",
+      "description": "设备冷启动后的健康检查",
+      "test_sequence": ["jetson_model_detection", "jetson_cuda_check", "jetson_tensorrt_check", "jetson_power_mode"],
+      "expected_status": "all_passed"
+    },
+    {
+      "id": "stress_test",
+      "name": "压力测试场景",
+      "description": "高负载下的稳定性检查",
+      "test_sequence": ["jetson_thermal_check", "jetson_memory_check", "jetson_fan_control"],
+      "expected_status": "all_passed"
+    },
+    {
+      "id": "software_validation",
+      "name": "软件版本验证场景",
+      "description": "验证软件组件版本兼容性",
+      "test_sequence": ["jetson_jetpack_version", "jetson_cuda_version", "jetson_tensorrt_check"],
+      "expected_status": "all_passed"
+    }
+  ]
+}

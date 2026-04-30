@@ -1,0 +1,178 @@
+{
+  "summary": {
+    "total_tests": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "duration": 0.0
+  },
+  "test_results": [
+    {
+      "test_id": "jetson_model_detection",
+      "test_name": "Jetson 型号检测",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": "AGX Orin",
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_cuda_check",
+      "test_name": "CUDA 可用性检查",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": true,
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_tensorrt_check",
+      "test_name": "TensorRT 可用性检查",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": true,
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_memory_check",
+      "test_name": "GPU 内存检查",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": 32,
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_power_mode",
+      "test_name": "电源模式检查",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": "MAXN",
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_jetpack_version",
+      "test_name": "JetPack 版本检测",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": "5.0.2",
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_cuda_version",
+      "test_name": "CUDA 版本检测",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": "11.4",
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_multiprocess_service",
+      "test_name": "多进程服务检查",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": "running",
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_thermal_check",
+      "test_name": "温度检测",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": 45.5,
+      "expected_value": null,
+      "duration": 0.0
+    },
+    {
+      "test_id": "jetson_fan_control",
+      "test_name": "风扇控制检查",
+      "status": "passed",
+      "message": "Test passed",
+      "actual_value": true,
+      "expected_value": null,
+      "duration": 0.0
+    }
+  ],
+  "scenario_results": [
+    {
+      "scenario_id": "cold_boot",
+      "scenario_name": "冷启动场景",
+      "status": "passed",
+      "duration": 0.0,
+      "test_results": [
+        {
+          "test_id": "jetson_model_detection",
+          "test_name": "Jetson 型号检测",
+          "status": "passed"
+        },
+        {
+          "test_id": "jetson_cuda_check",
+          "test_name": "CUDA 可用性检查",
+          "status": "passed"
+        },
+        {
+          "test_id": "jetson_tensorrt_check",
+          "test_name": "TensorRT 可用性检查",
+          "status": "passed"
+        },
+        {
+          "test_id": "jetson_power_mode",
+          "test_name": "电源模式检查",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "scenario_id": "stress_test",
+      "scenario_name": "压力测试场景",
+      "status": "passed",
+      "duration": 0.0,
+      "test_results": [
+        {
+          "test_id": "jetson_thermal_check",
+          "test_name": "温度检测",
+          "status": "passed"
+        },
+        {
+          "test_id": "jetson_memory_check",
+          "test_name": "GPU 内存检查",
+          "status": "passed"
+        },
+        {
+          "test_id": "jetson_fan_control",
+          "test_name": "风扇控制检查",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "scenario_id": "software_validation",
+      "scenario_name": "软件版本验证场景",
+      "status": "passed",
+      "duration": 0.0,
+      "test_results": [
+        {
+          "test_id": "jetson_jetpack_version",
+          "test_name": "JetPack 版本检测",
+          "status": "passed"
+        },
+        {
+          "test_id": "jetson_cuda_version",
+          "test_name": "CUDA 版本检测",
+          "status": "passed"
+        },
+        {
+          "test_id": "jetson_tensorrt_check",
+          "test_name": "TensorRT 可用性检查",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

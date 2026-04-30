@@ -1,0 +1,22 @@
+{
+  "round": 1,
+  "test_date": "2026-04-25",
+  "target_device": "192.168.1.123",
+  "device_info": {
+    "model": "",
+    "os": "",
+    "python_version": "",
+    "architecture": ""
+  },
+  "bugs": [],
+  "summary": {
+    "total_checks": 0,
+    "passed": 0,
+    "warnings": 0,
+    "critical": 0,
+    "p0_count": 0,
+    "p1_count": 0,
+    "p2_count": 0,
+    "p3_count": 0
+  }
+}

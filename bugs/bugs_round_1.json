@@ -1,0 +1,103 @@
+{
+  "round": 1,
+  "test_date": "2026-04-25",
+  "target_device": "192.168.1.123",
+  "environment": {
+    "test_date": "2026-04-25T16:36:18.163603",
+    "target_device": "192.168.1.123",
+    "target_port": 8000,
+    "python_version": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "working_directory": "D:\\project\\nastool7",
+    "ping_status": "success",
+    "http_status": "success"
+  },
+  "bugs": [
+    {
+      "bug_id": "BUG-R1-001",
+      "timestamp": "2026-04-25T16:36:19.825241",
+      "status": "fixed",
+      "module": "SYSTEM",
+      "severity": "P0",
+      "title": "docker_service.py 缩进错误导致模块导入失败",
+      "description": "test_remote.py 执行时导入 nastool_adapters 模块失败，错误信息：unindent does not match any outer indentation level (docker_service.py, line 21)。该语法错误导致整个测试脚本无法正常运行。",
+      "reproduce_steps": [
+        "1. 运行 python test_remote.py",
+        "2. 观察导入模块时的错误输出"
+      ],
+      "expected_result": "模块正常导入，测试脚本正常执行",
+      "actual_result": "导入模块失败，返回错误：unindent does not match any outer indentation level (docker_service.py, line 21)",
+      "file_path": "nastool-v4.0.0/nastool-core/nastool_core/checks/system/docker_service.py",
+      "line_number": 21,
+      "error_type": "SyntaxError/IndentationError",
+      "screenshot": "",
+      "log": "导入模块失败: unindent does not match any outer indentation level (docker_service.py, line 21)",
+      "fix_info": {
+        "fix_date": "2026-04-25",
+        "fixer": "AI Assistant",
+        "fix_description": "修复了 nastool-v4.0.0 版本中 docker_service.py 文件第 17 行的缩进错误，将 for 循环正确缩进到 if 块内。",
+        "fix_verification": "测试脚本现在可以正常运行，模块导入成功。"
+      }
+    },
+    {
+      "bug_id": "BUG-R1-002",
+      "timestamp": "2026-04-25T16:36:19.825241",
+      "status": "fixed",
+      "module": "TEST",
+      "severity": "P1",
+      "title": "test_remote.py 模块路径硬编码为本地用户目录",
+      "description": "test_remote.py 中硬编码了 nastool 安装路径为 C:\\Users\\Administrator\\nastool-v4.0.0，但该路径在测试环境中不存在，导致无法找到模块文件。",
+      "reproduce_steps": [
+        "1. 检查 test_remote.py 第 7-10 行",
+        "2. 确认硬编码路径 C:\\Users\\Administrator\\nastool-v4.0.0 不存在"
+      ],
+      "expected_result": "使用相对路径或配置化的路径，或检查路径存在性",
+      "actual_result": "路径硬编码且不存在，模块加载失败",
+      "file_path": "test_remote.py",
+      "line_number": "7-10",
+      "error_type": "ConfigurationError",
+      "screenshot": "",
+      "log": "模块文件是否存在: False",
+      "fix_info": {
+        "fix_date": "2026-04-25",
+        "fixer": "AI Assistant",
+        "fix_description": "将 test_remote.py 中的模块路径从硬编码的用户目录改为使用相对路径 os.path.join(os.path.dirname(__file__), 'nastool-v4.0.0')，指向项目根目录下的 4.0 版本模块目录。",
+        "fix_verification": "测试脚本现在可以正常运行，模块导入成功。"
+      }
+    },
+    {
+      "bug_id": "BUG-R1-003",
+      "timestamp": "2026-04-25T16:45:00",
+      "status": "fixed",
+      "module": "TEST",
+      "severity": "P2",
+      "title": "http_detector.py 中使用 Unicode 符号导致编码错误",
+      "description": "http_detector.py 中使用了 Unicode 符号（✓ 和 ✗），在 Windows 终端中导致编码错误：'gbk' codec can't encode character '\u2717'。",
+      "reproduce_steps": [
+        "1. 运行 python test_remote.py",
+        "2. 观察连接时的编码错误"
+      ],
+      "expected_result": "测试脚本正常执行，无编码错误",
+      "actual_result": "出现编码错误：'gbk' codec can't encode character '\u2717'",
+      "file_path": "nastool-v4.0.0/nastool-adapters/nastool_adapters/http_detector.py",
+      "line_number": "118, 121",
+      "error_type": "EncodingError",
+      "screenshot": "",
+      "log": "错误: 'gbk' codec can't encode character '\u2717' in position 0: illegal multibyte sequence",
+      "fix_info": {
+        "fix_date": "2026-04-25",
+        "fixer": "AI Assistant",
+        "fix_description": "将 http_detector.py 中的 Unicode 符号（✓ 和 ✗）替换为 ASCII 字符 ([OK] 和 [X])，解决编码错误问题。",
+        "fix_verification": "测试脚本现在可以正常运行，无编码错误。"
+      }
+    }
+  ],
+  "summary": {
+    "total_bugs": 3,
+    "p0": 1,
+    "p1": 1,
+    "p2": 1,
+    "p3": 0,
+    "fixed_bugs": 3,
+    "open_bugs": 0
+  }
+}
