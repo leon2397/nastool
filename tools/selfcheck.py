@@ -22,11 +22,12 @@ from typing import Callable, Dict, List, Optional, Pattern, Set, Tuple
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-try:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
-except Exception:  # noqa: BLE001 - 老版本 Python 没有该方法
-    pass
+from _utf8_stdio import force_utf8_stdio  # noqa: E402 - 需先设好 sys.path
+
+# 控制台编码由系统 locale 决定，英文 Windows 是 cp1252，编不了中文输出。
+force_utf8_stdio()
 
 README_FILES_EXCLUDE = ("reference/", "tmpr/", "reports/", "docsrun/")
 

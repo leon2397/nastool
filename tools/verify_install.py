@@ -21,6 +21,12 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from _utf8_stdio import force_utf8_stdio
+
+force_utf8_stdio()
+
 
 def fail(msg: str) -> None:
     print(f"✗ 隔离安装冒烟失败：{msg}", file=sys.stderr)

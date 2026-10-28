@@ -23,6 +23,12 @@ import sys
 import tarfile
 import zipfile
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from _utf8_stdio import force_utf8_stdio
+
+force_utf8_stdio()
+
 MIN_RUNTIME_MODULES = 30
 
 
