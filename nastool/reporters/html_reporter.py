@@ -191,7 +191,9 @@ class HTMLReporter:
         return f'<div class="note">{items}</div>'
 
     def _categories(self, report: Report) -> str:
-        cats = [c for c in report.score.categories if c.weight > 0]
+        # 与终端保持一致：权重为 0 但确有判定的分类也要显示（标注仅展示不计分）
+        cats = [c for c in report.score.categories
+                if c.weight > 0 or c.score is not None]
         if not cats:
             return ""
         items = []
@@ -202,6 +204,8 @@ class HTMLReporter:
             coverage_note = f"{c.judged}/{c.total}"
             if c.judged and c.total and c.judged / c.total < 0.5:
                 coverage_note += " 低覆盖"
+            if c.weight <= 0:
+                coverage_note += " · 权重 0 仅展示"
             items.append(f'''
         <div class="cat-item">
           <div class="row"><span>{_esc(c.name)}

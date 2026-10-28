@@ -32,7 +32,7 @@ class CheckMeta:
     function: Optional[Callable] = None
     platforms: Sequence[str] = ()      # 适用平台：linux / windows / macos / any
     requires: Sequence[str] = ()       # 依赖能力：smartctl / root / docker ...
-    tags: Sequence[str] = ()           # 标签：nas / verify / slow / ai
+    tags: Sequence[str] = ()           # 标签：nas / verify / slow / ai（元数据，暂不参与筛选）
     description: str = ""
 
     def to_dict(self) -> dict:

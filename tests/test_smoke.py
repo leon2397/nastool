@@ -38,7 +38,7 @@ def _c(cid, status, category="storage", weight=1.0, confidence=0.9):
 def _report(checks, ts="2026-01-01 00:00:00", hostname="test"):
     from nastool.collect import PlatformFacts
     r = Report()
-    r.meta = ReportMeta(generated_at=ts, hostname=hostname, version="0.3.0",
+    r.meta = ReportMeta(generated_at=ts, hostname=hostname, version="0.3.1",
                         fingerprint="fp123", profile="nas")
     r.platform = PlatformFacts()
     r.checks = checks
@@ -378,3 +378,36 @@ def test_ainas_connector_tolerates_missing_facts():
     assert ok is True
     assert captured["score"] is None
     assert captured["storage_path"] == ""
+
+
+# ── 报告一致性 ──────────────────────────────────────────────
+def test_zero_weight_category_visible_in_all_reporters():
+    """权重为 0 但确有判定的分类，必须在终端 / HTML / JSON 里都能看到。
+
+    verify 场景下 ai 权重为 0（只展示、不计分）。若报告器按 weight > 0 过滤，
+    就会出现「JSON 里有这一类、终端和 HTML 里没有」——同一份数据三种说法。
+    """
+    from nastool.collect import PlatformFacts
+
+    checks = [
+        _c("storage.capacity", Status.PASS, category="storage", weight=4),
+        _c("ai.hardware", Status.PASS, category="ai", weight=3),
+    ]
+    r = Report()
+    r.meta = ReportMeta(generated_at="t", hostname="h", version="0.3.1",
+                        fingerprint="fp", profile="verify")
+    r.platform = PlatformFacts()
+    r.checks = checks
+    r.score, r.coverage = compute(checks, get_profile("verify"))
+
+    ai_cat = next(c for c in r.score.categories if c.category == "ai")
+    assert ai_cat.weight == 0
+    assert ai_cat.score == 100          # 判定了就不该是 None
+
+    text = TerminalReporter(color=False).render(r)
+    assert "AI 算力" in text
+    assert "仅展示" in text
+
+    html = HTMLReporter().build(r)
+    assert "AI 算力" in html
+    assert "仅展示" in html

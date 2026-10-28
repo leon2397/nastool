@@ -149,7 +149,10 @@ class TerminalReporter:
         self._w()
 
     def _categories(self, report: Report) -> None:
-        cats = [c for c in report.score.categories if c.weight > 0]
+        # 权重为 0 的分类也要显示——只要它真的判定了东西。
+        # 否则 JSON 里有这一类、终端和 HTML 里没有，同一份数据两种说法。
+        cats = [c for c in report.score.categories
+                if c.weight > 0 or c.score is not None]
         if not cats:
             return
         self._w("  " + self._c("分项", "dim"))
@@ -165,8 +168,10 @@ class TerminalReporter:
             ratio = f"{c.judged}/{c.total}"
             if c.judged and c.total and c.judged / c.total < 0.5:
                 ratio += self._c(" 低覆盖", "grey")
+            weight_note = (f"权重 {c.weight:.0f}" if c.weight > 0
+                           else "权重 0 · 仅展示不计分")
             self._w(f"    {self._pad(c.name, 12)}{bar} {score_text}  "
-                    f"{self._c(f'权重 {c.weight:.0f}', 'dim')}  "
+                    f"{self._c(weight_note, 'dim')}  "
                     f"{self._c(ratio, 'dim')}")
         self._w()
 
