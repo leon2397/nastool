@@ -153,6 +153,7 @@ nastool -p verify
 | 理解分层为什么这样 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adr/](docs/adr/) |
 | 看改了什么 / 还欠什么 / 踩过什么坑 | [docs/memo/](docs/memo/)（日志 · 技术债 · 踩坑 · 未决问题） |
 | 下一版做什么 | [docs/VERSION-PLAN.md](docs/VERSION-PLAN.md) |
+| 这东西最终长成什么样、给谁用 | [docs/PRODUCT-PLAN.md](docs/PRODUCT-PLAN.md) |
 | 知道还差哪些能力没做 | [docs/CHECKS-ROADMAP.md](docs/CHECKS-ROADMAP.md) |
 
 ---

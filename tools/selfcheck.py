@@ -375,6 +375,7 @@ def check_numbers(res: CheckResult) -> None:
 # 文档里出现、但属于其他工具、提案中命令或占位符的参数。
 # 新增未知项时先确认来源再加进来，并写明属于谁。
 KNOWN_FOREIGN = {
+    "--all": "git 的参数（git log --all）",
     "--config": "其他工具/示例",
     "--device": "其他工具/示例",
     "--format": "其他工具/示例",
@@ -383,6 +384,7 @@ KNOWN_FOREIGN = {
     "--junit-xml": "pytest",
     "--privileged": "docker run",
     "--rm": "docker run",
+    "--sdist": "python -m build 的参数",
     "--flag": "占位符示例",
     "--mock": "其他工具/示例",
     "--pid": "其他工具/示例",
@@ -505,6 +507,57 @@ def check_version_plan(res: CheckResult) -> None:
         res.note(f"覆盖 {len(open_debt)} 条未修债 + {len(open_q)} 个开放问题")
 
 
+# ── 12. 产品化规划与版本计划一致 ───────────────────────────
+
+def check_product_plan(res: CheckResult) -> None:
+    """
+    产品化规划必须存在，且它引用的债/问题必须真的在版本计划里排了期。
+
+    背景：产品化规划是"这产品长成什么样"，版本计划是"什么时候动手"。
+    两份文档如果脱节，规划就变成没有人执行的愿望书——这正是本项目
+    吃过亏的地方（前身项目的设计文档留下来了，代码内核却丢了）。
+    """
+    plan_path = ROOT / "docs" / "PRODUCT-PLAN.md"
+    if not plan_path.exists():
+        res.fail("缺少 docs/PRODUCT-PLAN.md（产品化规划是版本计划的上游）")
+        return
+    plan = plan_path.read_text(encoding="utf-8")
+
+    version_plan_path = ROOT / "docs" / "VERSION-PLAN.md"
+    version_plan = version_plan_path.read_text(encoding="utf-8")
+
+    # 双向引用：缺一边就会各自漂移。
+    # 必须检查**链接形式**而不是纯文本——文档里写一句「见 PRODUCT-PLAN.md」
+    # 不算引用，读者点不过去。变异测试证明过这个区别。
+    if not re.search(r"\[PRODUCT-PLAN\.md\]\(PRODUCT-PLAN\.md", version_plan):
+        res.fail("docs/VERSION-PLAN.md 没有以链接形式引用 PRODUCT-PLAN.md"
+                 "（两份规划会脱节）")
+    if not re.search(r"\[VERSION-PLAN\.md\]\(VERSION-PLAN\.md", plan):
+        res.fail("docs/PRODUCT-PLAN.md 没有以链接形式引用 VERSION-PLAN.md"
+                 "（排期不在它那儿）")
+
+    # 规划里引用的债与问题必须在版本计划中有归属
+    plan_debt = set(re.findall(r"DEBT-(\d+)(?![\dx])", plan))
+    plan_q = set(re.findall(r"\bQ-(\d+)(?![\dx])", plan))
+    sched_debt = set(re.findall(r"DEBT-(\d+)(?![\dx])", version_plan))
+    sched_q = set(re.findall(r"\bQ-(\d+)(?![\dx])", version_plan))
+
+    orphan_debt = sorted(plan_debt - sched_debt, key=int)
+    orphan_q = sorted(plan_q - sched_q, key=int)
+    if orphan_debt:
+        res.fail(f"产品化规划引用但未在版本计划排期: DEBT-{', DEBT-'.join(orphan_debt)}")
+    if orphan_q:
+        res.fail(f"产品化规划引用但未在版本计划排期: Q-{', Q-'.join(orphan_q)}")
+
+    # LICENSE 必须在仓库里（产品化的法律基础）
+    if not (ROOT / "LICENSE").exists():
+        res.fail("缺少 LICENSE 文件（README 声明 MIT 但仓库无许可正本，见 DEBT-015）")
+
+    if not orphan_debt and not orphan_q:
+        res.note(f"规划覆盖 {len(plan_debt)} 条债 + {len(plan_q)} 个问题，"
+                 f"全部已在版本计划排期")
+
+
 # ── 主流程 ───────────────────────────────────────────────────
 
 CHECKS: List[Tuple[str, Callable[[CheckResult], None]]] = [
@@ -520,6 +573,7 @@ CHECKS: List[Tuple[str, Callable[[CheckResult], None]]] = [
     ("profile 分类一致性", check_profiles),
     ("memo 台账编号与引用", check_memo),
     ("版本计划覆盖", check_version_plan),
+    ("产品化规划一致", check_product_plan),
 ]
 
 

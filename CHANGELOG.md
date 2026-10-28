@@ -4,6 +4,23 @@
 
 **产品行为有变化**：温度不再只取一个来源，报告可能新增「温度读数存在争议」的提示。
 
+### 补充：产品化规划（同版本追加）
+
+在多源融合之后追加了 [docs/PRODUCT-PLAN.md](docs/PRODUCT-PLAN.md)——产品层面的
+"长成什么样"，与 [docs/VERSION-PLAN.md](docs/VERSION-PLAN.md) 的"什么时候动手"分开。
+
+同批追加的打包基础修复：
+
+- **新增 `LICENSE`（MIT 正本）**——此前 README 与 `pyproject.toml` 都声明 MIT，
+  但仓库里没有许可文件，从未提交过。法律基础缺失（DEBT-015）。
+- **新增 `MANIFEST.in`**——`reference/`（前身归档，245 KB）不进构建产物；
+  实测 sdist 从含归档变为 98 个文件、含 `LICENSE`、不含 `reference/`。
+- `pyproject.toml` 改用 SPDX license 表达式（`license = "MIT"` + `license-files`），
+  消除 setuptools 的弃用警告（2027-02-18 后旧写法不再受支持）。
+
+`selfcheck` 新增第 13 项「产品化规划一致」：规划与版本计划必须双向引用、
+规划引用的债与问题必须已排期、`LICENSE` 必须存在。13/13 绿。
+
 ### 新增
 
 - `nastool/fusion.py` —— 通用融合引擎

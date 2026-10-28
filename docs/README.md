@@ -20,6 +20,7 @@
 | 查某个词到底指什么 | [GLOSSARY.md](GLOSSARY.md) |
 | 看这轮改了什么 / 还欠什么 / 踩过什么坑 | [memo/](memo/) |
 | 下一版做什么、什么时候发 1.0 | [VERSION-PLAN.md](VERSION-PLAN.md) |
+| 这东西最终长成什么样、给谁用 | [PRODUCT-PLAN.md](PRODUCT-PLAN.md) |
 | 理解这套分层为什么是这样 | [ARCHITECTURE.md](ARCHITECTURE.md) + [adr/](adr/) |
 | 知道还差哪些能力没做 | [CHECKS-ROADMAP.md](CHECKS-ROADMAP.md) |
 | 看前身项目的设计遗产 | [DESIGN-NOTES.md](DESIGN-NOTES.md) |
@@ -56,6 +57,7 @@
 | 文档 | 内容 |
 |---|---|
 | [VERSION-PLAN.md](VERSION-PLAN.md) | **版本计划**：0.4.0 / 0.5.0 / 0.6.0 / 1.0.0 各做什么、破坏性变更预告、1.0 门槛、明确不做的决定 |
+| [PRODUCT-PLAN.md](PRODUCT-PLAN.md) | **产品化规划**：目标用户与旅程、交付形态矩阵、成熟度阶梯（L0–L2）、信任机制、成功度量、风险登记、商业化路径 |
 | [CHECKS-ROADMAP.md](CHECKS-ROADMAP.md) | 当前 55 项清单 + 前身 92 项中的缺口 + 价值判断（排期见版本计划） |
 | [DESIGN-NOTES.md](DESIGN-NOTES.md) | 前身项目（v7.1.0-beta，92 检测器）的设计要点与 12 条真机 BUG 教训 |
 

@@ -4,6 +4,9 @@
 > [memo/open-questions.md](memo/open-questions.md)，检测项缺口在
 > [CHECKS-ROADMAP.md](CHECKS-ROADMAP.md)——但**"什么时候做"只在这里写**。
 >
+> **产品层面的"做成什么样"在 [PRODUCT-PLAN.md](PRODUCT-PLAN.md)**：本文件管工程节奏，
+> 那份管用户旅程、成熟度阶梯与商业化路径。两份互相引用，改一份要同步另一份。
+>
 > `python tools/selfcheck.py` 会检查：技术债与未决问题是否都有归属，没有就算漏排期。
 
 ---
@@ -15,6 +18,7 @@
 | 现在该做什么 | 下面「当前焦点」 |
 | 这一版会改坏什么 | 每个版本的「破坏性变更预告」 |
 | 什么时候能发 1.0 | [1.0.0 的门槛](#100--承诺稳定) |
+| 这东西最终长成什么样 | [PRODUCT-PLAN.md](PRODUCT-PLAN.md) |
 | 哪些事明确不做 | [明确不做的决定](#明确不做的决定) |
 | 每条债的细节 | [memo/debt.md](memo/debt.md) |
 
@@ -145,12 +149,24 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 | 踩坑守门测试 | [DEBT-013](memo/debt.md#debt-013-一半的坑没有守门测试) | 把 PowerShell/命令输出做成固定 fixture，让 6 条无守门的坑可测 |
 | 前身缺口补齐 | [CHECKS-ROADMAP.md](CHECKS-ROADMAP.md) | 登录失败次数 / 系统日志错误、NAS 平台专属项（DSM/QTS 版本判定、UPS、备份任务） |
 | 仓库瘦身 | [DEBT-012](memo/debt.md#debt-012-reference-目录不进构建但占体积) | `reference/` 移出主仓或标 vendored |
+| 报告加设备身份 | [DEBT-017](memo/debt.md#debt-017-报告缺设备身份字段) | 序列号 / 资产编号 / 主机名，让 `verify` 场景的报告能当交易凭证。**设备身份是契约字段**，要进 [OUTPUT.md](OUTPUT.md) |
+
+**产品化基础**（不占本版主题，但必须在这版之前完成——见 [PRODUCT-PLAN.md](PRODUCT-PLAN.md)）
+
+| 项 | 来源 | 说明 |
+|---|---|---|
+| LICENSE 文件 | [DEBT-015](memo/debt.md#debt-015-缺-license-文件) | README 声明 MIT 但仓库无许可正本。**法律基础缺失，成本 5 分钟** |
+| CI 工作流 | [DEBT-016](memo/debt.md#debt-016-没有-ci) | 每次提交自动跑 `selfcheck` + `pytest`，矩阵含 `ubuntu-latest` + `windows-latest` |
+| MANIFEST.in | — | 排除 `reference/`，把 `LICENSE` 打进产物 |
+| 远端仓库 + 首个 tag | [PRODUCT-PLAN.md](PRODUCT-PLAN.md#第-0-优先法律与分发基础本周可做完) | 没有远端 = 没有分发渠道 = L1"能给别人用"无从谈起 |
 
 **破坏性变更预告**
 
 - 新增若干检测项 → `report_version` 升 4.2
 - **Windows 上的检测项集合会变大** → 覆盖率数字、分类得分都会变，历史对比会看到"新增项"
 - 若接入 NAS 平台专属项，检测项 id 会增加（**已有 id 不变**，[STANDARDS.md](STANDARDS.md#8-兼容性承诺-硬)）
+- **报告新增设备身份顶层字段**（DEBT-017）→ `report_version` 升 4.2
+- **设备身份读不到时标 UNKNOWN 而非 FAIL**——很多设备不提供序列号，那属于"读不到"不是"坏了"
 
 **验收标准**
 
@@ -174,8 +190,10 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 | 项 | 来源 | 说明 |
 |---|---|---|
 | 报告格式兼容承诺 | [Q-003](memo/open-questions.md#q-003-report_version-30-稳定后要不要承诺向后兼容) | 冻结 `3.x`/`4.x` 只加字段，破坏性变更留给下一个 major |
-| 插件机制决策 | [Q-004](memo/open-questions.md#q-004-要不要开放第三方检测项插件) | 做或不做都要在 1.0 前定。倾向**不做**（`CheckContext` 还会变） |
+| 插件机制决策 | [Q-004](memo/open-questions.md#q-004-要不要开放第三方检测项插件) | 做或不做都要在 1.0 前定。倾向**不做**（`CheckContext` 还会变）——[PRODUCT-PLAN.md](PRODUCT-PLAN.md#结论二成熟度止步于-l2生态不是这条路) 已把它固化为产品战略：终点是 L2"可被依赖"，不是 L3"可被扩展" |
 | 国际化决策 | [Q-009](memo/open-questions.md#q-009-输出要不要国际化) | 做或不做都要在 1.0 前定。契约字段已是英文，改造点在展示层 |
+| 单文件可执行版决策 | [Q-011](memo/open-questions.md#q-011-要不要做单文件可执行版) | 做不做都要在 1.0 前定。**做决定需要实测三项**：单文件体积、打包后检测项是否全可用、打包后报告是否与源码运行一致。倾向"做，但先实测" |
+| 插件与定制检测项的兼容 | [Q-012](memo/open-questions.md#q-012-插件不做与定制检测项需求怎么兼容) | 与 Q-004 绑定。**只有出现愿意付费的定制需求才重新评估**——目前该需求为零，而插件 API 一旦公开就要背兼容承诺 |
 | 1.0 门槛校验 | — | 见下 |
 
 **1.0 的门槛清单**（全部满足才算 1.0）
