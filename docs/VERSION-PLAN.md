@@ -164,6 +164,7 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 | 前身缺口补齐 | [CHECKS-ROADMAP.md](CHECKS-ROADMAP.md) | 登录失败次数 / 系统日志错误、NAS 平台专属项（DSM/QTS 版本判定、UPS、备份任务） |
 | 仓库瘦身 | [DEBT-012](memo/debt.md#debt-012-reference-目录不进构建但占体积) | `reference/` 移出主仓或标 vendored |
 | 报告加设备身份 | [DEBT-017](memo/debt.md#debt-017-报告缺设备身份字段) | 序列号 / 资产编号 / 主机名，让 `verify` 场景的报告能当交易凭证。**设备身份是契约字段**，要进 [OUTPUT.md](OUTPUT.md) |
+| selfcheck 加浅克隆检测 | [DEBT-018](memo/debt.md#debt-018-selfcheck-缺浅克隆与工作区一致性检测) | `--is-shallow-repository` 必须为 false；fetch 类操作加超时（见 [GOTCHA-018](memo/gotchas.md#gotcha-018-git-fetch---depth1-在弱网环境是一次性炸弹)） |
 
 **产品化基础**（不占本版主题，但必须在这版之前完成——见 [PRODUCT-PLAN.md](PRODUCT-PLAN.md)）
 

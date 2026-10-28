@@ -381,6 +381,8 @@ def check_numbers(res: CheckResult) -> None:
 KNOWN_FOREIGN = {
     "--all": "git 的参数（git log --all）",
     "--config": "其他工具/示例",
+    "--depth": "git 的参数（git fetch --depth）",
+    "--is-shallow-repository": "git 的参数（git rev-parse）",
     "--device": "其他工具/示例",
     "--format": "其他工具/示例",
     "--interval": "其他工具/示例",

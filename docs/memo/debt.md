@@ -265,6 +265,25 @@ CSV）、003（GBK 解码）、007（全 SKIP 文案）、010（罕见分支 `Na
 
 ---
 
+### DEBT-018 selfcheck 缺浅克隆与工作区一致性检测
+
+**现状** [GOTCHA-018](gotchas.md#gotcha-018-git-fetch---depth1-在弱网环境是一次性炸弹)（浅克隆事故）
+的守门缺位：`tools/selfcheck.py` 检查不了"本地仓库是不是 shallow、工作区与远端是否还有效"。
+另外弱网下 fetch 挂死无提示，靠人肉掐掉。
+
+**不修的代价** 浅克隆/历史损坏这类状态**静默存在**，等到推送或重建历史时才爆，
+届时排查成本远高于一条检查。弱网环境（当前常态）下尤甚。
+
+**触发条件** 下一次需要同步远端、或怀疑本地历史不对时。
+
+**修法要点** selfcheck 加一条：`git rev-parse --is-shallow-repository` 必须为 false；
+可顺带校验 `origin` 可达时 `ls-remote` 的 head 与本地分支的关系（只比较，不 fetch）。
+工具层面：`git fetch` 类操作加超时（如 60s）与明确报错。
+
+**规模** 小。
+
+---
+
 ## 已修
 
 ### ✅ DEBT-016 没有 CI
