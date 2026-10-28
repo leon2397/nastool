@@ -250,9 +250,9 @@ python -m pytest tests/test_smoke.py -k cap -v
 版本号在三处，必须同步：
 
 ```bash
-VERSION                 # 0.3.2
-nastool/__init__.py     # __version__ = "0.3.2"
-pyproject.toml          # version = "0.3.2"
+VERSION                 # 0.3.3
+nastool/__init__.py     # __version__ = "0.3.3"
+pyproject.toml          # version = "0.3.3"
 ```
 
 三项都改完后：
@@ -261,8 +261,8 @@ pyproject.toml          # version = "0.3.2"
 python tools/selfcheck.py             # 规范自检（含版本一致性）
 python -m pytest -q
 python -m nastool --no-speed-test -o all --out-dir /tmp/relcheck
-git add -A && git commit -m "release: 0.3.2"
-git tag v0.3.2
+git add -A && git commit -m "release: 0.3.3"
+git tag v0.3.3
 ```
 
 `CHANGELOG.md` 用「新增 / 变更 / 修复 / 移除」分节。破坏性变更单独标 **破坏性变更** 并写迁移方式。

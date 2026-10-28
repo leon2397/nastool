@@ -152,6 +152,7 @@ nastool -p verify
 | 加一项新检测 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)（规范：[docs/STANDARDS.md](docs/STANDARDS.md)） |
 | 理解分层为什么这样 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adr/](docs/adr/) |
 | 看改了什么 / 还欠什么 / 踩过什么坑 | [docs/memo/](docs/memo/)（日志 · 技术债 · 踩坑 · 未决问题） |
+| 下一版做什么 | [docs/VERSION-PLAN.md](docs/VERSION-PLAN.md) |
 | 知道还差哪些能力没做 | [docs/CHECKS-ROADMAP.md](docs/CHECKS-ROADMAP.md) |
 
 ---

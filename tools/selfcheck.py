@@ -416,6 +416,38 @@ def check_memo(res: CheckResult) -> None:
                              f"{key.upper()}-{rid}")
 
 
+# ── 11. 版本计划覆盖（memo 台账不得漏排期）─────────────────
+
+def check_version_plan(res: CheckResult) -> None:
+    plan_path = ROOT / "docs" / "VERSION-PLAN.md"
+    if not plan_path.exists():
+        res.fail("缺少 docs/VERSION-PLAN.md（技术债与未决问题必须在其中有归属）")
+        return
+    plan = plan_path.read_text(encoding="utf-8")
+
+    debt_text = read("docs/memo/debt.md")
+    all_debt = set(re.findall(r"^### (?:✅ )?DEBT-(\d+)", debt_text, re.M))
+    done_debt = set(re.findall(r"^### ✅ DEBT-(\d+)", debt_text, re.M))
+    open_debt = all_debt - done_debt
+
+    q_text = read("docs/memo/open-questions.md")
+    all_q = set(re.findall(r"^### (?:✅ )?Q-(\d+)", q_text, re.M))
+    closed_q = set(re.findall(r"^### ✅ Q-(\d+)", q_text, re.M))
+    open_q = all_q - closed_q
+
+    plan_debt = set(re.findall(r"DEBT-(\d+)(?![\dx])", plan))
+    plan_q = set(re.findall(r"\bQ-(\d+)(?![\dx])", plan))
+
+    missing_debt = sorted(open_debt - plan_debt, key=int)
+    missing_q = sorted(open_q - plan_q, key=int)
+    if missing_debt:
+        res.fail(f"技术债未在版本计划中排期: DEBT-{', DEBT-'.join(missing_debt)}")
+    if missing_q:
+        res.fail(f"未决问题未在版本计划中排期: Q-{', Q-'.join(missing_q)}")
+    if not missing_debt and not missing_q:
+        res.note(f"覆盖 {len(open_debt)} 条未修债 + {len(open_q)} 个开放问题")
+
+
 # ── 主流程 ───────────────────────────────────────────────────
 
 CHECKS: List[Tuple[str, Callable[[CheckResult], None]]] = [
@@ -429,6 +461,7 @@ CHECKS: List[Tuple[str, Callable[[CheckResult], None]]] = [
     ("文档 --flag 真实性", check_flags),
     ("profile 分类一致性", check_profiles),
     ("memo 台账编号与引用", check_memo),
+    ("版本计划覆盖", check_version_plan),
 ]
 
 
