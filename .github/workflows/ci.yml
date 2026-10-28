@@ -24,6 +24,20 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# 统一用 bash。
+#
+# **为什么不用默认 shell**：Windows runner 的默认 shell 是 PowerShell，
+# 而 bash 的 heredoc（`python - <<'PY'`）在 PowerShell 里是语法错误——
+# 实测 5 个 Windows 格子全挂在 `ParserError: .ps1:4`。
+# Git Bash 在 windows-latest 上是现成的，显式指定它，三平台的脚本才能一致。
+#
+# 另外，校验逻辑本身已抽到 tools/ 下的独立脚本（smoke.py / verify_dist.py /
+# verify_install.py），本文件只负责调用——这样同一份校验本地也能跑，
+# 不必依赖 CI 才能验证。
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
@@ -68,21 +82,8 @@ jobs:
         # nastool 的退出码语义是「0 健康 / 1 有严重问题 / 2 错误」——
         # runner 机器上检测出任何 FAIL 项就返回 1，那是**正常的体检结果**，
         # 不是 CI 失败。冒烟要验的是「工具能跑完并产出完整报告」。
-        run: |
-          python -m nastool --no-speed-test --no-smart --no-internet --no-color \
-            -o json --output-file report.json || test $? -eq 1
-          python - <<'PY'
-          import json
-          d = json.load(open("report.json", encoding="utf-8"))
-          assert d["meta"]["report_version"].startswith("4."), d["meta"]["report_version"]
-          assert d["checks"], "报告里没有检查项"
-          assert d["coverage"]["total"] == len(d["checks"]), "覆盖度与检查项数不一致"
-          # 三种不确定要能分开计数（DEBT-009）
-          cov = d["coverage"]
-          assert cov["total"] == cov["judged"] + cov["unknown"] + cov["skipped"], cov
-          assert cov["usable"] == cov["judged"] - cov["low_confidence"], cov
-          print(f"OK {len(d['checks'])} 项，覆盖 {cov['percent']}%，存疑 {cov['low_confidence']} 项")
-          PY
+        # 校验逻辑在 tools/smoke.py 里，它自己处理三态退出码。
+        run: python tools/smoke.py
 
   build:
     name: 构建并校验产物
@@ -110,33 +111,13 @@ jobs:
         run: python -m build
 
       - name: 校验产物内容
-        run: |
-          python - <<'PY'
-          import glob, tarfile, zipfile
-          whl = glob.glob("dist/*.whl")[0]
-          sdist = glob.glob("dist/*.tar.gz")[0]
-          names = zipfile.ZipFile(whl).namelist()
-          assert any("LICENSE" in n for n in names), "LICENSE 未进 wheel"
-          assert not any("reference/" in n for n in names), "reference/ 不该进产物"
-          modules = [n for n in names if n.startswith("nastool/") and n.endswith(".py")]
-          assert len(modules) >= 30, f"wheel 里运行时模块不全: {len(modules)}"
-          tar_names = tarfile.open(sdist).getnames()
-          assert any(n.endswith("LICENSE") for n in tar_names), "LICENSE 未进 sdist"
-          print(f"OK wheel {len(names)} 条目 / 运行时模块 {len(modules)} 个 / sdist {len(tar_names)} 条目")
-          PY
+        run: python tools/verify_dist.py dist
 
       - name: 校验元数据（twine check）
         run: twine check dist/*
 
       - name: 隔离安装冒烟（装出来的能真跑）
-        run: |
-          python -m venv /tmp/verify
-          /tmp/verify/bin/pip install --quiet dist/*.whl
-          /tmp/verify/bin/nastool --no-speed-test --no-smart --no-internet --no-color
-          /tmp/verify/bin/python -c "
-          import nastool
-          print('安装版本', nastool.__version__)
-          "
+        run: python tools/verify_install.py dist
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4

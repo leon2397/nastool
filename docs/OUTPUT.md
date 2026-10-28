@@ -157,8 +157,8 @@
 ```json
 { "total": 51, "applicable": 19, "judged": 19,
   "unknown": 0, "skipped": 32, "low_confidence": 0,
-  "usable": 19,
-  "percent": 100.0, "usable_percent": 100.0, "blind_percent": 0.0 }
+  "trustworthy": 19,
+  "percent": 100.0, "trustworthy_percent": 100.0, "blind_percent": 0.0 }
 ```
 
 | 字段 | 说明 |
@@ -168,11 +168,23 @@
 | `judged` | 已判定（PASS + WARN + FAIL），**含低置信项** |
 | `unknown` | 不可判定（读不到、权限不足、工具缺失） |
 | `skipped` | 不适用（平台不支持） |
-| `low_confidence` | 判定了但置信度不足（≤ 0.5），**v4.0 新增** |
-| `usable` | 真正对分数有贡献的项数 = `judged − low_confidence`，**v4.0 新增** |
+| `low_confidence` | 判定了但置信度不足（≤ 0.5）的项数（**含低置信的 FAIL**），**v4.0 新增** |
+| `trustworthy` | 有可信结论的项数 = `judged − low_confidence`，**v4.0 新增** |
 | `percent` | `judged / applicable × 100` |
-| `usable_percent` | `usable / applicable × 100`，**v4.0 新增**——可信结论的占比 |
+| `trustworthy_percent` | `trustworthy / applicable × 100`，**v4.0 新增**——可信结论的占比 |
 | `blind_percent` | `(unknown + low_confidence) / applicable × 100`，用于封顶判断 |
+
+**`coverage.trustworthy` 与 `categories[].usable` 不是一回事**（[ADR-0011](adr/0011-coverage-field-naming.md)）：
+
+| | `coverage.trustworthy` | `categories[].usable` |
+|---|---|---|
+| 衡量什么 | 有多少项的**结论可信** | 有多少项**参与了打分** |
+| 低置信 PASS | 剔除 | 剔除 |
+| 低置信 FAIL | **剔除**（结论不可信） | **保留**（照样扣分并封顶） |
+| 用途 | 衡量报告可信度 | 报告里显示的打分分母 |
+
+两者同名会让人误以为 `coverage` 里的数就是「参与打分的项数」——那是错的，
+所以覆盖度侧改用 `trustworthy`。
 
 **注意 `percent` 的分母是 `applicable` 而不是 `total`。** 在 Windows 上 `skipped` 会很大（Linux 专属项），若用 `total` 作分母会制造「覆盖率只有 39%」的假象。详见 [SCORING.md](SCORING.md#5-覆盖度)。
 
@@ -387,7 +399,7 @@ for c in report["checks"]:
 cov = report["coverage"]
 assert cov["total"] == cov["judged"] + cov["unknown"] + cov["skipped"]
 assert cov["applicable"] == cov["total"] - cov["skipped"]
-assert cov["usable"] == cov["judged"] - cov["low_confidence"]
+assert cov["trustworthy"] == cov["judged"] - cov["low_confidence"]
 assert report["meta"]["report_version"].startswith("4.")
 ```
 

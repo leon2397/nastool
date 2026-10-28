@@ -15,7 +15,8 @@
 | WARN / FAIL | 任意 | **是** | 否 |
 
 - 判定规则收在 `CheckResult.counts_toward_score` 一处，终端 / JSON / HTML 共用
-- 覆盖度新增 `low_confidence` / `usable` / `usable_percent` 三个字段
+- 覆盖度新增 `low_confidence` / `trustworthy` / `trustworthy_percent` 三个字段
+  （原名 `usable` 与分类的 `usable` 同名不同义，发版前改名，见 ADR-0011）
 - `blind_percent` 口径改为 `(unknown + low_confidence) / applicable`
 - 低置信项在终端与 HTML 里会说明「该项未计入分数」
 

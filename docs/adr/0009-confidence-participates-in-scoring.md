@@ -89,6 +89,10 @@ MIN_CONFIDENCE_FOR_SCORING = 0.5
 
 顺带新增 `usable` 与 `usable_percent`：真正对分数有贡献的项数与占比。
 
+> **本文的字段命名已被 [ADR-0011](0011-coverage-field-naming.md) 取代**：
+> 覆盖度侧改名为 `trustworthy` / `trustworthy_percent`。
+> 本文其余决策（阈值 `<= 0.5`、按 PASS / FAIL 非对称处理）**继续有效**。
+
 ### 五、口径变更时不给差值
 
 置信度参与判定改变了 `score` 的计算方式，因此 `report_version` 从 3.0 升到 4.0。

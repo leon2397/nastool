@@ -85,7 +85,7 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 - 原计划对所有低置信项一视同仁——**改为按 PASS / FAIL 非对称**：低置信 PASS 不进分母，
   低置信 WARN/FAIL **仍然计入并照样触发封顶**。对称处理会让可疑的严重问题
   从分数里被抹掉，等于让设备看起来比实际更健康
-- 覆盖度新增 `low_confidence` / `usable` / `usable_percent`，
+- 覆盖度新增 `low_confidence` / `trustworthy` / `trustworthy_percent`，
   `blind_percent` 改为 `(unknown + low_confidence) / applicable`
 - 低置信项在终端与 HTML 里会说明「该项未计入分数」，避免用户以为分数算错了
 

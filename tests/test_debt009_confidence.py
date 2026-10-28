@@ -70,8 +70,8 @@ def test_low_confidence_pass_excluded_from_denominator():
     # 但"已判定"仍是 3 项——它确实判定了，只是不可信
     assert coverage.judged == 3
     assert coverage.low_confidence == 1
-    # 真正对分数有贡献的只有 2 项
-    assert coverage.usable == 2
+    # 有可信结论的只有 2 项
+    assert coverage.trustworthy == 2
 
 
 def test_low_confidence_pass_removed_does_not_hide_a_failure():
@@ -173,7 +173,7 @@ def test_boundary_conflict_confidence_is_excluded():
 
     assert coverage.low_confidence == 1
     assert coverage.judged == 2
-    assert coverage.usable == 1
+    assert coverage.trustworthy == 1
 
 
 # ── 规则 4：覆盖度口径 ──────────────────────────────────────
@@ -186,7 +186,7 @@ def test_low_confidence_counts_as_blind_spot():
     score, coverage = compute(checks, get_profile("nas"))
 
     assert coverage.blind_percent == 50.0
-    assert coverage.usable_percent == 50.0
+    assert coverage.trustworthy_percent == 50.0
     # 一半适用项不可信 → 触发盲区封顶
     assert score.capped is True
     assert score.total is not None and score.total <= 74
@@ -241,7 +241,7 @@ def test_all_reporters_explain_excluded_item():
 
     d = r.to_dict()
     assert d["coverage"]["low_confidence"] == 1
-    assert d["coverage"]["usable"] == 1
+    assert d["coverage"]["trustworthy"] == 1
 
 
 def test_reporters_show_low_confidence_count():
@@ -301,6 +301,55 @@ def test_category_score_exposes_low_confidence():
     assert cat.usable == 1
     assert cat.to_dict()["usable"] == 1
     assert cat.to_dict()["low_confidence"] == 1
+
+
+def test_coverage_trustworthy_differs_from_category_usable():
+    """
+    覆盖度与分类的两个「分母」含义不同，别混为一谈（ADR-0011）。
+
+    低置信的 FAIL 是关键样本：它**不可信**，但**照样计入分数**
+    （非对称规则，宁可误报不可漏报）。于是：
+      · 覆盖度的 trustworthy = judged − 全部低置信项 = 1（结论不可信）
+      · 分类的 usable        = 真正参与打分的项数   = 2（FAIL 计入了）
+
+    如果把两个字段都叫 `usable`，读 JSON 的人会以为
+    `coverage.usable` 就是「参与打分的项数」——那是错的。
+    """
+    checks = [
+        _c("storage.ok", Status.PASS, category="storage", confidence=0.9),
+        _c("storage.lowconf_fail", Status.FAIL, category="storage", confidence=0.4),
+    ]
+    score, coverage = compute(checks, get_profile("nas"))
+    cat = score.categories[0]
+
+    # 覆盖度口径：低置信 FAIL 算「不可信」
+    assert coverage.judged == 2
+    assert coverage.low_confidence == 1
+    assert coverage.trustworthy == 1
+
+    # 分类口径：低置信 FAIL 照样参与打分
+    assert cat.judged == 2
+    assert cat.low_confidence == 0
+    assert cat.usable == 2
+
+    # 覆盖度里不再有 usable 字段，避免与分类的 usable 同名不同义
+    cov = coverage.to_dict()
+    assert cov["trustworthy"] == 1
+    assert "usable" not in cov
+    assert "usable_percent" not in cov
+
+
+def test_low_confidence_fail_still_caps_score():
+    """低置信的 FAIL 必须照样触发封顶 59——它是不可信，不是没事。"""
+    checks = [
+        _c("storage.ok", Status.PASS, category="storage", confidence=0.95),
+        _c("storage.ok2", Status.PASS, category="storage", confidence=0.95),
+        _c("storage.lowconf_fail", Status.FAIL, category="storage", confidence=0.4),
+    ]
+    score, _ = compute(checks, get_profile("nas"))
+
+    assert score.total is not None and score.total <= 59
+    assert score.capped is True
 
 
 # ── 规则 6：口径变更时分数不可比 ────────────────────────────
@@ -381,7 +430,7 @@ def test_high_confidence_behavior_unchanged():
 
     assert score.categories[0].score == 100
     assert coverage.low_confidence == 0
-    assert coverage.usable == 3
+    assert coverage.trustworthy == 3
     assert coverage.blind_percent == 0.0
 
 

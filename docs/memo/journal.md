@@ -7,11 +7,36 @@
 
 ---
 
+## 2026-10-28 · 远端仓库 + CI + 首个 tag（产品化第 0 优先）
+
+**做了什么** 建远端 `leon2397/nastool`（`main` = 本项目，`master` 保留前身 V7.2 代码不动），
+建 `.github/workflows/ci.yml`（3 平台 × Python 3.9–3.13 = 12 格）与 `release.yml`（tag 触发）。
+
+**为什么** 没有远端 = 没有分发渠道 = L1「能给别人用」无从谈起。这是产品化的第 0 优先。
+
+**踩到的坑** ① CI 用 bash heredoc 写校验，Windows runner 默认 PowerShell → `ParserError`，
+5 格全挂。**修法不是改 YAML 而是抽脚本**：`tools/smoke.py`、`tools/verify_dist.py`、
+`tools/verify_install.py` 进仓库，CI 与本地跑同一份代码。
+② 完整 `git fetch` 被代理掐断（pack 传输失败），浅 fetch 与 push 可用。
+③ API 推送脚本 `git ls-tree` 遇中文路径会加引号八进制转义 → 远端造出带引号的假目录，
+Windows 检出直接失败。改用 `-z`。
+
+**发现并修正的契约缺陷** 覆盖度的 `usable` 与分类的 `usable` 同名不同义
+（低置信 FAIL 在分类侧保留、在覆盖度侧剔除），且覆盖度侧 docstring 写错。
+发版前改名 `trustworthy`，见 [ADR-0011](../adr/0011-coverage-field-naming.md)。
+
+**验证** 远端 `main` 与本地 SHA 完全一致（无需 reset 对齐）；本地自检 13/13、
+测试 77 项全绿、冒烟 + 产物校验 + 隔离安装三项在 Windows 上实跑通过。
+
+**遗留** PyPI 发布默认关闭，待配 trusted publisher 后再开。
+
+---
+
 ## 2026-10-28 · 置信度参与判定（v0.4.0，DEBT-009 闭环）
 
 **做了什么** 置信度从展示值变成判定依据。规则收在 `model.CheckResult.counts_toward_score`：
 低置信（≤ 0.5）的 PASS 不进分母且计入盲区，低置信的 WARN/FAIL **仍然计入并照样触发封顶**。
-覆盖度新增 `low_confidence` / `usable` / `usable_percent`，`blind_percent` 改为
+覆盖度新增 `low_confidence` / `trustworthy` / `trustworthy_percent`，`blind_percent` 改为
 `(unknown + low_confidence) / applicable`。`report_version` 3.0 → 4.0，
 `diff.py` 检测跨口径对比并**不给差值**。新增 ADR-0009、18 项专属测试。
 

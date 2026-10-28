@@ -299,7 +299,7 @@ CSV）、003（GBK 解码）、007（全 SKIP 文案）、010（罕见分支 `Na
 1. `model.py` 新增 `MIN_CONFIDENCE_FOR_SCORING = 0.5` 与
    `CheckResult.counts_toward_score`——判定规则收在一处，三个报告器共用
 2. `scoring.py` 的 `_category_score()` 改为只把「计入分数」的项放进分母
-3. 覆盖度新增 `low_confidence` / `usable` / `usable_percent`，
+3. 覆盖度新增 `low_confidence` / `trustworthy` / `trustworthy_percent`，
    `blind_percent` 改为 `(unknown + low_confidence) / applicable`
 4. `report_version` 3.0 → 4.0；`diff.py` 检测口径变更，跨版本不给差值只给提示
 

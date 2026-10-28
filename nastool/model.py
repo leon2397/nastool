@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional
 # 报告格式版本：向后兼容契约，任何破坏性变更必须升这里
 #
 # 4.0（DEBT-009）：coverage 的口径变了——
-#   · 新增 low_confidence / usable / usable_percent 三个字段
+#   · 新增 low_confidence / trustworthy / trustworthy_percent 三个字段
 #   · blind_percent 现在 = (unknown + low_confidence) / applicable
 #   · score 的计算方式变了：低置信的 PASS 不计入分母
 # 历史库里的旧分数与新口径**不可直接比较**，对比时会提示口径变更。
@@ -236,8 +236,19 @@ class Coverage:
         return max(0, self.total - self.skipped)
 
     @property
-    def usable(self) -> int:
-        """真正对分数有贡献的项数（判定了，且置信度够高）。"""
+    def trustworthy(self) -> int:
+        """
+        有可信结论的项数（判定了，且置信度够高）。
+
+        **注意它与 `CategoryScore.usable` 不是一回事**（见 ADR-0011）：
+          · 本字段 = judged − 全部低置信项，包括低置信的 FAIL。
+            低置信 FAIL 虽不可信，但它**确实计入了分数**（非对称规则），
+            所以这里衡量的是「结论有多可信」，不是「有多少项参与了打分」。
+          · `CategoryScore.usable` = 真正参与该分类打分的项数。
+            它的分母必须与实际打分分母一致，否则报告里的分母对不上分数。
+
+        两者名字不同、含义不同，别再混用。
+        """
         return max(0, self.judged - self.low_confidence)
 
     @property
@@ -245,9 +256,9 @@ class Coverage:
         return round(self.judged / self.applicable * 100, 1) if self.applicable else 0.0
 
     @property
-    def usable_percent(self) -> float:
+    def trustworthy_percent(self) -> float:
         """可信结论的占比——比 percent 更能代表"这份报告能有多可靠"。"""
-        return round(self.usable / self.applicable * 100, 1) if self.applicable else 0.0
+        return round(self.trustworthy / self.applicable * 100, 1) if self.applicable else 0.0
 
     @property
     def blind_percent(self) -> float:
@@ -268,9 +279,9 @@ class Coverage:
             "unknown": self.unknown,
             "skipped": self.skipped,
             "low_confidence": self.low_confidence,
-            "usable": self.usable,
+            "trustworthy": self.trustworthy,
             "percent": self.percent,
-            "usable_percent": self.usable_percent,
+            "trustworthy_percent": self.trustworthy_percent,
             "blind_percent": self.blind_percent,
         }
 
@@ -288,7 +299,13 @@ class CategoryScore:
 
     @property
     def usable(self) -> int:
-        """真正计入分数的项数。"""
+        """
+        真正计入分数的项数。
+
+        低置信的 PASS 被剔除（不进分母），低置信的 WARN/FAIL 仍然计入。
+        这个分母**必须**与实际打分用的分母一致——否则报告里显示的
+        「12/15」和分数就对不上账了。
+        """
         return max(0, self.judged - self.low_confidence)
 
     def to_dict(self) -> dict:
