@@ -14,3 +14,6 @@ nastool_report.md
 # 报告文件（CI 冒烟产物等通用名称）
 report.json
 report.html
+
+# API 推送工具的本地缓存（远端已存在哪些 blob 的记录）
+tools/.blob_cache.json

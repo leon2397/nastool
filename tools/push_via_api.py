@@ -132,6 +132,62 @@ def upload_blob(commit_sha: str, path: str, token: str) -> str:
     return res["sha"]
 
 
+def _changed_entries(commit_sha: str, parent: str | None):
+    """
+    列出该 commit 相对父提交变更的文件：(路径, 模式, blob SHA, 是否删除)
+
+    **必须用 -z（NUL 分隔）**：`git diff-tree` 默认输出时，含中文或特殊字符的
+    路径会被 git 加引号并八进制转义（如 "reference/legacy/docs/NASTool\\351\\203\\250..."），
+    直接 split 会把转义串当成路径名，在远端造出一堆带引号的假目录。
+    实测这个坑造出的假目录会让 Windows 上的 checkout 直接失败。
+
+    根提交没有父，视为「全部文件都是新增」。
+    """
+    if parent is None:
+        args = ["git", "ls-tree", "-r", "-z", commit_sha]
+    else:
+        args = ["git", "diff-tree", "-r", "-z", "--no-renames",
+                "--raw", parent, commit_sha]
+
+    raw = subprocess.run(args, capture_output=True, timeout=180).stdout
+
+    if parent is None:
+        for record in raw.split(b"\x00"):
+            if not record:
+                continue
+            meta, _, path_b = record.partition(b"\t")
+            mode, typ, sha = meta.decode().split()
+            if typ != "blob":
+                continue
+            yield path_b.decode("utf-8"), mode, sha, False
+        return
+
+    # --raw 格式：:<old_mode> <new_mode> <old_sha> <new_sha> <status>\0<path>\0
+    #
+    # 注意 `-z` 模式下 **metadata 与路径之间是 NUL 而不是 TAB**——
+    # 这是 `diff-tree --raw -z` 与 `ls-tree -z` 的关键差别。
+    # 所以记录是「meta, path」交替出现的。
+    parts = raw.split(b"\x00")
+    i = 0
+    while i < len(parts) - 1:
+        meta = parts[i].decode("utf-8", "replace")
+        path = parts[i + 1].decode("utf-8", "replace")
+        i += 2
+        if not meta or not path:
+            continue
+        fields = meta.split()
+        if len(fields) < 5:
+            continue
+        old_mode, new_mode, old_sha, new_sha, status = fields[:5]
+        if status == "D":
+            yield path, new_mode or old_mode, old_sha, True
+        elif status == "T":
+            # 类型变了（文件 ↔ 符号链接）：按新增处理
+            yield path, new_mode, new_sha, False
+        else:
+            yield path, new_mode, new_sha, False
+
+
 def build_tree(base_tree: str | None, entries: list, token: str) -> str:
     res = api(f"/repos/{REPO}/git/trees", "POST",
               {"base_tree": base_tree, "tree": entries}, token)
@@ -210,29 +266,23 @@ def main() -> int:
         email = git("log", "-1", "--format=%ae", commit_sha)
         when = git("log", "-1", "--format=%cI", commit_sha)
 
-        # 该 commit 的完整文件树
+        # 该 commit 相对父提交**变更的**文件
         #
-        # 必须用 -z（NUL 分隔）：默认输出时，**含中文或特殊字符的路径会被 git
-        # 加引号并八进制转义**（如 "reference/legacy/docs/NASTool\351\203\250..."），
-        # 直接 split 会把转义串当成路径名，在远端造出一堆带引号的假目录。
+        # 为什么只传差异：GitHub 的建树接口支持 `base_tree`（以父提交的 tree
+        # 为基底），只列变更项即可得到与本地完全相同的 tree SHA。
+        # 传全量文件的话，15 个提交 × 106 个文件 = 1600 次 blob 探测请求，
+        # 在慢代理下要跑十几分钟；只传差异则每个提交通常只有几个文件。
         entries = []
-        raw = subprocess.run(
-            ["git", "ls-tree", "-r", "-z", commit_sha],
-            capture_output=True, timeout=180,
-        ).stdout
-        for record in raw.split(b"\x00"):
-            if not record:
+        for path, mode, sha, deleted in _changed_entries(commit_sha, parent):
+            if deleted:
+                # 删除的文件：用 sha=null 告诉 GitHub 从基底里去掉它
+                entries.append({"path": path, "mode": mode, "type": "blob", "sha": None})
                 continue
-            meta, _, path_b = record.partition(b"\t")
-            mode, typ, sha = meta.decode().split()
-            if typ != "blob":
-                continue
-            path = path_b.decode("utf-8")
             if not blob_exists(sha, token):
                 upload_blob(commit_sha, path, token)
             entries.append({"path": path, "mode": mode, "type": "blob", "sha": sha})
 
-        # base_tree = 父 commit 的 tree，这样只需上传差异
+        # base_tree = 父 commit 的 tree
         base_tree = None
         if parent:
             try:
