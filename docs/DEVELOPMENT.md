@@ -15,7 +15,7 @@ python -m pytest -q                       # 全部通过
 python -m nastool --no-speed-test -v      # 端到端跑一次
 ```
 
-要求 Python ≥ 3.8。**运行时不依赖任何第三方包**，请不要为了方便引入。
+要求 Python ≥ 3.9。**运行时不依赖任何第三方包**，请不要为了方便引入。
 
 ---
 

@@ -43,6 +43,23 @@
 绝大多数检查项置信度在 0.85–1.00，落在阈值之上，**平时不改变分数**。
 这条规则只在「多源数据打架」时起作用——而那正是最需要它的时候。
 
+### 补充：CI 与 Python 版本下限
+
+同版本追加 GitHub Actions 工作流（`.github/workflows/ci.yml` 与 `release.yml`）。
+
+**CI 首轮跑出 10 格失败，暴露了两个真问题**：
+
+1. **冒烟脚本误用了退出码语义** —— `nastool` 的退出码是「0 健康 / 1 有严重问题 /
+   2 错误」，CI 断言退出码为 0 就会把「正常的体检结果」当成 CI 失败。
+   已改为断言「报告能生成且内容完整」
+2. **`requires-python = ">=3.8"` 是落空的承诺** —— setuptools 从 76.0.0 起
+   要求 Python >= 3.9，而 `license-files` 需要 setuptools >= 77，
+   在 3.8 上 `pip install -e .` 直接失败。**已把下限抬到 3.9**
+   （Python 3.8 已于 2024-10 EOL），见 [ADR-0010](docs/adr/0010-python-3.9-floor.md)
+
+CI 矩阵为 3 平台（ubuntu / windows / macos）× Python 3.9–3.13 共 12 格，
+每格跑 `selfcheck` + `pytest` + 端到端冒烟。
+
 ### 验证
 
 - 新增 `tests/test_debt009_confidence.py`（18 项）

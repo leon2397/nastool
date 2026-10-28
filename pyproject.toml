@@ -7,7 +7,7 @@ name = "nastool"
 version = "0.4.0"
 description = "通用 NAS 设备检测工具：平台 / 硬件 / 存储与阵列 / 网络 / 服务 / 安全 / AI 算力 / 健康评分"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["nas", "diagnostics", "storage", "smart", "raid", "homelab"]

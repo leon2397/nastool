@@ -17,6 +17,7 @@
 | [0007](0007-no-fix-engine.md) | 刻意不做自动修复 | 生效 | 产品边界 |
 | [0008](0008-multi-source-fusion.md) | 多源融合放在判定层，温度取最高值而非平均值 | 生效 | 数据可信度、判定语义 |
 | [0009](0009-confidence-participates-in-scoring.md) | 置信度参与判定，低置信项按 PASS / FAIL 非对称处理 | 生效 | 评分口径、报告语义 |
+| [0010](0010-python-3.9-floor.md) | Python 版本下限从 3.8 抬到 3.9 | 生效 | 部署兼容性、CI 矩阵 |
 
 ## 什么值得记一条 ADR
 

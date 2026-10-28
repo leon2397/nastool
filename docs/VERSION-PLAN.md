@@ -170,7 +170,7 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 | 项 | 来源 | 说明 |
 |---|---|---|
 | LICENSE 文件 | [DEBT-015](memo/debt.md#debt-015-缺-license-文件) | README 声明 MIT 但仓库无许可正本。**法律基础缺失，成本 5 分钟** |
-| CI 工作流 | [DEBT-016](memo/debt.md#debt-016-没有-ci) | ✅ v0.4.0 完成 —— 3 平台 × Python 3.8–3.13 共 15 格，每格跑 `selfcheck` + `pytest` + 端到端冒烟 |
+| CI 工作流 | [DEBT-016](memo/debt.md#debt-016-没有-ci) | ✅ v0.4.0 完成 —— 3 平台 × Python 3.9–3.13 共 12 格，每格跑 `selfcheck` + `pytest` + 端到端冒烟 |
 | MANIFEST.in | — | 排除 `reference/`，把 `LICENSE` 打进产物 |
 | 远端仓库 + 首个 tag | [PRODUCT-PLAN.md](PRODUCT-PLAN.md#第-0-优先法律与分发基础本周可做完) | 没有远端 = 没有分发渠道 = L1"能给别人用"无从谈起 |
 

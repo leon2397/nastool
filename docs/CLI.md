@@ -214,7 +214,7 @@ nastool --only "storage.*" --skip "*.smart_*"    # 存储类里除 SMART 之外�
 
 | 依赖 | 用途 | 缺失时 |
 |---|---|---|
-| Python ≥ 3.8 | 运行 | — |
+| Python ≥ 3.9 | 运行 | — |
 | `smartctl` | SMART 检测 | 相关 4 项标 SKIP |
 | `lsblk` | 物理盘识别 | `storage.physical_disks` → UNKNOWN |
 | `zpool` / `btrfs` | 阵列检测 | 该路径不可用，mdstat 仍有效 |

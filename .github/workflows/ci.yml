@@ -32,10 +32,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        # 从 3.9 起：setuptools 76+ 要求 Python >= 3.9，而 `license-files`
+        # 需要 setuptools >= 77。声明支持 3.8 但装不上，是落空的承诺——
+        # 3.8 已于 2024-10 EOL，不如把下限抬到真正能跑的版本。
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         exclude:
-          # macOS 的 arm64 runner 最早提供 3.11，3.8/3.9/3.10 无二进制包
-          - { os: macos-latest, python-version: "3.8" }
+          # macOS 的 arm64 runner 最早提供 3.11，3.9/3.10 无二进制包
           - { os: macos-latest, python-version: "3.9" }
           - { os: macos-latest, python-version: "3.10" }
 
@@ -60,16 +62,26 @@ jobs:
       - name: 单元测试与不变式测试
         run: python -m pytest tests/ -v
 
-      - name: 端到端冒烟（能跑完、能出报告、退出码正确）
+      - name: 端到端冒烟（能跑完、能出报告、报告内容完整）
+        # 注意：这里**不能**断言退出码为 0。
+        # nastool 的退出码语义是「0 健康 / 1 有严重问题 / 2 错误」——
+        # runner 机器上检测出任何 FAIL 项就返回 1，那是**正常的体检结果**，
+        # 不是 CI 失败。冒烟要验的是「工具能跑完并产出完整报告」。
         run: |
-          python -m nastool --no-speed-test --no-smart --no-internet --no-color -o json --output-file report.json
-          python -c "
+          python -m nastool --no-speed-test --no-smart --no-internet --no-color \
+            -o json --output-file report.json || test $? -eq 1
+          python - <<'PY'
           import json
-          d = json.load(open('report.json', encoding='utf-8'))
-          assert d['meta']['report_version'].startswith('4.'), d['meta']['report_version']
-          assert d['checks'], '报告里没有检查项'
-          print(f\"OK {len(d['checks'])} 项，覆盖 {d['coverage']['percent']}%\")
-          "
+          d = json.load(open("report.json", encoding="utf-8"))
+          assert d["meta"]["report_version"].startswith("4."), d["meta"]["report_version"]
+          assert d["checks"], "报告里没有检查项"
+          assert d["coverage"]["total"] == len(d["checks"]), "覆盖度与检查项数不一致"
+          # 三种不确定要能分开计数（DEBT-009）
+          cov = d["coverage"]
+          assert cov["total"] == cov["judged"] + cov["unknown"] + cov["skipped"], cov
+          assert cov["usable"] == cov["judged"] - cov["low_confidence"], cov
+          print(f"OK {len(d['checks'])} 项，覆盖 {cov['percent']}%，存疑 {cov['low_confidence']} 项")
+          PY
 
   build:
     name: 构建并校验产物
