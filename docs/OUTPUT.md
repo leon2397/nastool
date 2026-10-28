@@ -1,7 +1,7 @@
 # 报告格式规范
 
 > JSON 是这个产品对外最重要的接口：上报、历史库、二次分析、CI 判定都依赖它。
-> 本文是 **`report_version: 3.0` 的字段说明书**。
+> 本文是 **`report_version: 4.0` 的字段说明书**。
 >
 > 相关：[CLI.md](CLI.md)（怎么产出）、[HISTORY.md](HISTORY.md)（存下来的报告怎么比对）
 
@@ -10,7 +10,7 @@
 ## 0. 版本契约
 
 ```json
-"meta": { "report_version": "3.0" }
+"meta": { "report_version": "4.0" }
 ```
 
 `REPORT_VERSION` 是**向后兼容契约**。规则：
@@ -20,7 +20,13 @@
 
 消费方应当先校验 `meta.report_version`，不匹配时明确报错而不是猜。
 
-3.0 相对 2.0 是破坏性升级，详见 [ADR-0005](adr/0005-report-version-3-breaking.md)。
+- 3.0 相对 2.0 是破坏性升级，详见 [ADR-0005](adr/0005-report-version-3-breaking.md)。
+- **4.0 相对 3.0 是破坏性升级**：`coverage` 新增三个字段、`blind_percent` 口径变了、
+  `score` 的计算方式变了（低置信的 PASS 不再计入分母）。
+  详见 [ADR-0009](adr/0009-confidence-participates-in-scoring.md)。
+
+**跨版本对比的注意事项**：3.0 的报告与 4.0 的报告**分数不可直接相减**——
+差值里一半来自设备变化、一半来自口径变化。`nastool --compare` 会自动识别并提示。
 
 ---
 
@@ -62,7 +68,7 @@
 |---|---|---|
 | `tool` | string | 固定 `"nastool"` |
 | `version` | string | 工具版本，如 `"0.3.4"` |
-| `report_version` | string | **格式版本，当前 `"3.0"`** |
+| `report_version` | string | **格式版本，当前 `"4.0"`** |
 | `generated_at` | string | `YYYY-MM-DD HH:MM:SS`（本地时间，无时区） |
 | `duration_s` | float | 本次检测耗时（秒） |
 | `hostname` | string | 主机名 |
@@ -123,7 +129,8 @@
 
 ```json
 { "category": "storage", "name": "存储",
-  "weight": 34, "score": 100, "judged": 3, "total": 13 }
+  "weight": 34, "score": 100, "judged": 3, "total": 13,
+  "low_confidence": 0, "usable": 3 }
 ```
 
 | 字段 | 说明 |
@@ -132,10 +139,16 @@
 | `name` | 中文显示名 |
 | `weight` | 该项在本次场景下的权重；**0 表示不计入总分** |
 | `score` | 该类得分 0–100；**`null` = 该类没有任何已判定项** |
-| `judged` | 已判定项数 |
+| `judged` | 已判定项数，**含低置信项** |
 | `total` | 该类总项数（含 SKIP / UNKNOWN） |
+| `low_confidence` | 判定了但未计入分数的项数，**v4.0 新增** |
+| `usable` | 真正计入分数的项数 = `judged − low_confidence`，**v4.0 新增** |
 
-`judged / total < 0.5` 时报告会标「低覆盖」，提示该得分只基于少数几项。
+`usable / total < 0.5` 时报告会标「低覆盖」，提示该得分只基于少数几项。
+
+**注意 `judged` 与 `usable` 的区别**：`judged` 是「判定了几项」，`usable` 是
+「其中几项真的参与了计算」。低置信的 PASS 会让 `judged` 大于 `usable`——
+终端会显示成 `0/1（1 项存疑未计分）`，让用户看到它被剔除了，而不是以为整类都查过了。
 
 ---
 
@@ -143,27 +156,42 @@
 
 ```json
 { "total": 51, "applicable": 19, "judged": 19,
-  "unknown": 0, "skipped": 32,
-  "percent": 100.0, "blind_percent": 0.0 }
+  "unknown": 0, "skipped": 32, "low_confidence": 0,
+  "usable": 19,
+  "percent": 100.0, "usable_percent": 100.0, "blind_percent": 0.0 }
 ```
 
 | 字段 | 说明 |
 |---|---|
 | `total` | 本次执行的检查项总数 |
 | `applicable` | 适用项 = `total − skipped` |
-| `judged` | 已判定（PASS + WARN + FAIL） |
-| `unknown` | 不可判定 |
-| `skipped` | 不适用 |
+| `judged` | 已判定（PASS + WARN + FAIL），**含低置信项** |
+| `unknown` | 不可判定（读不到、权限不足、工具缺失） |
+| `skipped` | 不适用（平台不支持） |
+| `low_confidence` | 判定了但置信度不足（≤ 0.5），**v4.0 新增** |
+| `usable` | 真正对分数有贡献的项数 = `judged − low_confidence`，**v4.0 新增** |
 | `percent` | `judged / applicable × 100` |
-| `blind_percent` | `unknown / applicable × 100`，用于封顶判断 |
+| `usable_percent` | `usable / applicable × 100`，**v4.0 新增**——可信结论的占比 |
+| `blind_percent` | `(unknown + low_confidence) / applicable × 100`，用于封顶判断 |
 
 **注意 `percent` 的分母是 `applicable` 而不是 `total`。** 在 Windows 上 `skipped` 会很大（Linux 专属项），若用 `total` 作分母会制造「覆盖率只有 39%」的假象。详见 [SCORING.md](SCORING.md#5-覆盖度)。
+
+**`unknown` 与 `low_confidence` 是两回事，不要合并**：
+
+| | 含义 | 典型成因 |
+|---|---|---|
+| `unknown` | **没测到** | 权限不足、工具缺失、读不到接口 |
+| `low_confidence` | **测到了但不可信** | 多个来源读数互相矛盾（见 [ADR-0008](adr/0008-multi-source-fusion.md)） |
+
+两者都会让「结论有限」，所以都计入 `blind_percent`；但成因不同，报告要分开显示，
+否则用户会以为所有不确定都是「工具没装好」。
 
 恒等式（可用于校验数据完整性）：
 
 ```
 total == judged + unknown + skipped
 applicable == total - skipped
+usable == judged - low_confidence
 ```
 
 ---
@@ -195,7 +223,7 @@ applicable == total - skipped
 | `title` | string | 显示名 |
 | `category` | string | 所属分类 |
 | `status` | string | `pass` / `warn` / `fail` / `unknown` / `skip` |
-| `confidence` | float | 该项置信度 0–1 |
+| `confidence` | float | 该项置信度 0–1。**≤ 0.5 时不再计入分数分母**（仅对 PASS 生效，详见下） |
 | `summary` | string | 一句话结论（报告主行显示这个） |
 | `detail` | string | 补充解释，为什么这是个问题 |
 | `suggestion` | string | 修复建议（仅 WARN / FAIL 有） |
@@ -214,6 +242,26 @@ applicable == total - skipped
 | 检查代码自己崩了 | `unknown` | `"KeyError: 'model'"` |
 
 消费者不要把 `error` 非空当成「设备有问题」——它意味着「这次没测成」，应联系工具维护者。
+
+### `checks[].confidence` 如何参与判定（v4.0 起）
+
+置信度低**不等于判定错**，而是「数据不足以支撑这个结论」。它如何影响分数：
+
+| `status` | `confidence` | 计入分数分母 | 计入盲区 |
+|---|---|---|---|
+| `pass` | > 0.5 | 是 | 否 |
+| `pass` | ≤ 0.5 | **否** | **是** |
+| `warn` / `fail` | 任意 | **是** | 否 |
+| `unknown` / `skip` | — | 否 | `unknown` 计入 |
+
+**为什么 PASS 与 WARN/FAIL 的处理不同**：低置信的 PASS 不可信——不能因为读不准
+就断言「没问题」，所以从分母剔除；但低置信的 WARN/FAIL 仍然要计入并扣分——
+宁可误报不可漏报，把可疑的严重问题从分数里抹掉等于让设备看起来比实际更健康。
+
+这条与「温度取 MAX 而非平均」是同一条安全保守逻辑，详见
+[ADR-0009](adr/0009-confidence-participates-in-scoring.md)。
+
+消费方若要自己重算分数，必须用同一套规则，否则算出来的数与工具对不上。
 
 ### `checks[].evidence[]`
 
@@ -339,7 +387,8 @@ for c in report["checks"]:
 cov = report["coverage"]
 assert cov["total"] == cov["judged"] + cov["unknown"] + cov["skipped"]
 assert cov["applicable"] == cov["total"] - cov["skipped"]
-assert report["meta"]["report_version"].startswith("3.")
+assert cov["usable"] == cov["judged"] - cov["low_confidence"]
+assert report["meta"]["report_version"].startswith("4.")
 ```
 
 ---

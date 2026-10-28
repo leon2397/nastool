@@ -155,7 +155,9 @@ class HTMLReporter:
         <div style="margin-top:2px">
           <div class="sub">覆盖 {cov.judged}/{cov.applicable} 项（{cov.percent}%）
             {'· ' + str(cov.unknown) + ' 项不可判定' if cov.unknown else ''}
-            {'· ' + str(cov.skipped) + ' 项不适用' if cov.skipped else ''}</div>
+            {'· ' + str(cov.skipped) + ' 项不适用' if cov.skipped else ''}
+            {'· <span style="color:#7b4fbf">' + str(cov.low_confidence) + ' 项结论存疑</span>'
+             if cov.low_confidence else ''}</div>
           <div class="covbar"><span style="width:{cov.percent}%"></span></div>
         </div>'''
 
@@ -208,8 +210,11 @@ class HTMLReporter:
             pct = 0 if c.score is None else c.score
             color = _score_color(c.score)
             label = "未判定" if c.score is None else str(c.score)
-            coverage_note = f"{c.judged}/{c.total}"
-            if c.judged and c.total and c.judged / c.total < 0.5:
+            coverage_note = f"{c.usable}/{c.total}"
+            if c.low_confidence:
+                # 被剔除的低置信项必须标出来，否则 "1/1" 会让人以为整类都查过了
+                coverage_note += f' <span style="color:#7b4fbf">（{c.low_confidence} 项存疑未计分）</span>'
+            if c.usable and c.total and c.usable / c.total < 0.5:
                 coverage_note += " 低覆盖"
             if c.weight <= 0:
                 coverage_note += " · 权重 0 仅展示"
@@ -236,6 +241,10 @@ class HTMLReporter:
         if c.confidence and c.confidence < LOW_CONFIDENCE and c.status is not Status.UNKNOWN:
             extra += (f'<div class="detail" style="color:#7b4fbf">'
                       f'⚠ 结论存疑（置信度 {c.confidence:.2f}）</div>')
+            # 低置信的 PASS 不计入分数——必须说明，否则用户以为分数算错了。
+            if not c.counts_toward_score:
+                extra += ('<div class="detail">· 该项未计入分数'
+                          '（置信度不足，通过类不作为健康依据）</div>')
         if c.detail:
             extra += f'<div class="detail">{_esc(c.detail)}</div>'
         if c.suggestion and c.status in (Status.WARN, Status.FAIL):

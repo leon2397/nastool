@@ -127,6 +127,12 @@ class TerminalReporter:
                 f"{cov.judged}/{cov.applicable} 项已判定（{cov.percent}%）"
                 + (f"，{cov.unknown} 项不可判定" if cov.unknown else "")
                 + (f"，{cov.skipped} 项不适用" if cov.skipped else ""))
+        # 低置信项单独说明：这些结论存疑，其中 PASS 类不计入分数。
+        # 不说清楚，用户会以为"分数算错了"。
+        if cov.low_confidence:
+            self._w(f"  {self._c(self._pad('', 8), 'dim')}"
+                    f"{self._c(f'其中 {cov.low_confidence} 项结论存疑', 'magenta')}"
+                    f"（{self._c('置信度不足，其中通过类未计入分数', 'dim')}）")
         self._w(f"  {self._c(self._pad('置信', 8), 'dim')}{sc.confidence:.2f}")
 
         if sc.capped and sc.cap_reason:
@@ -173,8 +179,13 @@ class TerminalReporter:
                 color = "green" if c.score >= 85 else ("yellow" if c.score >= 60 else "red")
                 bar = self._c("█" * filled + "░" * (20 - filled), color)
                 score_text = f"{c.score:>3}"
-            ratio = f"{c.judged}/{c.total}"
-            if c.judged and c.total and c.judged / c.total < 0.5:
+            # 分母用「计入分数的项」，分子同时标出被剔除的低置信项——
+            # 否则会出现「1/1 通过」这种让人以为全都查过了的显示。
+            usable = c.judged - c.low_confidence
+            ratio = f"{usable}/{c.total}"
+            if c.low_confidence:
+                ratio += self._c(f"（{c.low_confidence} 项存疑未计分）", "magenta")
+            if usable and c.total and usable / c.total < 0.5:
                 ratio += self._c(" 低覆盖", "grey")
             weight_note = (f"权重 {c.weight:.0f}" if c.weight > 0
                            else "权重 0 · 仅展示不计分")
@@ -193,8 +204,12 @@ class TerminalReporter:
             items = grouped.get(cat, [])
             if not items:
                 continue
+            # 低置信的项即使状态是 PASS 也要显示——它没计入分数，
+            # 藏起来等于让用户以为"这类别没问题"。
             shown = items if self.verbose else [
-                c for c in items if c.status not in (Status.PASS, Status.SKIP)]
+                c for c in items
+                if c.status not in (Status.PASS, Status.SKIP) or not c.counts_toward_score
+            ]
             self._w(f"  {self._c(CATEGORY_NAMES.get(cat, cat), 'bold')}")
 
             if not shown:
@@ -226,6 +241,9 @@ class TerminalReporter:
         # 同色系会让人误读成又一个告警。
         if c.confidence and c.confidence < LOW_CONFIDENCE and c.status is not Status.UNKNOWN:
             self._w(f"        {self._c(f'⚠ 结论存疑（置信度 {c.confidence:.2f}）', 'magenta')}")
+            # 低置信的 PASS 不计入分数——必须说明，否则用户以为分数算错了。
+            if not c.counts_toward_score:
+                self._w(f"        {self._c('· 该项未计入分数（置信度不足，通过类不作为健康依据）', 'dim')}")
 
         if c.detail and (self.verbose or c.status in (Status.FAIL, Status.WARN)):
             for line in textwrap.wrap(c.detail, width=68):
@@ -289,11 +307,20 @@ def render_diff(diff, color: bool = True) -> str:
 
     if diff.old_score is not None and diff.new_score is not None:
         delta = diff.score_delta()
-        sign = "+" if (delta or 0) > 0 else ""
-        arrow = f"{diff.old_score} → {diff.new_score}（{sign}{delta}）"
-        color = "green" if (delta or 0) > 0 else ("red" if (delta or 0) < 0 else "grey")
+        if diff.score_comparable:
+            sign = "+" if (delta or 0) > 0 else ""
+            arrow = f"{diff.old_score} → {diff.new_score}（{sign}{delta}）"
+            tone = "green" if (delta or 0) > 0 else ("red" if (delta or 0) < 0 else "grey")
+        else:
+            # 口径变了：分数差值没有意义，只给两个数，不给差值。
+            arrow = f"{diff.old_score} → {diff.new_score}（口径不同，差值不可比）"
+            tone = "grey"
         lines.append(f"  {c('分数', 'dim')}  {c(arrow, 'bold')}   "
                      f"{diff.old_grade} → {diff.new_grade}")
+
+    # 口径变更提示：必须显眼，否则用户会把口径差当成设备变差。
+    if diff.caliber_note:
+        lines.append(f"  {c('⚠', 'yellow')} {c(diff.caliber_note, 'yellow')}")
     lines.append("")
 
     changes = diff.significant

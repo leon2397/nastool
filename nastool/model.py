@@ -28,12 +28,31 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 # 报告格式版本：向后兼容契约，任何破坏性变更必须升这里
-REPORT_VERSION = "3.0"
+#
+# 4.0（DEBT-009）：coverage 的口径变了——
+#   · 新增 low_confidence / usable / usable_percent 三个字段
+#   · blind_percent 现在 = (unknown + low_confidence) / applicable
+#   · score 的计算方式变了：低置信的 PASS 不计入分母
+# 历史库里的旧分数与新口径**不可直接比较**，对比时会提示口径变更。
+REPORT_VERSION = "4.0"
 
 # 低于此置信度的判定项，在报告里标注「结论存疑」。
 # 置信度低不等于判定错，而是「数据不足以支撑这个结论」——
 # 典型来源：多源读数互相矛盾（见 nastool/fusion.py）。
 LOW_CONFIDENCE = 0.7
+
+# 低于此置信度的判定项**不计入分数分母**（DEBT-009）。
+#
+# 为什么用 `<=` 而不是 `<`：多源冲突时置信度恰好落在 0.5，
+# 用严格小于会把最需要提示的那一类漏掉。
+#
+# 为什么只看 PASS：置信度低意味着「数据不足以支撑结论」。
+#   · PASS  不可信 —— 不能因为读不准就断言「没问题」，从分母剔除，
+#                    相当于「这次没测到」，同时计入盲区拉低覆盖度。
+#   · FAIL/WARN 仍要计入 —— 宁可误报不可漏报。把可疑的严重问题
+#                    从分数里抹掉，等于让设备看起来比实际更健康。
+# 这条与「温度取 MAX 而非平均」是同一条安全保守逻辑。
+MIN_CONFIDENCE_FOR_SCORING = 0.5
 
 
 class Status(str, Enum):
@@ -146,6 +165,29 @@ class CheckResult:
     duration_ms: int = 0
     error: str = ""      # 检查器自身异常（与「检测对象有问题」区分开）
 
+    @property
+    def low_confidence(self) -> bool:
+        """置信度低到不足以支撑这个结论（数据不够，而非判定错）。"""
+        return self.confidence <= MIN_CONFIDENCE_FOR_SCORING
+
+    @property
+    def counts_toward_score(self) -> bool:
+        """
+        这一项是否计入分数分母。
+
+        非对称规则（见 MIN_CONFIDENCE_FOR_SCORING 的说明）：
+          · 低置信的 PASS      → 不计入。不能因为读不准就断言「没问题」。
+          · 低置信的 WARN/FAIL → **仍然计入**。宁可误报不可漏报，
+                                 把可疑的严重问题从分数里抹掉，
+                                 等于让设备看起来比实际更健康。
+          · UNKNOWN / SKIP     → 本就不计入（不是「低置信」，是「没测」）。
+        """
+        if not self.status.judged:
+            return False
+        if self.status is Status.PASS:
+            return not self.low_confidence
+        return True
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
@@ -175,24 +217,48 @@ class Coverage:
 
     这是可信度的另一半：一份只判定了 30% 适用项的报告，
     即使分数 100 也必须让人一眼看出它结论有限。
+
+    `low_confidence` 是第三种"不确定"，与 UNKNOWN 不同：
+      · UNKNOWN          —— **没测到**（读不到、权限不足、工具缺失）
+      · low_confidence   —— **测到了但不可信**（多源读数互相矛盾）
+    两者都会让"结论有限"，所以都计入盲区；但成因不同，报告要分开显示，
+    否则用户会以为所有不确定都是"工具没装好"。
     """
 
     total: int = 0
     judged: int = 0
     unknown: int = 0
     skipped: int = 0
+    low_confidence: int = 0
 
     @property
     def applicable(self) -> int:
         return max(0, self.total - self.skipped)
 
     @property
+    def usable(self) -> int:
+        """真正对分数有贡献的项数（判定了，且置信度够高）。"""
+        return max(0, self.judged - self.low_confidence)
+
+    @property
     def percent(self) -> float:
         return round(self.judged / self.applicable * 100, 1) if self.applicable else 0.0
 
     @property
+    def usable_percent(self) -> float:
+        """可信结论的占比——比 percent 更能代表"这份报告能有多可靠"。"""
+        return round(self.usable / self.applicable * 100, 1) if self.applicable else 0.0
+
+    @property
     def blind_percent(self) -> float:
-        return round(self.unknown / self.applicable * 100, 1) if self.applicable else 0.0
+        """
+        盲区占比 = 读不到 + 读到了但不可信。
+
+        低置信项也算盲区：如果一半的检查结论都存在争议，
+        那这份报告就不该给出"状态良好"的评价。
+        """
+        blind = self.unknown + self.low_confidence
+        return round(blind / self.applicable * 100, 1) if self.applicable else 0.0
 
     def to_dict(self) -> dict:
         return {
@@ -201,7 +267,10 @@ class Coverage:
             "judged": self.judged,
             "unknown": self.unknown,
             "skipped": self.skipped,
+            "low_confidence": self.low_confidence,
+            "usable": self.usable,
             "percent": self.percent,
+            "usable_percent": self.usable_percent,
             "blind_percent": self.blind_percent,
         }
 
@@ -215,6 +284,12 @@ class CategoryScore:
     score: Optional[int] = None     # None = 该类没有可判定项
     judged: int = 0
     total: int = 0
+    low_confidence: int = 0          # 判定了但未计入分数的项数（DEBT-009）
+
+    @property
+    def usable(self) -> int:
+        """真正计入分数的项数。"""
+        return max(0, self.judged - self.low_confidence)
 
     def to_dict(self) -> dict:
         return {
@@ -224,6 +299,8 @@ class CategoryScore:
             "score": self.score,
             "judged": self.judged,
             "total": self.total,
+            "low_confidence": self.low_confidence,
+            "usable": self.usable,
         }
 
 

@@ -11,7 +11,7 @@
 ```bash
 git clone <repo> && cd nastool
 python -m pip install -e ".[dev]"        # 只有 pytest 一个开发依赖
-python -m pytest -q                       # 54 passed
+python -m pytest -q                       # 全部通过
 python -m nastool --no-speed-test -v      # 端到端跑一次
 ```
 
@@ -209,7 +209,7 @@ class MyConnector(BaseConnector):
 ## 6. 测试
 
 ```bash
-python -m pytest -q                    # 全部 54 项
+python -m pytest -q                    # 全部测试
 python -m pytest -q --junit-xml=r.xml  # 终端汇总可能被吞时用这个取结果
 python -m pytest tests/test_smoke.py -k cap -v
 ```
@@ -229,7 +229,40 @@ python -m pytest tests/test_smoke.py -k cap -v
 
 **改 `scoring.py` 或 `reporters/` 后一定要跑这组。** 它们不是「测覆盖率」，是在守边界。
 
+**1b. 置信度不变式测试**（`tests/test_debt009_confidence.py`）——守 DEBT-009 的非对称规则：
+
+| 测试 | 保护什么 |
+|---|---|
+| `test_low_confidence_pass_excluded_from_denominator` | 低置信 PASS 不进分母 |
+| `test_low_confidence_fail_still_counts_and_caps` | **低置信 FAIL 仍扣分且封顶**（防漏报） |
+| `test_low_confidence_fail_alone_still_produces_a_score` | 不会被剔除成「测不出问题」 |
+| `test_low_confidence_warn_still_in_denominator` | 低置信 WARN 仍计入 |
+| `test_asymmetry_is_real_not_accidental` | PASS 与 FAIL 处理**必须**不同 |
+| `test_threshold_is_inclusive` | 阈值是 `<= 0.5`，边界值也要处理 |
+| `test_boundary_conflict_confidence_is_excluded` | 复现真实场景：冲突时置信度恰好 0.5 |
+| `test_low_confidence_counts_as_blind_spot` | 低置信计入盲区并触发封顶 |
+| `test_unknown_and_low_confidence_are_counted_separately` | 两种"不确定"必须分开计数 |
+| `test_all_reporters_explain_excluded_item` | 三个报告器都要说清"未计入分数" |
+| `test_diff_warns_when_report_version_changed` | 跨口径对比不给误导性差值 |
+
+**这组测试的价值在于「非对称」那几条。** 如果有人把规则改成对称的
+（低置信 FAIL 也剔除），`test_low_confidence_fail_still_counts_and_caps`
+会立刻失败——这是防止漏报的最后一道闸。
+
 **2. 解析器测试**（`tests/test_parsers.py`）——喂真实命令输出片段，断言解析正确。新写采集器时照这个模式加。
+
+### 变异测试：验证测试本身有效
+
+绿灯不等于测试有效。把实现改坏，看测试是否捕获——这是本项目验证测试质量的标准做法。
+
+```bash
+# 示例：把「非对称」改成「对称」，期望 test_low_confidence_fail_still_counts_and_caps 失败
+# 改完务必还原，并复跑全量测试
+python -m pytest tests/ -q
+```
+
+已做过的变异（DEBT-009）：对称处理 / 阈值改严格小于 / 低置信不计入盲区 /
+去掉口径检测——**四种全部被精确捕获**。
 
 ### 不需要测的
 

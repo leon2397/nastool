@@ -7,7 +7,7 @@ nastool/scoring.py — 聚合成分数与覆盖度
   2. 按 profile 权重合成总分（未参与的分类不计入分母）
   3. 算出覆盖度与整体置信度
 
-两条不可动摇的规则（产品的可信度就靠这两条）：
+三条不可动摇的规则（产品的可信度就靠这三条）：
 
   · **不可判定（UNKNOWN）不扣分，但降低覆盖度。**
     读不到 SMART 不能算「硬盘坏了」，也不能算「硬盘没事」——
@@ -15,6 +15,13 @@ nastool/scoring.py — 聚合成分数与覆盖度
 
   · **存在严重问题时总分封顶 59。**
     避免「97 分 A 级」下面挂着一块随时要挂的盘这种自相矛盾的结论。
+
+  · **低置信的 PASS 不计入分母，低置信的 FAIL/WARN 照常计入（DEBT-009）。**
+    置信度低意味着「数据不足以支撑结论」，不是「判定错」：
+      · PASS  不可信 → 不能因为读不准就断言「没问题」，从分母剔除，
+                      同时计入盲区拉低覆盖度。
+      · FAIL/WARN 仍计入 → 宁可误报不可漏报。
+    这与「温度取 MAX 而非平均」是同一条安全保守逻辑。
 """
 from __future__ import annotations
 
@@ -58,6 +65,10 @@ def build_coverage(checks: Sequence[CheckResult]) -> Coverage:
     for c in checks:
         if c.status.judged:
             cov.judged += 1
+            # 判定了但置信度不够 → 第三种"不确定"，单独计数。
+            # 它与 UNKNOWN 不同：UNKNOWN 是没测到，低置信是测到了但不可信。
+            if c.low_confidence:
+                cov.low_confidence += 1
         elif c.status is Status.UNKNOWN:
             cov.unknown += 1
         else:
@@ -67,25 +78,36 @@ def build_coverage(checks: Sequence[CheckResult]) -> Coverage:
 
 def _category_score(items: Sequence[CheckResult], weight: float) -> CategoryScore:
     judged = [c for c in items if c.status.judged]
+    # 只有「计入分数」的项进分母（见 CheckResult.counts_toward_score）：
+    # 低置信的 PASS 被剔除，低置信的 WARN/FAIL 仍然计入。
+    scored = [c for c in judged if c.counts_toward_score]
     cat = CategoryScore(
         category=items[0].category if items else "",
         name=CATEGORY_NAMES.get(items[0].category, "") if items else "",
         weight=weight,
         judged=len(judged),
         total=len(items),
+        low_confidence=sum(1 for c in judged if not c.counts_toward_score),
     )
-    if not judged:
+    if not scored:
         cat.score = None
         return cat
 
-    got = sum(c.weight * STATUS_VALUE[c.status] for c in judged)
-    full = sum(c.weight for c in judged)
+    got = sum(c.weight * STATUS_VALUE[c.status] for c in scored)
+    full = sum(c.weight for c in scored)
     cat.score = round(got / full * 100) if full else None
     return cat
 
 
 def _weighted_confidence(judged: Sequence[CheckResult]) -> float:
-    """整体置信度：按权重加权。不可判定的项权重为 0，只影响覆盖度。"""
+    """
+    整体置信度：按权重加权。不可判定的项权重为 0，只影响覆盖度。
+
+    这里用**全部**已判定项，包括低置信的——低置信项的 confidence 值本身
+    就会把整体置信度拉下来，这是我们要的效果：
+    「有 3 项结论存疑」就该让整份报告的置信度体现出来，
+    而不是把存疑项从统计里抹掉。
+    """
     if not judged:
         return 0.0
     total_w = sum(c.weight for c in judged)
@@ -135,6 +157,9 @@ def compute(checks: Sequence[CheckResult], profile: Profile,
         total = None
 
     # 封顶规则一：存在严重问题 → 不允许更高等级
+    # 注意这里用全部 FAIL，不筛低置信——低置信的严重问题**也要**封顶。
+    # 「读不准」不等于「没问题」，把可疑的严重问题从封顶里排除，
+    # 等于让设备看起来比实际更健康。
     failures = [c for c in checks if c.status is Status.FAIL]
     reasons = []
     if failures and total is not None and total > CRITICAL_CAP:

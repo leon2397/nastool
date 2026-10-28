@@ -131,21 +131,6 @@ Windows 上 `hasattr(signal, "SIGALRM")` 为假，整段跳过（`engine.py:55`�
 
 ---
 
-### DEBT-009 置信度只是展示值，不参与打分
-
-**现状** 每项有 `confidence`，报告汇总一个加权平均。但 `_category_score()` 不乘它，
-低置信度的 PASS 与高置信度的 PASS 得分完全相同。
-
-**不修的代价** 会给人一种"我们已经考虑了数据可靠性"的错觉。实际上一个靠猜得出 PASS 的项
-和一个从内核直接读到的 PASS，对分数贡献一样。真正该做的是"低置信 → 不计入或降权"。
-
-**触发条件** DEBT-001 修完之后（有了真实的多源判断，置信度才有意义）。
-
-**修法要点** 不要简单地乘权重——那会让"读不到"变成"少扣点分"，反而更糟。更合理的是：
-置信度 < 0.5 的判定不计入分母（等同 UNKNOWN 处理），只做展示。
-
-**规模** 中。改评分逻辑必须重跑六条不变式测试。
-
 ---
 
 ### DEBT-010 Windows 支持深度不足
@@ -260,26 +245,6 @@ CSV）、003（GBK 解码）、007（全 SKIP 文案）、010（罕见分支 `Na
 
 ---
 
-### DEBT-016 没有 CI
-
-**现状** 仓库里**没有任何 CI 配置**（无 `.github/workflows`）。`selfcheck` 12 项与
-`pytest` 54 项全靠人手动跑。
-
-**不修的代价** 规范里的"提交前跑 selfcheck + pytest"是纪律，纪律会松懈。
-更实质的问题是：这是 L2 门槛第 5 条（见 [PRODUCT-PLAN.md](../PRODUCT-PLAN.md)），
-没有 CI 就永远达不到"能被依赖"。而且 Windows 上的问题（[GOTCHA-002](gotchas.md)、
-[GOTCHA-003](gotchas.md)）只有 Windows runner 才测得到。
-
-**触发条件** 建远端仓库时（本来就要建），顺手接上。
-
-**修法要点** GitHub Actions，一个工作流，两个 job：`selfcheck`（含文档一致性检查）
-与 `pytest`。矩阵跑 `ubuntu-latest` + `windows-latest`——Windows 矩阵是必须的，
-本机开发环境是 Windows，但这不等于测过 Windows 下的路径组合。
-
-**规模** 小。
-
----
-
 ### DEBT-017 报告缺设备身份字段
 
 **现状** 报告里没有设备序列号、资产编号、主机名以外的任何身份标识。
@@ -301,6 +266,54 @@ CSV）、003（GBK 解码）、007（全 SKIP 文案）、010（罕见分支 `Na
 ---
 
 ## 已修
+
+### ✅ DEBT-016 没有 CI
+
+**曾经的现状** 仓库里没有任何 CI 配置，规范里的「提交前跑 selfcheck + pytest」
+完全靠人自觉。
+
+**怎么修的**（v0.4.0）
+
+新增 `.github/workflows/ci.yml` 与 `.github/workflows/release.yml`：
+
+- **测试矩阵 15 格**：3 平台（ubuntu / windows / macos）× Python 3.8–3.13
+  （macOS arm64 runner 最早提供 3.11，故排除 3.8–3.10）
+- **每格跑三件事**：`selfcheck`（规范与文档一致性）→ `pytest`（含不变式测试）
+  → 端到端冒烟（出报告、校验 `report_version`、断言有检查项）
+- **打 tag 时才构建**：校验产物内容（LICENSE 进包、reference/ 未进包、模块齐全）
+  → `twine check` → **隔离安装后真跑一次** → 上传 artifact
+- **PyPI 发布默认关闭**（`if: false`），配好 trusted publisher 再开
+
+**留下的教训** CI 脚本**必须本地实测过**。第一版产物校验写成
+`sum(1 for n in names if "/nastool/" in n)`，但 wheel 里路径是 `nastool/` 开头，
+断言永远为 0——写在 YAML 里的脚本不跑一遍就是装饰品。
+
+### ✅ DEBT-009 置信度只是展示值，不参与打分
+
+**曾经的现状** 每项有 `confidence`，报告汇总一个加权平均。但 `_category_score()` 不乘它，
+低置信度的 PASS 与高置信度的 PASS 得分完全相同。一个靠猜得出 PASS 的项，
+和一个从内核直接读到的 PASS，对分数的贡献一样。
+
+**怎么修的**（v0.4.0）
+
+1. `model.py` 新增 `MIN_CONFIDENCE_FOR_SCORING = 0.5` 与
+   `CheckResult.counts_toward_score`——判定规则收在一处，三个报告器共用
+2. `scoring.py` 的 `_category_score()` 改为只把「计入分数」的项放进分母
+3. 覆盖度新增 `low_confidence` / `usable` / `usable_percent`，
+   `blind_percent` 改为 `(unknown + low_confidence) / applicable`
+4. `report_version` 3.0 → 4.0；`diff.py` 检测口径变更，跨版本不给差值只给提示
+
+**与原修法不同的地方**（详见 [ADR-0009](../adr/0009-confidence-participates-in-scoring.md)）
+
+| 原计划 | 实际做法 | 为什么 |
+|---|---|---|
+| 「< 0.5 不计入分母」 | `<= 0.5` | 多源冲突时置信度**恰好落在 0.5**，严格小于会把唯一需要提示的那一类全漏掉 |
+| 所有低置信项一视同仁 | **按 PASS / FAIL 非对称** | 对称处理会让低置信的 FAIL 被抹掉——不再扣分、不再触发封顶，等于让设备看起来比实际更健康 |
+| 等同 UNKNOWN 处理 | 计入盲区但**分开计数** | UNKNOWN 是"没测到"，低置信是"测到了但不可信"，混在一起会让用户误以为都是工具没装好 |
+
+**留下的教训** 「对称」看起来公平，但在这个产品里**漏报的代价远高于误报**。
+凡是「好结果与坏结果处理方式不同」的规则，都该先问一句：
+把坏消息排除掉，是让报告更好看，还是让报告更危险？
 
 ### ✅ DEBT-001 多源数据只有回退，没有融合
 

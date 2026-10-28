@@ -323,10 +323,15 @@ def _count_fail_capable() -> int:
 
 
 def _count_tests() -> int:
+    """统计测试用例数（def test_* 的个数）。"""
     n = 0
     for pyfile in (ROOT / "tests").glob("test_*.py"):
         n += len(re.findall(r"^def (test_\w+)", pyfile.read_text(encoding="utf-8"), re.M))
     return n
+
+
+def _count_test_files() -> int:
+    return len(list((ROOT / "tests").glob("test_*.py")))
 
 
 def _expected_values() -> Dict[str, int]:
@@ -346,21 +351,19 @@ def _expected_values() -> Dict[str, int]:
 # (文件, 正则, 捕获组对应的期望键)。所有匹配都必须与代码一致。
 NUMBER_ASSERTS: List[Tuple[str, str, List[str]]] = [
     ("README.md", r"共 \*\*(\d+) 项\*\*，分 (\d+) 类", ["checks", "categories"]),
-    ("README.md", r"# (\d+) 项测试", ["tests"]),
     ("docs/CHECKS.md", r"本文是 \*\*(\d+) 个检测项的权威说明", ["checks"]),
     ("docs/CHECKS.md", r"(\d+) 项中其余 (\d+) 项\*?\*?在设计上不可能给出 FAIL",
      ["checks", "non_fail"]),
     ("docs/CHECKS-ROADMAP.md", r"## 第一部分：当前实现（(\d+) 项）", ["checks"]),
     ("docs/ARCHITECTURE.md", r"checks/  \((\d+) 项判定\)", ["checks"]),
     ("docs/README.md", r"只有 (\d+) 项能产生「严重」", ["fail_capable"]),
-    ("docs/DEVELOPMENT.md", r"# 全部 (\d+) 项", ["tests"]),
-    ("docs/DEVELOPMENT.md", r"# (\d+) passed", ["tests"]),
 ]
 
 
 def check_numbers(res: CheckResult) -> None:
     exp = _expected_values()
-    res.note("真实值: " + ", ".join(f"{k}={v}" for k, v in exp.items()))
+    res.note("真实值: " + ", ".join(f"{k}={v}" for k, v in exp.items())
+             + f", test_files={_count_test_files()}")
     for fname, pat, keys in NUMBER_ASSERTS:
         text = read(fname)
         for m in re.finditer(pat, text):

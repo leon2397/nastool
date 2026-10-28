@@ -113,6 +113,10 @@ class DiffResult:
     old_judged: int = 0
     new_judged: int = 0
     changes: List[Change] = field(default_factory=list)
+    # 口径变更：两份报告的 report_version 不同时，分数算法可能不同，
+    # 总分差值**不可直接解读**（DEBT-009 改变了 score 的计算方式）。
+    score_comparable: bool = True
+    caliber_note: str = ""
 
     def of_kind(self, *kinds: str) -> List[Change]:
         return [c for c in self.changes if c.kind in kinds]
@@ -125,6 +129,8 @@ class DiffResult:
         return bool(self.of_kind("new_failure", "still_failing", "evidence_worsened"))
 
     def score_delta(self) -> Optional[int]:
+        if not self.score_comparable:
+            return None
         if self.old_score is None or self.new_score is None:
             return None
         return self.new_score - self.old_score
@@ -135,6 +141,8 @@ class DiffResult:
             "old_score": self.old_score, "new_score": self.new_score,
             "old_grade": self.old_grade, "new_grade": self.new_grade,
             "score_delta": self.score_delta(),
+            "score_comparable": self.score_comparable,
+            "caliber_note": self.caliber_note,
             "regression": self.has_regression(),
             "changes": [c.to_dict() for c in self.significant],
         }
@@ -196,6 +204,20 @@ def diff_reports(old: Dict[str, Any], new: Dict[str, Any]) -> DiffResult:
         old_judged=old_cov.get("judged", 0),
         new_judged=new_cov.get("judged", 0),
     )
+
+    # 口径检测：report_version 不同 → 分数算法可能不同 → 差值不可直接解读。
+    # DEBT-009 把 report_version 从 3.0 升到 4.0，并改变了 score 的计算方式
+    # （低置信的 PASS 不再计入分母）。旧历史与新报告的分数差值，
+    # 一半来自设备变化、一半来自口径变化，不加提示用户会误判。
+    old_rv = old_meta.get("report_version", "")
+    new_rv = new_meta.get("report_version", "")
+    if old_rv and new_rv and old_rv != new_rv:
+        result.score_comparable = False
+        result.caliber_note = (
+            f"两次报告的格式版本不同（{old_rv} → {new_rv}），"
+            "分数计算口径已变更，总分差值不可直接解读；"
+            "请以逐项对比为准"
+        )
 
     old_checks = _index_checks(old)
     new_checks = _index_checks(new)

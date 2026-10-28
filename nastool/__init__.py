@@ -15,7 +15,7 @@ nastool — 通用 NAS 设备检测工具
 新增检测项只需在 nastool/checks/ 下加一个 @check 函数，其余层无需改动。
 """
 
-__version__ = "0.3.4"
+__version__ = "0.4.0"
 __product__ = "nastool"
 __description__ = "通用 NAS 设备检测工具"
 

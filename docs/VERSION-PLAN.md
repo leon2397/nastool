@@ -67,8 +67,8 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 |---|---|---|
 | 多源采集 + 一致性验证 | [DEBT-001](memo/debt.md#debt-001-多源数据只有回退没有融合) | ✅ v0.3.4 完成 |
 | 报告标注低置信度判定项 | — | ✅ v0.3.4 完成 |
-| 置信度参与判定 | [DEBT-009](memo/debt.md#debt-009-置信度只是展示值不参与打分) | ⏳ 下一步 |
-| 内存与 SMART 第二来源 | [DEBT-014](memo/debt.md#debt-014-内存与-smart-仍是单来源) | ⏳ 排在 DEBT-009 之后 |
+| 置信度参与判定 | [DEBT-009](memo/debt.md#debt-009-置信度只是展示值不参与打分) | ✅ v0.4.0 完成 |
+| 内存与 SMART 第二来源 | [DEBT-014](memo/debt.md#debt-014-内存与-smart-仍是单来源) | ⏳ 下一步 |
 
 **DEBT-001 的实际做法**（与原计划不同，理由见 [ADR-0008](adr/0008-multi-source-fusion.md)）：
 
@@ -78,18 +78,32 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 - 测量点归一化是前提：`cpu`/`soc`/`cpu-thermal` → `cpu`。归一化错了会把
   「CPU 45°C + GPU 70°C」误判成矛盾，产生假告警
 
+**DEBT-009 的实际做法**（与原计划不同，理由见 [ADR-0009](adr/0009-confidence-participates-in-scoring.md)）：
+
+- 原计划写"置信度 < 0.5 不计入分母"——**改为 `<= 0.5`**。多源冲突时置信度恰好落在
+  0.5，严格小于会把唯一能产出低置信判定的那一类全漏掉
+- 原计划对所有低置信项一视同仁——**改为按 PASS / FAIL 非对称**：低置信 PASS 不进分母，
+  低置信 WARN/FAIL **仍然计入并照样触发封顶**。对称处理会让可疑的严重问题
+  从分数里被抹掉，等于让设备看起来比实际更健康
+- 覆盖度新增 `low_confidence` / `usable` / `usable_percent`，
+  `blind_percent` 改为 `(unknown + low_confidence) / applicable`
+- 低置信项在终端与 HTML 里会说明「该项未计入分数」，避免用户以为分数算错了
+
 **破坏性变更预告**
 
-- DEBT-009 落地时，`score` 的计算会变：低置信项不再拉低分类分。**已有分数的历史不可直接
-  比较**——历史库记录的分数与新口径不同，对比时会失真，需要在对比结果里提示口径变更
-- `Evidence` 可能新增表示"来源冲突"的字段，`report_version` 升 4.0
+- ✅ 已落地：`score` 的计算变了——低置信的 PASS 不再计入分母。**已有分数的历史不可直接
+  比较**，对比时会提示口径变更且不给差值
+- ✅ 已落地：`report_version` 升 **4.0**，`coverage` 新增三个字段、`blind_percent` 口径变了
+- `Evidence` 可能新增表示"来源冲突"的字段 —— 本版未做（冲突信息已通过
+  证据列表与「结论存疑」标注呈现，另开字段的收益待评估）
 
 **验收标准**
 
 - 同一台机器跑两次，多源一致的项结论相同（[底线三：结论可复现](../README.md)）
 - ✅ 人为制造一个两源冲突的 fixture，报告出现"存疑"且两个来源都可见
-- ⏳ 置信度 < 0.5 的项不进分母，且在报告里标出原因
+- ✅ 置信度 ≤ 0.5 的项不进分母，且在报告里标出原因
 - ✅ 六条不变式测试仍全绿（[DEVELOPMENT.md](DEVELOPMENT.md#6-测试)）
+- ✅ 跨口径对比给出提示且不给误导性差值
 
 **不包含**：不引入第三方数据源包（[ADR-0006](adr/0006-zero-dependency.md)）；
 不做 AI 框架逐个点名（见 [CHECKS-ROADMAP.md](CHECKS-ROADMAP.md) 的取舍说明）。
@@ -156,7 +170,7 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 | 项 | 来源 | 说明 |
 |---|---|---|
 | LICENSE 文件 | [DEBT-015](memo/debt.md#debt-015-缺-license-文件) | README 声明 MIT 但仓库无许可正本。**法律基础缺失，成本 5 分钟** |
-| CI 工作流 | [DEBT-016](memo/debt.md#debt-016-没有-ci) | 每次提交自动跑 `selfcheck` + `pytest`，矩阵含 `ubuntu-latest` + `windows-latest` |
+| CI 工作流 | [DEBT-016](memo/debt.md#debt-016-没有-ci) | ✅ v0.4.0 完成 —— 3 平台 × Python 3.8–3.13 共 15 格，每格跑 `selfcheck` + `pytest` + 端到端冒烟 |
 | MANIFEST.in | — | 排除 `reference/`，把 `LICENSE` 打进产物 |
 | 远端仓库 + 首个 tag | [PRODUCT-PLAN.md](PRODUCT-PLAN.md#第-0-优先法律与分发基础本周可做完) | 没有远端 = 没有分发渠道 = L1"能给别人用"无从谈起 |
 

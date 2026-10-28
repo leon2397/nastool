@@ -1,0 +1,133 @@
+# nastool CI
+#
+# 为什么这样设计：
+#   · 三平台都跑 —— 这个工具主要部署在 Linux NAS 上，但也要在 Windows
+#     开发机上跑、在 macOS 上偶尔跑。测试全是纯 mock，不依赖真实硬件，
+#     所以三平台都能跑同一套（实测无平台硬编码、无 subprocess 依赖）。
+#   · Python 从 3.8 到最新 —— pyproject 声明 requires-python >= 3.8，
+#     少测一个版本就等于对外承诺落空。3.8 已 EOL，但既然声明支持就要测。
+#   · 每次都跑 selfcheck —— 它校验"文档与代码一致"，这正是人工最容易漏的。
+#   · tag 时才构建产物 —— 平时构建没意义，真正发版时再验证一次打包链路。
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+# 同一分支的新 push 取消旧任务，避免排队堆积
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # 一个格子失败不影响其他格子——要看到全貌，不是看到第一个错误
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        exclude:
+          # macOS 的 arm64 runner 最早提供 3.11，3.8/3.9/3.10 无二进制包
+          - { os: macos-latest, python-version: "3.8" }
+          - { os: macos-latest, python-version: "3.9" }
+          - { os: macos-latest, python-version: "3.10" }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设置 Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: 规范自检（文档与代码必须一致）
+        run: python tools/selfcheck.py
+
+      - name: 单元测试与不变式测试
+        run: python -m pytest tests/ -v
+
+      - name: 端到端冒烟（能跑完、能出报告、退出码正确）
+        run: |
+          python -m nastool --no-speed-test --no-smart --no-internet --no-color -o json --output-file report.json
+          python -c "
+          import json
+          d = json.load(open('report.json', encoding='utf-8'))
+          assert d['meta']['report_version'].startswith('4.'), d['meta']['report_version']
+          assert d['checks'], '报告里没有检查项'
+          print(f\"OK {len(d['checks'])} 项，覆盖 {d['coverage']['percent']}%\")
+          "
+
+  build:
+    name: 构建并校验产物
+    # 只在打 tag 时构建——平时构建没有意义
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: 安装构建依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: 构建 sdist 与 wheel
+        run: python -m build
+
+      - name: 校验产物内容
+        run: |
+          python - <<'PY'
+          import glob, tarfile, zipfile
+          whl = glob.glob("dist/*.whl")[0]
+          sdist = glob.glob("dist/*.tar.gz")[0]
+          names = zipfile.ZipFile(whl).namelist()
+          assert any("LICENSE" in n for n in names), "LICENSE 未进 wheel"
+          assert not any("reference/" in n for n in names), "reference/ 不该进产物"
+          modules = [n for n in names if n.startswith("nastool/") and n.endswith(".py")]
+          assert len(modules) >= 30, f"wheel 里运行时模块不全: {len(modules)}"
+          tar_names = tarfile.open(sdist).getnames()
+          assert any(n.endswith("LICENSE") for n in tar_names), "LICENSE 未进 sdist"
+          print(f"OK wheel {len(names)} 条目 / 运行时模块 {len(modules)} 个 / sdist {len(tar_names)} 条目")
+          PY
+
+      - name: 校验元数据（twine check）
+        run: twine check dist/*
+
+      - name: 隔离安装冒烟（装出来的能真跑）
+        run: |
+          python -m venv /tmp/verify
+          /tmp/verify/bin/pip install --quiet dist/*.whl
+          /tmp/verify/bin/nastool --no-speed-test --no-smart --no-internet --no-color
+          /tmp/verify/bin/python -c "
+          import nastool
+          print('安装版本', nastool.__version__)
+          "
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 30
