@@ -11,3 +11,6 @@ tmpr/
 nastool_report.json
 nastool_report.html
 nastool_report.md
+# 报告文件（CI 冒烟产物等通用名称）
+report.json
+report.html
