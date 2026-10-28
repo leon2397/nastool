@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nastool"
+version = "0.2.0"
+description = "通用 NAS 设备检测工具：平台 / 硬件 / 存储与阵列 / 网络 / 服务 / AI 算力 / 健康评分"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = ["nas", "diagnostics", "storage", "smart", "raid", "homelab"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = []
+
+[project.optional-dependencies]
+config = ["PyYAML>=5.4"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+nastool = "nastool.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nastool*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

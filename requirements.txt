@@ -1,0 +1,13 @@
+# nastool 核心零依赖：只用 Python 标准库
+# 下面这些是「有则增强、无则降级」的可选依赖，不是运行必需。
+
+# 读取配置文件里的 npu_type 提示（可选）
+# PyYAML>=5.4
+
+# 单元测试
+# pytest>=7
+
+# 说明：真正决定检测能力的不是 Python 包，而是系统命令
+#   Linux : lsblk smartctl mdadm zpool btrfs ss ip
+#   NVIDIA: nvidia-smi        AMD: rocm-smi
+#   Intel : vainfo
