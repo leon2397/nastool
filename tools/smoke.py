@@ -47,10 +47,15 @@ def main() -> int:
                  f"--- stderr ---\n{proc.stderr[-2000:]}")
         if proc.returncode not in (0, 1):
             fail(f"nastool 退出码异常：{proc.returncode}"
-                 f"（应为 0 健康 / 1 有问题 / 2 错误）")
+                 f"（应为 0 健康 / 1 有问题 / 2 错误）\n"
+                 f"--- stdout ---\n{proc.stdout[-2000:]}\n"
+                 f"--- stderr ---\n{proc.stderr[-2000:]}")
         if not os.path.exists(report_path):
+            # stderr 一定要打出来——崩溃的真正原因都在那儿。
+            # （曾经只打 stdout，排查时看到一片空白，白花半小时找原因。）
             fail(f"没有产出报告文件：{report_path}\n"
-                 f"--- stdout ---\n{proc.stdout[-2000:]}")
+                 f"--- stdout ---\n{proc.stdout[-2000:]}\n"
+                 f"--- stderr ---\n{proc.stderr[-2000:]}")
 
         with open(report_path, encoding="utf-8") as f:
             d = json.load(f)

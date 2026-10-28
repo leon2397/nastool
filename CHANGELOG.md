@@ -4,6 +4,15 @@
 
 **产品行为有变化**：低置信度的判定项不再和普通项一样计入分数。
 
+### 修好的问题
+
+**在英文 Windows 上直接崩溃**（stdout 一片空白、退出码 1）。
+Windows 标准输出的编码由系统 locale 决定，英文系统是 cp1252，编不了本工具的
+中文输出，`print` 抛 `UnicodeEncodeError` 就崩了。中文 Windows 恰好能编中文，
+所以本地永远复现不了——**只有英文 Windows 会中招**，
+GitHub Actions 的 Windows runner 就是英文 locale，实测 5 个格子全挂在同一处。
+现在 stdout/stderr 在 CLI 入口统一切到 UTF-8，并加了回归测试盯着。
+
 ### 改了什么
 
 置信度不再只是展示值，它决定这一项算不算进分数：

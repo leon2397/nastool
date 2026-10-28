@@ -35,6 +35,31 @@ EXIT_PROBLEM = 1
 EXIT_ERROR = 2
 
 
+def _force_utf8_stdio() -> None:
+    """
+    把 stdout / stderr 切到 UTF-8。
+
+    **为什么必须做**：Windows 上标准输出的默认编码由**系统 locale** 决定——
+    英文系统是 cp1252，中文系统是 cp936。两者都编不了本工具输出的中文，
+    `print` 会抛 `UnicodeEncodeError`，进程当场崩掉：连第一行横幅都打不出来，
+    stdout 一片空白，退出码 1。
+
+    这不是理论问题——GitHub Actions 的 Windows runner 就是英文 locale，
+    实测 5 个 Windows 格子全挂在同一处；而中文 Windows 用户根本碰不到，
+    所以本地永远复现不了。
+
+    `errors="replace"` 兜底：万一还有编不出来的字符，换成 � 而不是让程序挂掉。
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue  # 测试里可能被替换成没有 reconfigure 的对象
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass  # 改不了就算了，不能因为编码问题让工具起不来
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="nastool",
@@ -204,6 +229,7 @@ def _make_progress(quiet: bool, verbose: bool = False):
 
 # ── 主入口 ──────────────────────────────────────────────────
 def main(argv=None) -> int:
+    _force_utf8_stdio()
     args = _build_parser().parse_args(argv)
 
     if args.list_checks:

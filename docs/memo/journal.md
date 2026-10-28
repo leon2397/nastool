@@ -17,9 +17,14 @@
 **踩到的坑** ① CI 用 bash heredoc 写校验，Windows runner 默认 PowerShell → `ParserError`，
 5 格全挂。**修法不是改 YAML 而是抽脚本**：`tools/smoke.py`、`tools/verify_dist.py`、
 `tools/verify_install.py` 进仓库，CI 与本地跑同一份代码。
-② 完整 `git fetch` 被代理掐断（pack 传输失败），浅 fetch 与 push 可用。
-③ API 推送脚本 `git ls-tree` 遇中文路径会加引号八进制转义 → 远端造出带引号的假目录，
+② **英文 Windows 上 nastool 直接崩溃**——stdout 编码由系统 locale 决定，
+英文是 cp1252，编不了中文输出，`print` 抛 UnicodeEncodeError。
+中文 Windows 恰好能编中文，所以本地永远复现不了，只有 CI 的英文 runner 会中招。
+③ 完整 `git fetch` 被代理掐断（pack 传输失败），浅 fetch 与 push 可用。
+④ API 推送脚本 `git ls-tree` 遇中文路径会加引号八进制转义 → 远端造出带引号的假目录，
 Windows 检出直接失败。改用 `-z`。
+⑤ API 重建的 commit 与本地 SHA 对不上——根因是 `git log --format=%B` 会吃掉
+消息的尾部换行，而 GitHub 原样存储传入的消息。改用 `git cat-file commit` 取原文。
 
 **发现并修正的契约缺陷** 覆盖度的 `usable` 与分类的 `usable` 同名不同义
 （低置信 FAIL 在分类侧保留、在覆盖度侧剔除），且覆盖度侧 docstring 写错。

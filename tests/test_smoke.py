@@ -411,3 +411,32 @@ def test_zero_weight_category_visible_in_all_reporters():
     html = HTMLReporter().build(r)
     assert "AI 算力" in html
     assert "仅展示" in html
+
+
+def test_survives_non_utf8_console_encoding():
+    """英文 Windows（cp1252）上不能崩——这是真实事故，不是理论问题。
+
+    Windows 标准输出的默认编码由**系统 locale** 决定：英文 cp1252、
+    中文 cp936，两者都编不了本工具输出的中文。修复前 `print` 会抛
+    UnicodeEncodeError，进程当场崩掉，stdout 一片空白、退出码 1。
+
+    中文用户永远碰不到这个问题（本地复现不了），GitHub Actions 的
+    Windows runner 是英文 locale，实测 5 个格子全挂在同一处——
+    所以这个坑只能靠测试钉住。
+
+    这里用 `--list-checks`：它也会打印中文，但不需要跑完整检测（快）。
+    """
+    import subprocess
+
+    env = dict(os.environ, PYTHONIOENCODING="cp1252")
+    proc = subprocess.run(
+        [sys.executable, "-m", "nastool", "--list-checks"],
+        env=env, capture_output=True, timeout=300,
+    )
+    assert proc.returncode == 0, (
+        f"非 UTF-8 控制台下崩溃了（退出码 {proc.returncode}）：\n"
+        f"{proc.stderr.decode('utf-8', 'replace')[:1500]}"
+    )
+    # 中文确实打出来了，而不是被 replace 掉
+    out = proc.stdout.decode("utf-8", "replace")
+    assert "检测项" in out, out[:500]

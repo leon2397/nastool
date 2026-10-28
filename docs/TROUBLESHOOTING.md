@@ -225,6 +225,28 @@ print(repr(run("wmic os get Caption")))
 
 PowerShell 调用已改为**参数列表**（不是拼字符串），避免引号被 shell 吃掉。
 
+### 另一种情况：整个程序起不来，stdout 一片空白
+
+**症状**：在**英文** Windows（系统 locale 不是中文）上运行，命令没有任何输出，
+直接退出。退出码 1。
+
+**原因**：Windows 标准输出的默认编码由**系统 locale** 决定——英文系统是 cp1252，
+它编不了本工具输出的中文。`print` 抛 `UnicodeEncodeError`，进程当场崩掉。
+
+**为什么本地复现不了**：中文 Windows 的 locale 是 cp936，恰好能编中文，
+所以在中文机器上永远看不到这个现象。**只有英文 Windows 才会中招**——
+包括 CI 的 Windows runner。
+
+**现状**：已在 `cli.py` 的 `main()` 入口把 stdout/stderr 切到 UTF-8
+（`reconfigure(encoding="utf-8", errors="replace")`），并有回归测试
+`test_survives_non_utf8_console_encoding` 盯着。
+
+验证方法：
+
+```bash
+PYTHONIOENCODING=cp1252 python -m nastool --list-checks
+```
+
 ---
 
 ## 8. 自动挑选的存储路径不对
