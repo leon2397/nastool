@@ -1,0 +1,7 @@
+# 统一换行：仓库内用 LF，Windows 检出也不转换
+# （nastool 主要部署在 Linux NAS 上，混用 CRLF 容易在 shell/venv 里出问题）
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.zip binary
