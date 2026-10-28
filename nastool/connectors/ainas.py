@@ -103,9 +103,12 @@ class AinasConnector(BaseConnector):
         if health.get("status") not in ("healthy", "ok", None):
             return False, f"AINAS 健康检查异常：{health.get('status')}"
 
-        storage = payload.get("storage", {}) or {}
-        device = payload.get("device", {}) or {}
-        ai = payload.get("ai_accelerator", {}) or {}
+        # 报告格式 3.0：事实数据在 payload["facts"]，平台信息在 payload["platform"]
+        facts = payload.get("facts", {}) or {}
+        storage = facts.get("storage", {}) or {}
+        ai = facts.get("ai", {}) or {}
+        platform = payload.get("platform", {}) or {}
+        score = payload.get("score", {}) or {}
 
         reg = self._post("/api/devices/register", {
             "device_id": self.device_id,
@@ -115,7 +118,7 @@ class AinasConnector(BaseConnector):
             "npu_type": ai.get("best_chip_type", "unknown") or "unknown",
             "cpu_usage": 0.0,
             "npu_usage": 0.0,
-            "storage_usage": float(storage.get("target_use_percent", 0) or 0),
+            "storage_usage": float(storage.get("use_percent", 0) or 0),
         })
         if "error" in reg:
             return False, f"注册失败：{reg['error']}"
@@ -123,11 +126,11 @@ class AinasConnector(BaseConnector):
         self.device_id = reg.get("device_id") or self.device_id
         diag_path = f"/api/devices/{urllib.parse.quote(self.device_id, safe='')}/diagnosis"
         saved = self._post_json(diag_path, {
-            "score": payload.get("score", {}).get("total"),
-            "grade": payload.get("score", {}).get("grade"),
+            "score": score.get("total"),
+            "grade": score.get("grade"),
             "chip_type": ai.get("best_chip_type", ""),
-            "os": (device.get("board", {}) or {}).get("os", ""),
-            "arch": (device.get("cpu", {}) or {}).get("arch", ""),
+            "os": platform.get("pretty_name") or platform.get("product", ""),
+            "arch": platform.get("arch", ""),
             "storage_path": storage.get("target_path", ""),
             "report": payload,
         })

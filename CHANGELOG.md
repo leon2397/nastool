@@ -1,5 +1,57 @@
 # 变更日志
 
+## 0.3.0 — 架构重建
+
+不是修补，是重写判定内核。0.2.0 的根本问题是**加一项检测要改五个地方**（采集、评分、终端、JSON、HTML），导致每个新检查都得复制一遍逻辑，结论还容易在几处之间对不上。这一版把职责切开，让「加一项检测 = 写一个函数」。
+
+### 四层架构（`collect → checks → 聚合 → 呈现`，依赖单向）
+
+| 层 | 位置 | 职责 |
+|---|---|---|
+| 契约 | `model.py` | `Status` / `Evidence` / `CheckResult` / `Coverage` / `Score` / `Report` |
+| 注册 | `registry.py` | `@check` 装饰器，`resolve(only, skip, categories)` |
+| 采集 | `collect/` | 只拿事实，**不做判断**（已移除 `warnings` / `errors` / `ok` 等判断字段） |
+| 判定 | `checks/` | 一类一个模块，共 **55 项** |
+| 编排 | `engine.py` | 跑检查、超时、异常收敛、设备指纹 |
+| 聚合 | `scoring.py` | 分类得分 → 总分 → 封顶规则 + 覆盖度 + 置信度 |
+| 呈现 | `reporters/` | terminal / json / html，只依赖 `Report` |
+
+### 新增能力
+
+- **`Status.UNKNOWN` 成为一等状态**：读不到 SMART 既不判「硬盘坏了」也不判「硬盘没事」，不扣分但降低覆盖度。之前这种情况要么被当成 PASS（掩盖问题）要么被当成 FAIL（制造假故障）
+- **`Evidence`（source / key / value / num / trend）**：每条结论都能追溯到具体命令输出
+- **置信度（0-1）** 按权重加权到整体，随证据质量变化
+- **覆盖度**：分母是**适用项**（`总数 − 不适用`），并给出盲区比例。此前 Windows 上 31 项 Linux 专属检测拿不到数据，覆盖率被算成 39%
+- **两条封顶规则**：存在严重问题 → 59；盲区 ≥50% → 74、≥30% → 84。触发原因写入 `cap_reason`，不静默降分
+- **`--profile` 场景化**（`nas` / `verify` / `dev` / `ai`）：四套权重、阈值与启用分类。`verify` 提高安全权重，`ai` 给算力 26 分
+- **按芯片自适应温度阈值**：RK3588 → 70/82，Jetson → 75/88，其余走场景默认
+- **`--only` / `--skip` / `--enable` / `--list-checks`**：按模式筛选检查项
+- **历史库与逐项对比**：`history.db`（SQLite）存完整报告；`--compare` 输出 `new_failure / still_failing / evidence_worsened / new_improved / fixed / added / removed`。证据带 `trend` 方向语义（`up_bad` / `up_good` / 空），避免把「多跑了 0.1 小时」报成「指标恶化」
+- **检查超时**：`signal.SIGALRM`，单条卡死不会拖住整份报告
+- **新增安全分类（8 项）**：SSH root 直登、密码登录、防火墙、fail2ban、TLS 证书有效期与自签、SMB 匿名访问、NFS `no_root_squash`。全部只读配置
+- **新增外设分类（2 项）**：USB 设备、数据盘连接方式（USB 外接盘降速提示）
+
+### 破坏性变更
+
+- **`report_version` 2.0 → 3.0**：顶层改为 `meta / score / coverage / checks[] / platform / facts`；每条 check 带 `status / confidence / evidence[]`。**消费旧 JSON 的脚本需要改**
+- 删除 `nastool/core/`（拆入 `collect/` 与顶层模块）与 `nastool/adapters/`（平台专项检查并入 `checks/`）
+- 公开 API 改为 `run / RunOptions / Report / CheckResult / Evidence / Score / Status / REPORT_VERSION`
+- 默认权重从固定四维（存储 40 / 网络 25 / 系统 20 / 服务 15）改为按 profile 分配，`nas` 场景为存储 34 / 系统 16 / 网络 18 / 服务 16 / 安全 10 / 外设 6
+
+### 修复
+
+- 覆盖率分母错误（把不适用项算进分母，Windows 上显示 39.2%）
+- 历史对比误报「指标恶化」（中性数值被当成越大越差）
+- **AINAS 连接器读取已删除的报告字段**（`device` / `storage` / `ai_accelerator`）——格式升级到 3.0 后这些顶层键不存在了，推过去的设备信息会全为空。已改为从 `facts` / `platform` 取，并补契约测试锁住映射关系
+- `core/network.py` 在 ≤100 Mbps 链路下访问未定义的 `rep` 引发 `NameError`（潜伏 bug，重写后采集层无判断逻辑，问题消失）
+- 终端与 HTML 把「全部不适用」误写成「全部通过」，`--only` 过滤后尤其误导
+
+### 测试
+
+30 项（0.2.0 为 18 项），新增：UNKNOWN 不扣分类分、盲区封顶、FAIL 封顶 59、WARN 不封顶、不适用项不计入评分、注册表完整性、`--only` 过滤、JSON schema、HTML 自包含、历史往返、证据恶化检测、中性证据不误报、新故障检测、AINAS 连接器字段映射、facts 缺失容错。
+
+---
+
 ## 未发布 — 前身设计资产提取
 
 从归档中抢救前身项目的设计资料，整理为可执行的路线图。**不改动产品代码**。

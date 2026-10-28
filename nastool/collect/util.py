@@ -42,9 +42,19 @@ def run(cmd: str, timeout: int = 5) -> str:
             try:
                 return raw.decode("utf-8").strip()
             except UnicodeDecodeError:
-                import locale
-                return raw.decode(locale.getpreferredencoding(False) or "utf-8",
-                                  errors="replace").strip()
+                pass
+            # Windows 控制台程序（w32tm / netstat 等）输出的是 ANSI 代码页，
+            # 中文系统是 GBK。不能用 locale.getpreferredencoding()——
+            # 在 UTF-8 模式下它返回 utf-8，会把 GBK 直接解成乱码。
+            candidates = ["mbcs"] if IS_WINDOWS else []
+            import locale
+            candidates.append(locale.getpreferredencoding(False) or "utf-8")
+            for enc in candidates:
+                try:
+                    return raw.decode(enc).strip()
+                except (UnicodeDecodeError, LookupError):
+                    continue
+            return raw.decode("utf-8", errors="replace").strip()
         return str(raw).strip()
     except Exception:  # noqa: BLE001 - 采集器必须容错
         return ""

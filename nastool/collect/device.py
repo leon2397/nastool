@@ -54,14 +54,13 @@ class ThermalInfo:
 
 
 @dataclass
-class DeviceReport:
+class DeviceFacts:
     cpu: CpuInfo = field(default_factory=CpuInfo)
     memory: MemInfo = field(default_factory=MemInfo)
     board: BoardInfo = field(default_factory=BoardInfo)
     thermals: List[ThermalInfo] = field(default_factory=list)
     virtualization: str = ""      # 物理机 / docker / lxc / kvm / vmware / hyper-v
-    ok: bool = True
-    errors: List[str] = field(default_factory=list)
+    collect_errors: List[str] = field(default_factory=list)
 
 
 # ── CPU ─────────────────────────────────────────────────────
@@ -382,9 +381,9 @@ def get_thermal_zones() -> List[ThermalInfo]:
     return thermals
 
 
-def get_device_info() -> DeviceReport:
+def get_device_info() -> DeviceFacts:
     """主入口：任一子项失败不影响其他项。"""
-    report = DeviceReport()
+    report = DeviceFacts()
     errors = []
 
     for name, fn, attr in (
@@ -399,7 +398,5 @@ def get_device_info() -> DeviceReport:
         except Exception as e:  # noqa: BLE001
             errors.append(f"{name}: {e}")
 
-    report.errors = errors
-    # 只有关键项（CPU/内存）完全取不到才算失败，温度缺失很正常
-    report.ok = report.cpu.cores > 0 or report.memory.total_gb > 0
+    report.collect_errors = errors
     return report

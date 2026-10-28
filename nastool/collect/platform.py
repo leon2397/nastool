@@ -28,7 +28,7 @@ class PlatformKind:
 
 
 @dataclass
-class PlatformReport:
+class PlatformFacts:
     kind: str = PlatformKind.UNKNOWN
     vendor: str = ""            # 群晖 / 威联通 / TrueNAS / 飞牛 ...
     product: str = ""           # DSM / QTS / SCALE ...
@@ -43,8 +43,25 @@ class PlatformReport:
     is_root: bool = False
     data_roots: List[str] = field(default_factory=list)   # 探测到的 NAS 数据根目录
     facts: dict = field(default_factory=dict)             # 其他识别到的特征
-    warnings: List[str] = field(default_factory=list)
-    ok: bool = True
+
+    def to_dict(self) -> dict:
+        return {
+            "kind": self.kind,
+            "vendor": self.vendor,
+            "product": self.product,
+            "version": self.version,
+            "pretty_name": self.pretty_name,
+            "distro_id": self.distro_id,
+            "kernel": self.kernel,
+            "arch": self.arch,
+            "hostname": self.hostname,
+            "model": self.facts.get("model", ""),
+            "in_container": self.in_container,
+            "container_type": self.container_type,
+            "is_root": self.is_root,
+            "data_roots": list(self.data_roots),
+            "facts": dict(self.facts),
+        }
 
 
 def _os_release() -> dict:
@@ -216,9 +233,9 @@ def _is_admin() -> bool:
     return hasattr(os, "geteuid") and os.geteuid() == 0
 
 
-def detect_platform() -> PlatformReport:
+def detect_platform() -> PlatformFacts:
     """主入口：识别当前设备属于哪类 NAS 平台。"""
-    rep = PlatformReport()
+    rep = PlatformFacts()
     rep.arch = platform.machine()
     rep.kernel = platform.release()
     rep.hostname = platform.node()
@@ -245,7 +262,6 @@ def detect_platform() -> PlatformReport:
 
     if not IS_LINUX:
         rep.kind = PlatformKind.UNKNOWN
-        rep.warnings.append(f"未识别的操作系统: {platform.system()}")
         return rep
 
     # 1) 先看成品 NAS
@@ -279,18 +295,9 @@ def detect_platform() -> PlatformReport:
 
     rep.data_roots = _find_data_roots()
 
-    if rep.in_container:
-        rep.warnings.append(
-            f"运行在 {rep.container_type} 容器内：磁盘 SMART、RAID 状态、温度等项目可能不可见"
-        )
-    if not rep.is_root and rep.kind in (PlatformKind.NAS_APPLIANCE,
-                                        PlatformKind.NAS_SOFTWARE,
-                                        PlatformKind.LINUX):
-        rep.warnings.append("非 root 运行：SMART / RAID / 部分温度传感器读取会受限")
-
     return rep
 
 
-def platform_is_nas(rep: PlatformReport) -> bool:
+def platform_is_nas(rep: PlatformFacts) -> bool:
     """是否是「NAS 形态」（成品机或 NAS 系统），用于报告措辞。"""
     return rep.kind in (PlatformKind.NAS_APPLIANCE, PlatformKind.NAS_SOFTWARE)

@@ -64,7 +64,7 @@ class SmartInfo:
 
 
 @dataclass
-class StorageReport:
+class StorageFacts:
     target_path: str = ""
     target_exists: bool = False
     is_dir: bool = False
@@ -83,9 +83,6 @@ class StorageReport:
     iops_4k_read: int = 0
     iops_4k_write: int = 0
     speed_test_done: bool = False
-    warnings: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
-    ok: bool = False
 
 
 # ── 挂载盘 ──────────────────────────────────────────────────
@@ -473,77 +470,45 @@ def _safe_test_path(storage_path: str) -> bool:
         return False
 
 
-def check_storage(storage_path: str = "",
-                  do_speed_test: bool = True,
-                  do_smart: bool = True) -> StorageReport:
-    """主入口：目标路径 + 挂载盘 + 物理盘 + RAID + SMART + 读写速度。"""
-    report = StorageReport(target_path=storage_path)
+def collect_storage(storage_path: str = "",
+                    do_speed_test: bool = True,
+                    do_smart: bool = True) -> StorageFacts:
+    """
+    只采集事实，不做判定。
 
-    # 1. 路径存在性
-    report.target_exists = os.path.exists(storage_path)
-    report.is_dir = os.path.isdir(storage_path)
+    路径是否存在、可写、已用多少、阵列健不健康，全部交给 checks/storage.py。
+    这样采集层永远可以放心失败，不会污染结论。
+    """
+    facts = StorageFacts(target_path=storage_path)
 
-    if not report.target_exists:
-        report.errors.append(f"目标路径 '{storage_path}' 不存在")
-    elif not report.is_dir:
-        report.errors.append(f"目标路径 '{storage_path}' 不是目录")
-    else:
-        # 2. 可写性
-        report.can_write = _safe_test_path(storage_path)
-        if not report.can_write:
-            report.errors.append(f"目标路径 '{storage_path}' 不可写（权限不足或只读挂载）")
+    facts.target_exists = os.path.exists(storage_path)
+    facts.is_dir = os.path.isdir(storage_path)
 
-        # 3. 容量
+    if facts.target_exists and facts.is_dir:
+        facts.can_write = _safe_test_path(storage_path)
+
         try:
             usage = shutil.disk_usage(storage_path)
-            report.target_total_gb = round(usage.total / 1024 ** 3, 1)
-            report.target_free_gb = round(usage.free / 1024 ** 3, 1)
+            facts.target_total_gb = round(usage.total / 1024 ** 3, 1)
+            facts.target_free_gb = round(usage.free / 1024 ** 3, 1)
             if usage.total > 0:
                 used = usage.total - usage.free
-                report.target_use_percent = round(used / usage.total * 100, 1)
+                facts.target_use_percent = round(used / usage.total * 100, 1)
         except Exception:  # noqa: BLE001
             pass
 
-        # 4. 速度测试
-        if do_speed_test and report.can_write:
-            report.writable_test_size_mb = 50
-            report.seq_write_mbps = test_write_speed(storage_path, 50)
-            report.seq_read_mbps = test_read_speed(storage_path, 50)
-            report.speed_test_done = True
-            if report.seq_write_mbps == 0 and report.seq_read_mbps == 0:
-                report.warnings.append("读写测速未取得有效数据（路径可能只读或 I/O 异常）")
+        if do_speed_test and facts.can_write:
+            facts.writable_test_size_mb = 50
+            facts.seq_write_mbps = test_write_speed(storage_path, 50)
+            facts.seq_read_mbps = test_read_speed(storage_path, 50)
+            facts.speed_test_done = True
 
-    # 5. 磁盘 / RAID / SMART（与目标路径是否可用无关，都要采集）
-    report.disks = get_mounted_disks()
-    report.physical_disks = get_physical_disks()
-    report.raids = detect_raids()
+    facts.disks = get_mounted_disks()
+    facts.physical_disks = get_physical_disks()
+    facts.raids = detect_raids()
 
-    if do_smart and report.physical_disks:
-        report.smart = detect_smart(report.physical_disks, enabled=True)
-        report.smart_checked = bool(report.smart)
+    if do_smart and facts.physical_disks:
+        facts.smart = detect_smart(facts.physical_disks, enabled=True)
+        facts.smart_checked = bool(facts.smart)
 
-    # 6. 告警汇总
-    for d in report.disks:
-        if d.use_percent >= 95:
-            report.warnings.append(f"{d.mountpoint} 空间即将耗尽（{d.use_percent}%）")
-        if d.inodes_use_percent >= 95:
-            report.warnings.append(f"{d.mountpoint} inode 即将耗尽（{d.inodes_use_percent}%）")
-        if d.readonly and d.fstype not in ("squashfs", "iso9660"):
-            report.warnings.append(f"{d.mountpoint} 为只读挂载")
-
-    if not report.physical_disks and IS_LINUX:
-        report.warnings.append("未识别到物理磁盘（可能运行在容器/虚拟机中）")
-
-    # 7. 综合判断
-    bad_raid = [r for r in report.raids if not r.healthy]
-    bad_smart = [s for s in report.smart if s.healthy is False]
-
-    report.ok = (
-        report.target_exists
-        and report.is_dir
-        and report.can_write
-        and not report.errors
-        and not bad_raid
-        and not bad_smart
-    )
-    return report
+    return facts

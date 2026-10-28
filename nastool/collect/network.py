@@ -45,7 +45,7 @@ class ConnectivityTest:
 
 
 @dataclass
-class NetworkReport:
+class NetworkFacts:
     interfaces: List[NetworkInterface] = field(default_factory=list)
     dns_ok: bool = False
     dns_server: str = ""
@@ -53,10 +53,6 @@ class NetworkReport:
     gateway_reachable: bool = False
     internet_reachable: bool = False
     peers: List[ConnectivityTest] = field(default_factory=list)
-    notes: List[str] = field(default_factory=list)      # 仅提示，不算问题
-    warnings: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
-    ok: bool = False
 
     def best_ip(self) -> str:
         """第一个拿到 IPv4 的非回环接口 IP。"""
@@ -289,81 +285,46 @@ def _detect_dns_server() -> str:
     return ""
 
 
-def check_network(peers: Optional[List[str]] = None,
-                  do_internet_check: bool = True) -> NetworkReport:
+def collect_network(peers: Optional[List[str]] = None,
+                    do_internet_check: bool = True) -> NetworkFacts:
     """
-    主入口。
-    peers: 需要对端探测的目标列表，形如 ["192.168.1.10:445", "nas.local:5000"]
+    只采集事实：网卡、DNS、网关、外网、对端可达性。
+
+    「有没有 IP」「速率够不够」「外网该不该通」全部交给 checks/network.py，
+    因为判定标准随场景变化（内网 NAS 外网不通完全正常）。
     """
-    report = NetworkReport()
+    facts = NetworkFacts()
 
-    # 1. 接口
-    report.interfaces = get_interfaces()
+    facts.interfaces = get_interfaces()
 
-    # 2. DNS
-    report.dns_server = _detect_dns_server()
+    facts.dns_server = _detect_dns_server()
     try:
         socket.gethostbyname("www.baidu.com" if IS_LINUX else "www.bing.com")
-        report.dns_ok = True
+        facts.dns_ok = True
     except OSError:
-        report.dns_ok = False
+        facts.dns_ok = False
 
-    # 3. 网关
-    report.gateway = _detect_gateway()
-    if report.gateway:
+    facts.gateway = _detect_gateway()
+    if facts.gateway:
         if IS_WINDOWS:
-            ping = run(f"ping -n 1 -w 2000 {report.gateway}", timeout=6)
+            ping = run(f"ping -n 1 -w 2000 {facts.gateway}", timeout=6)
         else:
-            ping = run(f"ping -c 1 -W 2 {report.gateway} 2>/dev/null", timeout=6)
-        report.gateway_reachable = ("TTL=" in ping.upper() or "bytes from" in ping
-                                    or "1 received" in ping or "1 packets received" in ping)
+            ping = run(f"ping -c 1 -W 2 {facts.gateway} 2>/dev/null", timeout=6)
+        facts.gateway_reachable = ("TTL=" in ping.upper() or "bytes from" in ping
+                                   or "1 received" in ping or "1 packets received" in ping)
 
-    # 4. 互联网
     if do_internet_check:
         if IS_WINDOWS:
             ping = run("ping -n 1 -w 3000 223.5.5.5", timeout=6)
         else:
             ping = run("ping -c 1 -W 3 223.5.5.5 2>/dev/null || "
                        "ping -c 1 -W 3 114.114.114.114 2>/dev/null", timeout=8)
-        report.internet_reachable = ("TTL=" in ping.upper() or "bytes from" in ping
-                                     or "1 received" in ping or "1 packets received" in ping)
+        facts.internet_reachable = ("TTL=" in ping.upper() or "bytes from" in ping
+                                    or "1 received" in ping or "1 packets received" in ping)
 
-    # 5. 对端探测
     for target in (peers or []):
         host, port = parse_peer(target)
         if host:
-            report.peers.append(test_connectivity(host, port))
+            facts.peers.append(test_connectivity(host, port))
 
-    # 6. 告警
-    active = [i for i in report.interfaces if i.up]
-    usable = [i for i in active if i.has_usable_ip()]
-
-    if not active:
-        report.errors.append("没有任何已启用的网络接口")
-    elif not usable:
-        report.errors.append("网络接口未获取到有效 IP（只有链路本地地址）")
-
-    for i in active:
-        if i.ip.startswith("169.254."):
-            msg = f"{i.name} 只有链路本地地址（169.254.x.x），可能未接网线/DHCP 失败"
-            # 已经有一条可用链路时，其他网卡的 link-local 只是提示，不算问题
-            (report.notes if usable else report.warnings).append(msg)
-        if i.speed_mbps and i.speed_mbps <= 100:
-            rep.warnings.append(
-                f"{i.name} 链路速率仅 {i.speed_mbps} Mbps（千兆及以上网卡建议检查网线/交换机）"
-            )
-
-    if active and not report.gateway_reachable:
-        report.warnings.append("默认网关不可达（内网直连可忽略）")
-    if report.gateway_reachable and not report.internet_reachable:
-        report.warnings.append("外网不可达（NAS 常见，若无需联网可忽略）")
-    if not report.dns_ok:
-        report.warnings.append("DNS 解析失败")
-
-    for peer in report.peers:
-        if not peer.reachable:
-            report.errors.append(f"对端不可达: {peer.label}（{peer.error}）")
-
-    # 7. 判定：有网卡拿到有效 IP 即基本可用
-    report.ok = bool(usable)
-    return report
+    return facts

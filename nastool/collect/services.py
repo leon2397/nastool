@@ -90,16 +90,14 @@ class DockerContainer:
 
 
 @dataclass
-class ServicesReport:
+class ServicesFacts:
     items: List[ServiceItem] = field(default_factory=list)
     processes: List[str] = field(default_factory=list)
     containers: List[DockerContainer] = field(default_factory=list)
     docker_available: bool = False
     total_listening: int = 0
-    notes: List[str] = field(default_factory=list)      # 仅提示，不算问题
-    warnings: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
-    ok: bool = True
+    ephemeral_ports: int = 0          # 临时端口数量（49152-65535），只计数不逐条列
+    processes_readable: bool = True
 
     def has(self, category: str) -> bool:
         return any(i.category == category for i in self.items)
@@ -196,54 +194,34 @@ def _is_ephemeral(port: int) -> bool:
     return 49152 <= port <= 65535
 
 
-def detect_services() -> ServicesReport:
-    """主入口：监听端口 + 已知服务 + 进程 + Docker。"""
-    rep = ServicesReport()
+def collect_services() -> ServicesFacts:
+    """只采集事实：监听端口、已知服务对照、进程、容器。不做风险判定。"""
+    facts = ServicesFacts()
 
     rows = _get_listening_ports()
-    rep.total_listening = len(rows)
+    facts.total_listening = len(rows)
 
     seen_ports = set()
-    ephemeral_count = 0
+    ephemeral = 0
     for port, addr, process, pid in rows:
         if port in seen_ports:
             continue
         seen_ports.add(port)
         if port not in KNOWN_SERVICES and _is_ephemeral(port):
-            ephemeral_count += 1
+            ephemeral += 1
             continue
         name, category, note = KNOWN_SERVICES.get(port, ("未知服务", "其他", ""))
-        rep.items.append(ServiceItem(
+        facts.items.append(ServiceItem(
             port=port, name=name, category=category, note=note,
             listening=True, pid=pid, process=process, bind_address=addr,
         ))
 
-    if ephemeral_count:
-        rep.notes.append(
-            f"另有 {ephemeral_count} 个临时端口（49152-65535）在监听，多为客户端出站连接，无需处理"
-        )
+    facts.ephemeral_ports = ephemeral
+    facts.items.sort(key=lambda i: (i.category == "其他", i.port))
 
-    # 按端口排序，未识别的排后面，报告更好读
-    rep.items.sort(key=lambda i: (i.category == "其他", i.port))
-
-    # 进程
     procs = _list_processes()
-    rep.processes = sorted({KNOWN_PROCESSES[p] for p in procs if p in KNOWN_PROCESSES})
-    if not procs:
-        rep.notes.append("无法读取进程列表（权限受限），服务判定仅基于端口")
+    facts.processes = sorted({KNOWN_PROCESSES[p] for p in procs if p in KNOWN_PROCESSES})
+    facts.processes_readable = bool(procs)
 
-    # Docker
-    rep.docker_available, rep.containers = _docker_containers()
-
-    # 风险提示
-    if any(i.port == 23 for i in rep.items):
-        rep.warnings.append("Telnet(23) 正在监听：明文传输，建议关闭")
-    if any(i.port == 2375 for i in rep.items):
-        rep.warnings.append("Docker API(2375) 未加密监听：一旦对外暴露等于交出 root")
-    for i in rep.items:
-        if i.bind_address in ("0.0.0.0", "*", "::", "[::]") and i.port in (445, 2049, 23, 2375, 3306, 6379):
-            rep.warnings.append(f"{i.name}({i.port}) 监听所有地址，请确认已做访问控制")
-
-    # 服务属于「信息项」，不参与失败判定
-    rep.ok = True
-    return rep
+    facts.docker_available, facts.containers = _docker_containers()
+    return facts

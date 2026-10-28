@@ -7,6 +7,7 @@ dist/
 venv/
 .pytest_cache/
 reports/
+tmpr/
 nastool_report.json
 nastool_report.html
 nastool_report.md

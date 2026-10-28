@@ -53,7 +53,7 @@ class AcceleratorDevice:
 
 
 @dataclass
-class AIReport:
+class AIFacts:
     devices: List[AcceleratorDevice] = field(default_factory=list)
     primary: Optional[AcceleratorDevice] = None
     best_chip_type: str = ChipType.NONE
@@ -64,9 +64,8 @@ class AIReport:
     inference_test_ms: float = 0.0
     config_path: str = ""                # 配置文件里 npu_type 的提示（可选）
     config_npu_type: str = ""
-    errors: List[str] = field(default_factory=list)
-    notes: List[str] = field(default_factory=list)
-    ok: bool = False                     # AI 能力是否可用（不参与整体合格判定）
+    inference_tested: bool = True        # 是否真的跑了推理测试
+    notes: List[str] = field(default_factory=list)   # 纯信息说明，不参与判定
 
 
 def _dev_entries() -> list:
@@ -293,12 +292,12 @@ def _load_config_hint() -> tuple:
     return "", ""
 
 
-def detect_ai_accelerator(do_inference_test: bool = True) -> AIReport:
+def detect_ai_accelerator(do_inference_test: bool = True) -> AIFacts:
     """
     主入口：探测所有 AI 加速设备 + 推理测试。
     优先级：NVIDIA > AMD > Rockchip > 昇腾 > Intel > Sophgo > Google > CPU
     """
-    report = AIReport()
+    report = AIFacts()
     report.config_path, report.config_npu_type = _load_config_hint()
 
     detectors = [
@@ -331,13 +330,7 @@ def detect_ai_accelerator(do_inference_test: bool = True) -> AIReport:
         report.inference_test_passed = success
         report.inference_test_ms = elapsed
     else:
-        report.notes.append("已跳过推理测试（--no-ai）")
+        report.inference_tested = False
 
-    report.ok = report.inference_available
-
-    if not report.hardware_accelerated:
-        report.notes.append("未检测到 AI 加速硬件，仅 CPU 可用（纯存储用途不受影响）")
-    if do_inference_test and not report.inference_available:
-        report.notes.append("未找到可用的推理引擎（PyTorch / ONNX Runtime / NumPy）")
 
     return report
