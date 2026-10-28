@@ -4,8 +4,9 @@
 #   · 三平台都跑 —— 这个工具主要部署在 Linux NAS 上，但也要在 Windows
 #     开发机上跑、在 macOS 上偶尔跑。测试全是纯 mock，不依赖真实硬件，
 #     所以三平台都能跑同一套（实测无平台硬编码、无 subprocess 依赖）。
-#   · Python 从 3.8 到最新 —— pyproject 声明 requires-python >= 3.8，
-#     少测一个版本就等于对外承诺落空。3.8 已 EOL，但既然声明支持就要测。
+#   · Python 从 3.9 到最新 —— pyproject 声明 requires-python >= 3.9，
+#     少测一个版本就等于对外承诺落空。3.8 已 EOL，且 setuptools 76+ 装不上，
+#     所以下限抬到真正能跑的 3.9（见 ADR-0010）。
 #   · 每次都跑 selfcheck —— 它校验"文档与代码一致"，这正是人工最容易漏的。
 #   · tag 时才构建产物 —— 平时构建没意义，真正发版时再验证一次打包链路。
 name: CI
