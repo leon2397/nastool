@@ -12,7 +12,14 @@ from __future__ import annotations
 import textwrap
 from typing import List
 
-from ..model import CATEGORY_NAMES, CATEGORY_ORDER, CheckResult, Report, Status
+from ..model import (
+    CATEGORY_NAMES,
+    CATEGORY_ORDER,
+    LOW_CONFIDENCE,
+    CheckResult,
+    Report,
+    Status,
+)
 
 _COLORS = {
     "reset": "\033[0m",
@@ -22,6 +29,7 @@ _COLORS = {
     "green": "\033[92m",
     "yellow": "\033[93m",
     "blue": "\033[94m",
+    "magenta": "\033[95m",
     "cyan": "\033[96m",
     "grey": "\033[90m",
 }
@@ -212,6 +220,12 @@ class TerminalReporter:
     def _render_check(self, c: CheckResult) -> None:
         color = _STATUS_COLOR.get(c.status, "grey")
         self._w(f"    {self._c(c.status.glyph, color)} {self._pad(c.title, 18)}{c.summary}")
+
+        # 低置信度标记：结论本身可能是对的，但数据不够可靠。
+        # 用洋红而非黄——黄是「告警」的状态色，存疑是关于数据可靠性的元信息，
+        # 同色系会让人误读成又一个告警。
+        if c.confidence and c.confidence < LOW_CONFIDENCE and c.status is not Status.UNKNOWN:
+            self._w(f"        {self._c(f'⚠ 结论存疑（置信度 {c.confidence:.2f}）', 'magenta')}")
 
         if c.detail and (self.verbose or c.status in (Status.FAIL, Status.WARN)):
             for line in textwrap.wrap(c.detail, width=68):

@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import os
 import time
+from typing import Dict, List
 
 from ..collect.util import IS_LINUX, IS_WINDOWS, have, read_file, run, safe_listdir
+from ..fusion import FusionMethod, SourceValue, fuse, normalize_point, validate
 from ..model import Status
 from ..registry import check
 from ._base import R, ev
@@ -91,31 +93,103 @@ def swap_pressure(ctx):
 @check("system.thermal", "温度", "system", weight=3,
        platforms=["linux"], tags=["nas", "verify", "ai"])
 def thermal(ctx):
+    """
+    温度判定：取最高值 + 交叉验证多源一致性。
+
+    两件独立的事：
+      1. **最高温度**用 MAX 融合，不用平均值。SoC 45°C 与热点 60°C
+         平均成 52.5°C 会低估散热风险——温度这类量必须取最坏值。
+      2. **同一测量点**若有两个来源且读数超容差，说明数据有争议，
+         返回 WARN 并列出两个来源，同时降低置信度。
+
+    不一致时不隐藏矛盾、不随便采信一方——这正是 DEBT-001 要解决的问题。
+    """
     zones = [t for t in ctx.device.thermals if t.temp_c > 0]
     if not zones:
         return R(Status.UNKNOWN, "未读取到温度传感器",
                  detail="容器 / 虚拟机 / 部分 ARM 设备不暴露温度接口",
                  suggestion="在宿主机上运行，或确认 /sys/class/thermal 可读")
 
-    hottest = max(zones, key=lambda t: t.temp_c)
     warn, crit = ctx.thermal_limits()
     chip = ctx.chip_hint()
 
+    # ── 1. 最高温度：MAX 融合，安全保守 ──────────────────
+    hottest = max(zones, key=lambda t: t.temp_c)
+    max_result = fuse(
+        [SourceValue(source=t.source or "unknown", value=t.temp_c)
+         for t in zones],
+        method=FusionMethod.MAX,
+    )
+    peak = max_result.value if max_result.value is not None else hottest.temp_c
+
+    # ── 2. 同测量点交叉验证 ─────────────────────────────
+    by_point: Dict[str, List] = {}
+    for t in zones:
+        point = normalize_point(t.zone_type or t.zone)
+        by_point.setdefault(point, []).append(t)
+
+    conflicts = []
+    confidence = 0.95
+    for point, group in by_point.items():
+        if len(group) < 2:
+            continue
+        sources = [SourceValue(source=t.source or "unknown", value=t.temp_c)
+                   for t in group]
+        cons = validate(sources, key="temp_c")
+        if not cons.consistent:
+            conflicts.append((point, group, cons))
+            confidence = min(confidence, 0.5)
+
     evidence = [
-        ev("thermal_zone", z.zone_type or z.zone, f"{z.temp_c}°C", num=z.temp_c)
-        for z in sorted(zones, key=lambda t: -t.temp_c)[:6]
+        ev(t.source or "unknown", t.zone_type or t.zone, f"{t.temp_c}°C",
+           num=t.temp_c, note=f"测量点 {normalize_point(t.zone_type or t.zone)}")
+        for t in sorted(zones, key=lambda x: -x.temp_c)[:8]
     ]
 
     note = f"（阈值按 {chip} 校准：{warn:.0f}/{crit:.0f}°C）" if chip != "generic" else ""
-    if hottest.temp_c >= crit:
-        return R(Status.FAIL, f"最高温度 {hottest.temp_c}°C，已超过安全线{note}",
+
+    # ── 3. 数据有争议：先报矛盾，状态取最坏 ──────────────
+    if conflicts:
+        point, group, cons = conflicts[0]
+        detail_parts = [
+            f"测量点「{point}」："
+            + "、".join(f"{t.source}={t.temp_c}°C" for t in group)
+            + f"，相差 {cons.spread:.1f}°C（容差 {cons.tolerance:.0f}°C）"
+            for point, group, cons in conflicts
+        ]
+        detail = "；".join(detail_parts) + "。可能是测量点定义不同，或其中一路读数不可靠。"
+        if peak >= crit:
+            return R(Status.FAIL,
+                     f"最高温度 {peak}°C，已超过安全线{note}（温度读数存在争议）",
+                     detail=detail,
+                     suggestion="立即检查风扇与散热；温度读数不一致，建议人工核对传感器",
+                     evidence=evidence, confidence=confidence)
+        if peak >= warn:
+            return R(Status.WARN,
+                     f"最高温度 {peak}°C，偏高{note}（温度读数存在争议）",
+                     detail=detail,
+                     suggestion="清理灰尘、检查风扇转速与风道；建议人工核对传感器读数",
+                     evidence=evidence, confidence=confidence)
+        return R(Status.WARN,
+                 f"最高温度 {peak}°C{note}，但温度读数存在争议",
+                 detail=detail,
+                 suggestion="建议人工核对传感器读数，确认测量点是否对应同一位置",
+                 evidence=evidence, confidence=confidence)
+
+    # ── 4. 读数一致，按最高值判定 ───────────────────────
+    src_note = ""
+    if len({t.source for t in zones}) > 1:
+        src_note = f"，已交叉验证 {len(by_point)} 个测量点"
+    if peak >= crit:
+        return R(Status.FAIL, f"最高温度 {peak}°C，已超过安全线{note}",
                  suggestion="立即检查风扇与散热，避免降频或硬件损伤",
-                 evidence=evidence)
-    if hottest.temp_c >= warn:
-        return R(Status.WARN, f"最高温度 {hottest.temp_c}°C，偏高{note}",
+                 evidence=evidence, confidence=confidence)
+    if peak >= warn:
+        return R(Status.WARN, f"最高温度 {peak}°C，偏高{note}",
                  suggestion="清理灰尘、检查风扇转速与风道",
-                 evidence=evidence)
-    return R(Status.PASS, f"最高温度 {hottest.temp_c}°C{note}", evidence=evidence)
+                 evidence=evidence, confidence=confidence)
+    return R(Status.PASS, f"最高温度 {peak}°C{note}{src_note}",
+             evidence=evidence, confidence=confidence)
 
 
 @check("system.load_average", "负载", "system", weight=2,

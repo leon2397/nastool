@@ -51,6 +51,7 @@ class ThermalInfo:
     zone: str = ""
     temp_c: float = 0.0
     zone_type: str = ""
+    source: str = ""      # 读数来源：hwmon / thermal_zone（用于多源一致性验证）
 
 
 @dataclass
@@ -344,12 +345,9 @@ def detect_virtualization() -> str:
     return "physical"
 
 
-def get_thermal_zones() -> List[ThermalInfo]:
-    """读取温度传感器（hwmon 优先，thermal_zone 兜底）。"""
-    thermals: List[ThermalInfo] = []
-    if not IS_LINUX:
-        return thermals
-
+def _read_hwmon_thermals() -> List[ThermalInfo]:
+    """读取 hwmon 传感器（SoC / CPU / 主板温度点）。"""
+    out: List[ThermalInfo] = []
     for name in safe_listdir("/sys/class/hwmon"):
         base = f"/sys/class/hwmon/{name}"
         hw_name = read_file(f"{base}/name")
@@ -363,21 +361,49 @@ def get_thermal_zones() -> List[ThermalInfo]:
                 continue
             zone_num = entry.replace("temp", "").replace("_input", "")
             label = read_file(f"{base}/temp{zone_num}_label", hw_name or "cpu")
-            thermals.append(ThermalInfo(zone=f"{hw_name}/{zone_num}", temp_c=temp_c,
-                                        zone_type=label or hw_name or "cpu"))
+            out.append(ThermalInfo(zone=f"{hw_name or 'hwmon'}/{zone_num}",
+                                   temp_c=temp_c,
+                                   zone_type=label or hw_name or "cpu",
+                                   source="hwmon"))
+    return out
 
-    if not thermals:
-        for zone in safe_listdir("/sys/class/thermal"):
-            if not zone.startswith("thermal_zone"):
-                continue
-            raw = read_file(f"/sys/class/thermal/{zone}/temp", "0")
-            try:
-                temp_c = round(int(raw) / 1000.0, 1)
-            except ValueError:
-                continue
-            ztype = read_file(f"/sys/class/thermal/{zone}/type", "unknown")
-            thermals.append(ThermalInfo(zone=zone, temp_c=temp_c, zone_type=ztype))
 
+def _read_thermal_zone_temps() -> List[ThermalInfo]:
+    """读取 thermal_zone（内核热区，整机视角）。"""
+    out: List[ThermalInfo] = []
+    for zone in safe_listdir("/sys/class/thermal"):
+        if not zone.startswith("thermal_zone"):
+            continue
+        raw = read_file(f"/sys/class/thermal/{zone}/temp", "0")
+        try:
+            temp_c = round(int(raw) / 1000.0, 1)
+        except ValueError:
+            continue
+        ztype = read_file(f"/sys/class/thermal/{zone}/type", "unknown")
+        out.append(ThermalInfo(zone=zone, temp_c=temp_c,
+                               zone_type=ztype, source="thermal_zone"))
+    return out
+
+
+def get_thermal_zones() -> List[ThermalInfo]:
+    """
+    读取温度传感器。
+
+    **两个来源都读，不再互斥兜底。**
+
+    旧实现是「hwmon 优先，thermal_zone 兜底」——hwmon 有值就完全不读
+    thermal_zone。这在某些 ARM 板子上会给出误导结论：hwmon 只报 SoC 上
+    某一点，而 thermal_zone 报整机热点，两者可差 15°C，取哪个直接决定
+    是否告警，而用户从报告里看不出存在争议。
+
+    现在两个来源都保留，由 `checks/system.py` 的判定项做一致性验证
+    （见 `nastool/fusion.py`）。判定仍在判定层，采集层不做判断。
+    """
+    if not IS_LINUX:
+        return []
+
+    thermals = _read_hwmon_thermals()
+    thermals += _read_thermal_zone_temps()
     return thermals
 
 

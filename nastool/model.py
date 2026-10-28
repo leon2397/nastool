@@ -30,6 +30,11 @@ from typing import Any, Dict, List, Optional
 # 报告格式版本：向后兼容契约，任何破坏性变更必须升这里
 REPORT_VERSION = "3.0"
 
+# 低于此置信度的判定项，在报告里标注「结论存疑」。
+# 置信度低不等于判定错，而是「数据不足以支撑这个结论」——
+# 典型来源：多源读数互相矛盾（见 nastool/fusion.py）。
+LOW_CONFIDENCE = 0.7
+
 
 class Status(str, Enum):
     """单条检查的判定结果。"""

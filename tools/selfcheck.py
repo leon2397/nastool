@@ -176,6 +176,39 @@ def check_silent_except(res: CheckResult) -> None:
                          "（窄捕获+默认值可以；宽捕获必须带 # noqa 和原因注释）")
 
 
+# ── 3b. 文件编码与行尾（STANDARDS §4）──────────────────────
+
+def check_encoding(res: CheckResult) -> None:
+    """
+    仓库内文本文件必须是 UTF-8 + LF。
+
+    背景：Windows 上的编辑器容易把文件写成 CRLF，而本项目主要部署在
+    Linux NAS 上。`.gitattributes` 已声明 `eol=lf`，git 提交时会转换，
+    但**工作区**会一直不一致——下次编辑又变回 CRLF，来回反复。
+    """
+    targets = []
+    for sub in ("nastool", "tests", "tools"):
+        targets += sorted((ROOT / sub).rglob("*.py"))
+    targets += sorted((ROOT / "docs").rglob("*.md"))
+    targets += [ROOT / "README.md", ROOT / "CHANGELOG.md", ROOT / "VERSION"]
+
+    for f in targets:
+        if not f.exists():
+            continue
+        raw = f.read_bytes()
+        rel = f.relative_to(ROOT).as_posix()
+        if raw.startswith(b"\xef\xbb\xbf"):
+            res.fail(f"{rel} 带 UTF-8 BOM")
+        try:
+            raw.decode("utf-8")
+        except UnicodeDecodeError as e:
+            res.fail(f"{rel} 不是合法 UTF-8：{e}")
+            continue
+        if b"\r\n" in raw:
+            n = raw.count(b"\r\n")
+            res.fail(f"{rel} 含 {n} 处 CRLF，应统一为 LF")
+
+
 # ── 4. 版本号三处一致（STANDARDS §8）────────────────────────
 
 def check_versions(res: CheckResult) -> None:
@@ -209,11 +242,35 @@ def check_report_version(res: CheckResult) -> None:
 # ── 6. 文档链接与锚点 ────────────────────────────────────────
 
 def _github_slug(text: str) -> str:
+    """
+    生成 GitHub 风格的标题锚点。
+
+    与 GitHub 实际行为对齐的关键点：**emoji 及其后的空格被一起丢弃**。
+    GitHub 先移除 emoji，再把剩余空格转成连字符，所以
+    「✅ DEBT-001 多源数据」的锚点是 `debt-001-多源数据`，
+    不是 `-debt-001-多源数据`。
+    """
     t = text.strip().lower()
     t = re.sub(r"`([^`]*)`", r"\1", t)
     t = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", t)
     out = []
+    after_emoji = False
     for ch in t:
+        cp = ord(ch)
+        is_emoji = (
+            0x1F000 <= cp <= 0x1FAFF      # 彩色符号与图形
+            or 0x2600 <= cp <= 0x27BF    # 杂项符号与箭头
+            or 0xFE0F == cp              # 变体选择符
+            or 0x2B00 <= cp <= 0x2BFF    # 箭头补充
+        )
+        if is_emoji:
+            after_emoji = True
+            continue
+        if after_emoji:
+            after_emoji = False
+            if ch == " ":
+                # emoji 后的空格直接丢弃，不产生连字符
+                continue
         if ch.isalnum() or ch in " -_":
             out.append(ch)
     return "".join(out).replace(" ", "-")
@@ -454,6 +511,7 @@ CHECKS: List[Tuple[str, Callable[[CheckResult], None]]] = [
     ("分层依赖方向", check_layers),
     ("库代码裸 print", check_print),
     ("静默吞异常", check_silent_except),
+    ("文件编码与行尾", check_encoding),
     ("版本号三处一致", check_versions),
     ("REPORT_VERSION 一致", check_report_version),
     ("文档链接与锚点", check_links),

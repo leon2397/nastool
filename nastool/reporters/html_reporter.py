@@ -14,7 +14,14 @@ import html
 import os
 from typing import Any, Dict, List
 
-from ..model import CATEGORY_NAMES, CATEGORY_ORDER, CheckResult, Report, Status
+from ..model import (
+    CATEGORY_NAMES,
+    CATEGORY_ORDER,
+    LOW_CONFIDENCE,
+    CheckResult,
+    Report,
+    Status,
+)
 
 _STATUS_STYLE = {
     Status.PASS: ("pass", "✓", "通过"),
@@ -223,6 +230,12 @@ class HTMLReporter:
     def _check_row(self, c: CheckResult) -> str:
         cls, glyph, label = _STATUS_STYLE.get(c.status, ("skip", "·", ""))
         extra = ""
+        # 低置信度标记：结论可能对，但数据不足以支撑它。
+        # 用紫色而非黄/橙——状态色（绿/黄/红）表示「设备状态」，
+        # 存疑是关于「数据可靠性」的元信息，混用同色系会让人误读成告警。
+        if c.confidence and c.confidence < LOW_CONFIDENCE and c.status is not Status.UNKNOWN:
+            extra += (f'<div class="detail" style="color:#7b4fbf">'
+                      f'⚠ 结论存疑（置信度 {c.confidence:.2f}）</div>')
         if c.detail:
             extra += f'<div class="detail">{_esc(c.detail)}</div>'
         if c.suggestion and c.status in (Status.WARN, Status.FAIL):

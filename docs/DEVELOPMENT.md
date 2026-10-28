@@ -11,7 +11,7 @@
 ```bash
 git clone <repo> && cd nastool
 python -m pip install -e ".[dev]"        # 只有 pytest 一个开发依赖
-python -m pytest -q                       # 31 passed
+python -m pytest -q                       # 54 passed
 python -m nastool --no-speed-test -v      # 端到端跑一次
 ```
 
@@ -209,7 +209,7 @@ class MyConnector(BaseConnector):
 ## 6. 测试
 
 ```bash
-python -m pytest -q                    # 全部 31 项
+python -m pytest -q                    # 全部 54 项
 python -m pytest -q --junit-xml=r.xml  # 终端汇总可能被吞时用这个取结果
 python -m pytest tests/test_smoke.py -k cap -v
 ```
@@ -250,9 +250,9 @@ python -m pytest tests/test_smoke.py -k cap -v
 版本号在三处，必须同步：
 
 ```bash
-VERSION                 # 0.3.3
-nastool/__init__.py     # __version__ = "0.3.3"
-pyproject.toml          # version = "0.3.3"
+VERSION                 # 0.3.4
+nastool/__init__.py     # __version__ = "0.3.4"
+pyproject.toml          # version = "0.3.4"
 ```
 
 三项都改完后：
@@ -261,8 +261,8 @@ pyproject.toml          # version = "0.3.3"
 python tools/selfcheck.py             # 规范自检（含版本一致性）
 python -m pytest -q
 python -m nastool --no-speed-test -o all --out-dir /tmp/relcheck
-git add -A && git commit -m "release: 0.3.3"
-git tag v0.3.3
+git add -A && git commit -m "release: 0.3.4"
+git tag v0.3.4
 ```
 
 `CHANGELOG.md` 用「新增 / 变更 / 修复 / 移除」分节。破坏性变更单独标 **破坏性变更** 并写迁移方式。

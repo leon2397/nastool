@@ -187,8 +187,8 @@ nastool --push ainas --nas-host 192.168.1.10 --nas-port 8000
 
 ```bash
 pip install -e ".[dev]"
-python -m pytest -q            # 31 项测试，不依赖真实硬件
-python tools/selfcheck.py       # 开发规范自检（10 项，含文档与代码一致性）
+python -m pytest -q            # 54 项测试，不依赖真实硬件
+python tools/selfcheck.py       # 开发规范自检（12 项，含文档与代码一致性）
 python -m nastool --no-speed-test -o all
 ```
 
