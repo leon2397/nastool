@@ -149,8 +149,9 @@ nastool -p verify
 | 写脚本消费 JSON 报告 | [docs/OUTPUT.md](docs/OUTPUT.md) |
 | 追踪硬盘老化趋势 | [docs/HISTORY.md](docs/HISTORY.md) |
 | 排掉「为什么全是不适用」 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
-| 加一项新检测 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |
+| 加一项新检测 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)（规范：[docs/STANDARDS.md](docs/STANDARDS.md)） |
 | 理解分层为什么这样 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adr/](docs/adr/) |
+| 看改了什么 / 还欠什么 / 踩过什么坑 | [docs/memo/](docs/memo/)（日志 · 技术债 · 踩坑 · 未决问题） |
 | 知道还差哪些能力没做 | [docs/CHECKS-ROADMAP.md](docs/CHECKS-ROADMAP.md) |
 
 ---
@@ -186,6 +187,7 @@ nastool --push ainas --nas-host 192.168.1.10 --nas-port 8000
 ```bash
 pip install -e ".[dev]"
 python -m pytest -q            # 31 项测试，不依赖真实硬件
+python tools/selfcheck.py       # 开发规范自检（10 项，含文档与代码一致性）
 python -m nastool --no-speed-test -o all
 ```
 
@@ -202,6 +204,9 @@ def my_check(ctx):
 ```
 
 报告、评分、历史对比全部自动包含它。
+
+改动前请读 [docs/STANDARDS.md](docs/STANDARDS.md)（强制规范），改动后请在
+[docs/memo/](docs/memo/) 留一笔——日志、踩坑或技术债，总得留一样。
 
 ---
 

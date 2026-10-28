@@ -16,7 +16,9 @@
 | 从报告里读出信息、写脚本消费 JSON | [OUTPUT.md](OUTPUT.md) |
 | 追踪某块盘的老化趋势 | [HISTORY.md](HISTORY.md) |
 | 排掉「为什么全是不适用 / 为什么读不到 SMART」 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
-| 加一项新检测 / 改评分 / 提 PR | [DEVELOPMENT.md](DEVELOPMENT.md) |
+| 加一项新检测 / 改评分 / 提交代码 | [DEVELOPMENT.md](DEVELOPMENT.md)，规范见 [STANDARDS.md](STANDARDS.md) |
+| 查某个词到底指什么 | [GLOSSARY.md](GLOSSARY.md) |
+| 看这轮改了什么 / 还欠什么 / 踩过什么坑 | [memo/](memo/) |
 | 理解这套分层为什么是这样 | [ARCHITECTURE.md](ARCHITECTURE.md) + [adr/](adr/) |
 | 知道还差哪些能力没做 | [CHECKS-ROADMAP.md](CHECKS-ROADMAP.md) |
 | 看前身项目的设计遗产 | [DESIGN-NOTES.md](DESIGN-NOTES.md) |
@@ -42,8 +44,11 @@
 | 文档 | 内容 |
 |---|---|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 四层结构、数据流、五个关键机制、四个扩展点、与旧架构的对比 |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | 加检测项（含完整示例）、加分类、加报告格式、加连接器、测试约定、**文档同步规则**、发布流程 |
+| [STANDARDS.md](STANDARDS.md) | **开发规范**（强制）：分层依赖、异常契约、兼容承诺、提交格式、自审清单；`python tools/selfcheck.py` 可自动检查 |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | 加检测项（含完整示例）、加分类、加报告格式、加连接器、测试约定、发布流程 |
+| [GLOSSARY.md](GLOSSARY.md) | 术语表：状态五态、覆盖度 vs 置信度、两个 weight 的区别 |
 | [adr/](adr/) | 7 条架构决策的来龙去脉（为什么这样，放弃了什么） |
+| [memo/](memo/) | **项目记忆**：工作日志、技术债台账、踩坑记录、未决问题 |
 
 ### 规划与历史
 
@@ -94,7 +99,7 @@
 这个项目因为文档与代码脱节吃过两次亏（一批实现位置指向已删除的 `core/` 目录），所以定下硬规则：
 
 1. **单一来源。** 同一事实只在一个地方定义，其他地方引用链接。例如 profile 权重表只在 [PROFILES.md](PROFILES.md) 出现。
-2. **代码改动同 PR 改文档。** 对照表见 [DEVELOPMENT.md](DEVELOPMENT.md#7-文档同步规则)。
+2. **代码改动同 PR 改文档。** 对照表见 [STANDARDS.md](STANDARDS.md#10-文档同步-硬-自动)。
 3. **不写代码里没有的东西。** 不确定就去看代码，不要凭印象写。
 4. **数字必须可复现。** 写「55 项」就该能对上 `nastool --list-checks` 的输出。
 

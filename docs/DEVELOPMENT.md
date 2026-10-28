@@ -238,25 +238,10 @@ python -m pytest tests/test_smoke.py -k cap -v
 
 ---
 
-## 7. 文档同步规则
+## 7. 文档同步
 
-**代码改动必须在同一个 PR 里改文档。** 这个项目已经因为文档与代码脱节吃过两次亏（`docs/CHECKS-ROADMAP.md` 里一批实现位置指向已删除的 `core/`）。
-
-| 改了什么 | 必须同步 |
-|---|---|
-| 新增 / 删除检测项 | `docs/CHECKS.md` 对应章节；`README.md` 的分类项数表 |
-| 改权重 / 阈值 | `docs/CHECKS.md`、`docs/PROFILES.md`、`docs/SCORING.md` |
-| 改评分或封顶规则 | `docs/SCORING.md`（含重算示例） |
-| 改 JSON 字段 | `docs/OUTPUT.md`；**破坏性改动必须升 `REPORT_VERSION`** |
-| 加 / 改 CLI 参数 | `docs/CLI.md`、`README.md` 常用参数表 |
-| 加场景 | `docs/PROFILES.md` 的四个表 |
-| 任何用户可见变更 | `CHANGELOG.md` |
-
-写文档的硬规则：
-
-- **不写代码里没有的东西。** 不确定就去看代码，不要凭印象写。
-- **不复制会漂移的事实。** 同一张权重表只在 `docs/PROFILES.md` 出现一次，其他地方引用链接。
-- 数字必须能复现：写「55 项」就该能对上 `nastool --list-checks` 的输出。
+**代码改动必须在同一个提交里改文档**——完整的对照表与四条硬规则见
+[STANDARDS.md](STANDARDS.md#10-文档同步-硬-自动)。那是唯一权威来源，这里不再复制。
 
 ---
 
@@ -265,18 +250,19 @@ python -m pytest tests/test_smoke.py -k cap -v
 版本号在三处，必须同步：
 
 ```bash
-VERSION                 # 0.3.1
-nastool/__init__.py     # __version__ = "0.3.1"
-pyproject.toml          # version = "0.3.1"
+VERSION                 # 0.3.2
+nastool/__init__.py     # __version__ = "0.3.2"
+pyproject.toml          # version = "0.3.2"
 ```
 
 三项都改完后：
 
 ```bash
+python tools/selfcheck.py             # 规范自检（含版本一致性）
 python -m pytest -q
 python -m nastool --no-speed-test -o all --out-dir /tmp/relcheck
-git add -A && git commit -m "release: 0.3.1"
-git tag v0.3.1
+git add -A && git commit -m "release: 0.3.2"
+git tag v0.3.2
 ```
 
 `CHANGELOG.md` 用「新增 / 变更 / 修复 / 移除」分节。破坏性变更单独标 **破坏性变更** 并写迁移方式。
@@ -285,11 +271,10 @@ git tag v0.3.1
 
 ## 9. 代码风格
 
-没有强制 linter，但实际遵守的约定：
+完整规范见 [STANDARDS.md](STANDARDS.md)——分层依赖、命名、异常契约、输出边界、依赖红线、
+兼容承诺、提交格式都在那里，`python tools/selfcheck.py` 会自动检查其中能机器判断的部分。
+这里是开发时最常翻的两条速查：
 
-- **类型标注**用在函数签名和 dataclass，内部变量不强求
-- `from __future__ import annotations` 放在每个模块开头
-- 异常必须捕获并降级，**采集与检查中禁止裸 raise 穿透**
-- 注释写「为什么」，不写「是什么」。`# 取最长匹配，因为 /mnt 和 /mnt/data 都会匹配` 有价值；`# 循环 disks` 没有价值
-- 中文字符串直接写，不用 `\u` 转义
-- Windows 兼容：路径用 `os.path`，编码走 `collect/util.py: run()` 的 UTF-8 → mbcs → locale 回退链，**不要自己 `decode()`**
+- **异常**：采集层失败返回空值并记录；检查层捕获后返回 `UNKNOWN` + `error`；禁止 `except Exception: pass`
+  静默吞（宽捕获必须 `# noqa` + 原因）。
+- **编码**：Windows 走 `collect/util.py: run()` 的 UTF-8 → mbcs → locale 回退链，**不要自己 `decode()`**。

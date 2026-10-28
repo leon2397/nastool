@@ -61,7 +61,7 @@
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | `tool` | string | 固定 `"nastool"` |
-| `version` | string | 工具版本，如 `"0.3.1"` |
+| `version` | string | 工具版本，如 `"0.3.2"` |
 | `report_version` | string | **格式版本，当前 `"3.0"`** |
 | `generated_at` | string | `YYYY-MM-DD HH:MM:SS`（本地时间，无时区） |
 | `duration_s` | float | 本次检测耗时（秒） |

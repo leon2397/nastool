@@ -1,0 +1,88 @@
+# 工作日志
+
+> 倒序（最新在上）。每条不超过 8 行：**做了什么 / 为什么 / 验证 / 遗留**。
+>
+> 只记实质性变更（改了行为、结构、文档体系）。修个错别字不用记。
+> 规则见 [README.md](README.md)。
+
+---
+
+## 2026-10-28 · 规范与备忘录体系（v0.3.2）
+
+**做了什么** 建立 [STANDARDS.md](../STANDARDS.md)（开发规范，12 节，分效力等级）、
+[memo/](.) 四本台账、[GLOSSARY.md](../GLOSSARY.md)（术语表）、`tools/selfcheck.py`（把规范
+变成可执行检查）。收敛 `DEVELOPMENT.md` 的 §7/§9 到 STANDARDS，消除双份维护。
+
+**为什么** 规范和记忆一直是隐性的：规范只有 `DEVELOPMENT.md §9` 的 9 条风格建议，
+"必须遵守什么"没有权威文本；记忆全靠提交信息和对话，前身项目就是这样丢掉 92 项检测
+的实现细节的。另外"文档必须和代码一致"一直是纪律要求，纪律会松懈——改成脚本。
+
+**验证** `selfcheck` 全绿；`pytest` 31 passed；文档链接与锚点全有效。
+
+**遗留** `selfcheck` 目前不检查"检测项权重与 PROFILES 是否一致"的语义合理性（只查键是否
+合法），需要人工评审。见 [debt.md](debt.md) DEBT-006。
+
+---
+
+## 2026-10-28 · 文档体系重建（v0.3.1）
+
+**做了什么** README 改为门面，深度内容移入 `docs/`：CHECKS（55 项逐条）、SCORING
+（三层计算+手算示例）、PROFILES、OUTPUT（JSON 3.0 字段）、CLI、HISTORY、ARCHITECTURE、
+DEVELOPMENT、TROUBLESHOOTING，加 7 条 ADR。
+
+**为什么** 0.3.0 之后文档半新半旧：README 讲新架构但细节散落，`docs/` 只有两篇规划类文档。
+同一事实在多处各写一遍必然漂移。
+
+**验证** 37 个 md 链接与锚点全有效；文档中 47 处 `--xxx` 参数写法与 `--help` 比对；15 条命令逐条实跑；
+HTML 经无头浏览器确认无破版。
+
+**顺手修的 bug** 权重为 0 但确有判定的分类（verify 的 ai），JSON 有、终端与 HTML 按
+`weight > 0` 过滤掉了——同一份数据两种说法。见 [gotchas.md](gotchas.md) GOTCHA-006。
+
+---
+
+## 2026-10-28 · 架构重建（v0.3.0，破坏性）
+
+**做了什么** 判定内核重写为四层：契约（`model.py`）→ 注册表（`@check`）→ 采集（`collect/`，
+只拿事实）→ 判定（`checks/`，55 项）→ 聚合（`scoring.py`）→ 呈现（`reporters/`）。
+删除 `core/` 与 `adapters/`，`report_version` 升 3.0。
+
+**为什么** 0.2.0 加一项检测要改五个地方（采集、评分、终端、JSON、HTML），逻辑复制多份，
+结论容易互相矛盾。用户明确要求"不要一步一步改，先把产品架构重新建立起来"。
+
+**三条不变式落地** UNKNOWN 成为一等状态（读不到 ≠ 坏掉）；两条封顶规则（有 FAIL → 59；
+盲区 ≥50% → 74、≥30% → 84）；覆盖度分母改为适用项（此前 Windows 上被误算成 39%）。
+
+**顺手修的 bug** `connectors/ainas.py` 仍在读 2.0 的顶层 `device`/`storage`/`ai_accelerator`，
+格式升级后推送的设备信息会全空。加 2 条契约测试锁住。
+
+**验证** pytest 30 passed；Windows 真机 51 项 / 7.5s / exit 0；不存在路径 → exit 1 / 59 分 D。
+
+---
+
+## 2026-10-28 · 独立为通用 NAS 检测工具（v0.2.0）
+
+**做了什么** 从 `ainas/tools/nastool` 抽出为独立仓库。剥离对 AINAS 后端的依赖，
+上报通道改为可选（`none` / `webhook` / `ainas`）。排除前身里的 `nastool_agent.py`
+（远程执行 shell）与 `jetson_install/patch.py`（默认管理令牌）。
+
+**为什么** 用户定性：**通用 NAS 设备检测工具，独立于 AINAS**。检测内核不该被一个后端绑架。
+
+**验证** 纯标准库可跑；`python -m nastool` 单机运行；终端/JSON/HTML 三格式。
+
+**遗留** 此时仍是"采集器直接判定"的结构，为后面的架构重建埋下伏笔。见 0.3.0。
+
+---
+
+## 2026-10-28 · 前身设计资产提取
+
+**做了什么** 从归档 `D:\pro1\project\910\...\desktop\arm\nastool`（v7.1.0-beta，92 检测器、
+1086 文件、6 个子包）提取可用部分：`docs/CHECKS-ROADMAP.md`（92 项清单）、
+`docs/DESIGN-NOTES.md`（设计要点 + 12 条真机 BUG 教训）、`reference/legacy/`（原始文档与代码）。
+
+**为什么** 前身代码内核已丢失，但文档记录了大量踩坑经验。这些是真正值钱的东西。
+
+**发现的未实现设计** 准确性保障层（多源融合、一致性验证、置信度 0-1）、`--profile` 场景化
+检测、按芯片自适应温度阈值、`action_plan`。前两项在 0.3.0 部分落地。
+
+**遗留** 92 项 vs 现有 55 项的差距清单见 [CHECKS-ROADMAP.md](../CHECKS-ROADMAP.md)。

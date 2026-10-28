@@ -38,7 +38,7 @@ def _c(cid, status, category="storage", weight=1.0, confidence=0.9):
 def _report(checks, ts="2026-01-01 00:00:00", hostname="test"):
     from nastool.collect import PlatformFacts
     r = Report()
-    r.meta = ReportMeta(generated_at=ts, hostname=hostname, version="0.3.1",
+    r.meta = ReportMeta(generated_at=ts, hostname=hostname, version="0.3.2",
                         fingerprint="fp123", profile="nas")
     r.platform = PlatformFacts()
     r.checks = checks
@@ -394,7 +394,7 @@ def test_zero_weight_category_visible_in_all_reporters():
         _c("ai.hardware", Status.PASS, category="ai", weight=3),
     ]
     r = Report()
-    r.meta = ReportMeta(generated_at="t", hostname="h", version="0.3.1",
+    r.meta = ReportMeta(generated_at="t", hostname="h", version="0.3.2",
                         fingerprint="fp", profile="verify")
     r.platform = PlatformFacts()
     r.checks = checks
