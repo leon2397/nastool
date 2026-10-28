@@ -202,7 +202,10 @@ nastool/
 │   └── runner.py        编排，产出 DiagnosticResult
 ├── reporters/           terminal / json / html
 ├── adapters/            特定硬件平台的专项检查
-└── connectors/          webhook / ainas（可选）
+├── connectors/          webhook / ainas（可选）
+docs/                    检测项路线图、设计笔记
+reference/               前身项目设计资产（不参与构建）
+tests/
 ```
 
 各报告器只依赖 `DiagnosticResult`，新增输出格式不需要动采集代码。
@@ -231,3 +234,18 @@ nastool 是**独立产品**，与 AINAS（家庭 AI 媒体 NAS）没有任何代
 - 不接 AINAS 也能完整使用，`connectors/ainas.py` 不启用时根本不会被 import
 - AINAS 接入只是一个可选连接器，用于把设备登记进 AINAS 设备列表并归档诊断报告
 - 两者的版本线、发布节奏互不影响
+
+---
+
+## 12. 设计参考与前身资产
+
+nastool 有一个前身项目（演进到 v7.1.0-beta，92 个检测器、6 个子包）。它的代码内核已随归档丢失，但**设计文档保留下来了**，已提取到本仓库：
+
+| 文档 | 内容 |
+|---|---|
+| [`docs/CHECKS-ROADMAP.md`](docs/CHECKS-ROADMAP.md) | 92 项检测清单 + 当前实现状态逐项对照（当前已实现 22%） |
+| [`docs/DESIGN-NOTES.md`](docs/DESIGN-NOTES.md) | 准确性保障层、profile 场景化、自适应阈值、行动计划、修复风险模型 |
+| [`reference/README.md`](reference/README.md) | 前身项目全貌、可复用资产清单、刻意排除的部分 |
+
+**`reference/` 目录不参与构建**（`pyproject.toml` 只打包 `nastool*`）。里面的代码依赖已丢失的 `nastool_core`，仅作算法与结构参考，**不可直接运行**。
+
