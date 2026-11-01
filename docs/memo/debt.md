@@ -227,24 +227,6 @@ CSV）、003（GBK 解码）、007（全 SKIP 文案）、010（罕见分支 `Na
 
 ---
 
-### DEBT-015 缺 LICENSE 文件
-
-**现状** `README.md` 结尾写"MIT License"，`pyproject.toml` 里 `license = { text = "MIT" }`，
-但**仓库里没有 LICENSE 文件**——`git log --all -- LICENSE` 为空，从未提交过。
-
-**不修的代价** MIT 是一份"授权方必须明示许可条款"的许可。缺了正本，
-别人无法确认这个项目"以 MIT 授权"——这不是形式问题，是**法律基础缺失**。
-想被安装、被二次分发、被别人写进自己的产品里，都缺这一步。
-
-**触发条件** 立刻。补一个文件，5 分钟，没有理由拖。
-
-**修法要点** 加 `LICENSE`（MIT 全文，版权人写项目作者），并在 `pyproject.toml` 里
-改用 `license-files` 指向它（PEP 639 写法），避免两处各写一份、年份不同步。
-
-**规模** 极小。
-
----
-
 ### DEBT-017 报告缺设备身份字段
 
 **现状** 报告里没有设备序列号、资产编号、主机名以外的任何身份标识。
@@ -295,8 +277,9 @@ CSV）、003（GBK 解码）、007（全 SKIP 文案）、010（罕见分支 `Na
 
 新增 `.github/workflows/ci.yml` 与 `.github/workflows/release.yml`：
 
-- **测试矩阵 15 格**：3 平台（ubuntu / windows / macos）× Python 3.8–3.13
-  （macOS arm64 runner 最早提供 3.11，故排除 3.8–3.10）
+- **测试矩阵 13 格**：3 平台（ubuntu / windows / macos）× Python 3.9–3.13 共 15 格，
+  扣掉 macOS arm64 runner 无 3.9/3.10 的两格。下限 3.9 而非 3.8：`license-files` 需要
+  setuptools ≥ 77，而 setuptools 76+ 装不上 3.8（[ADR-0010](../adr/0010-python-3.9-floor.md)）
 - **每格跑三件事**：`selfcheck`（规范与文档一致性）→ `pytest`（含不变式测试）
   → 端到端冒烟（出报告、校验 `report_version`、断言有检查项）
 - **打 tag 时才构建**：校验产物内容（LICENSE 进包、reference/ 未进包、模块齐全）
@@ -306,6 +289,25 @@ CSV）、003（GBK 解码）、007（全 SKIP 文案）、010（罕见分支 `Na
 **留下的教训** CI 脚本**必须本地实测过**。第一版产物校验写成
 `sum(1 for n in names if "/nastool/" in n)`，但 wheel 里路径是 `nastool/` 开头，
 断言永远为 0——写在 YAML 里的脚本不跑一遍就是装饰品。
+
+---
+
+### ✅ DEBT-015 缺 LICENSE 文件
+
+**曾经的现状** `README.md` 结尾写"MIT License"，`pyproject.toml` 里 `license = { text = "MIT" }`，
+但**仓库里没有 LICENSE 文件**——`git log --all -- LICENSE` 为空，从未提交过。
+MIT 是一份"授权方必须明示许可条款"的许可，缺了正本别人无法确认这个项目"以 MIT 授权"。
+
+**怎么修的**（v0.4.0）
+
+1. 补 `LICENSE`（MIT 全文）
+2. `pyproject.toml` 改用 PEP 639 的 `license-files` 指向它，不再在两处各写一份
+3. `selfcheck` 的「产品化规划一致」加一条硬检查：`LICENSE` 不存在就失败
+4. CI 的产物校验断言 LICENSE 确实进了 wheel 与 sdist
+
+**留下的教训** **README 上的一句话不是许可**。声明与正本是两回事，
+而缺正本这件事在本地跑一百次测试都不会暴露——只有"要给别人的时候"才成为问题。
+凡是"对外承诺"类的东西，都要有一条自动化检查盯着，否则它迟早变成一句没人验证的话。
 
 ### ✅ DEBT-009 置信度只是展示值，不参与打分
 

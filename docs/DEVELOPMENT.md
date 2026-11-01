@@ -202,7 +202,7 @@ class MyConnector(BaseConnector):
 
 在 `connectors/__init__.py` 的注册表里加一行，`--push` 的候选值会自动包含它。
 
-**注意 payload 是 `report_version 3.0` 结构**：事实数据在 `payload["facts"]`，平台在 `payload["platform"]`。不要读 2.0 时代的顶层 `device` / `storage` ——它们在 3.0 里已不存在（这个坑真实发生过一次）。
+**注意 payload 是 `report_version 4.0` 结构**：事实数据在 `payload["facts"]`，平台在 `payload["platform"]`。不要读 2.0 时代的顶层 `device` / `storage` ——它们在 3.0 里已不存在（这个坑真实发生过一次）；4.0 起 `coverage` 增加了 `low_confidence` / `trustworthy` / `trustworthy_percent`，`blind_percent` 口径也变了。
 
 ---
 

@@ -171,7 +171,7 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 | 项 | 来源 | 说明 |
 |---|---|---|
 | LICENSE 文件 | [DEBT-015](memo/debt.md#debt-015-缺-license-文件) | README 声明 MIT 但仓库无许可正本。**法律基础缺失，成本 5 分钟** |
-| CI 工作流 | [DEBT-016](memo/debt.md#debt-016-没有-ci) | ✅ v0.4.0 完成 —— 3 平台 × Python 3.9–3.13 共 12 格，每格跑 `selfcheck` + `pytest` + 端到端冒烟 |
+| CI 工作流 | [DEBT-016](memo/debt.md#debt-016-没有-ci) | ✅ v0.4.0 完成 —— 3 平台 × Python 3.9–3.13 共 13 格，每格跑 `selfcheck` + `pytest` + 端到端冒烟 |
 | MANIFEST.in | — | 排除 `reference/`，把 `LICENSE` 打进产物 |
 | 远端仓库 + 首个 tag | [PRODUCT-PLAN.md](PRODUCT-PLAN.md#第-0-优先法律与分发基础本周可做完) | 没有远端 = 没有分发渠道 = L1"能给别人用"无从谈起 |
 
@@ -204,7 +204,7 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 
 | 项 | 来源 | 说明 |
 |---|---|---|
-| 报告格式兼容承诺 | [Q-003](memo/open-questions.md#q-003-report_version-30-稳定后要不要承诺向后兼容) | 冻结 `3.x`/`4.x` 只加字段，破坏性变更留给下一个 major |
+| 报告格式兼容承诺 | [Q-003](memo/open-questions.md#q-003-report_version-40-稳定后要不要承诺向后兼容) | 冻结 `4.x` 只加字段，破坏性变更留给下一个 major |
 | 插件机制决策 | [Q-004](memo/open-questions.md#q-004-要不要开放第三方检测项插件) | 做或不做都要在 1.0 前定。倾向**不做**（`CheckContext` 还会变）——[PRODUCT-PLAN.md](PRODUCT-PLAN.md#结论二成熟度止步于-l2生态不是这条路) 已把它固化为产品战略：终点是 L2"可被依赖"，不是 L3"可被扩展" |
 | 国际化决策 | [Q-009](memo/open-questions.md#q-009-输出要不要国际化) | 做或不做都要在 1.0 前定。契约字段已是英文，改造点在展示层 |
 | 单文件可执行版决策 | [Q-011](memo/open-questions.md#q-011-要不要做单文件可执行版) | 做不做都要在 1.0 前定。**做决定需要实测三项**：单文件体积、打包后检测项是否全可用、打包后报告是否与源码运行一致。倾向"做，但先实测" |
@@ -215,7 +215,7 @@ thermal_zone 温度（整机）能差 15°C，取哪个直接决定告警与否�
 
 - [ ] `report_version` 冻结，且有明确的兼容策略写进 [OUTPUT.md](OUTPUT.md)
 - [ ] 至少在 **3 台真实设备**上验证过（含一台 NAS、一台非 NAS 的 Linux、一台 Windows）
-- [ ] `selfcheck` 12 项全绿并纳入发版流程
+- [ ] `selfcheck` 13 项全绿并纳入发版流程
 - [ ] 文档无断链、无过期数字（由 `selfcheck` 保证）
 - [ ] [memo/debt.md](memo/debt.md) 里没有 P0 级未修项
 - [ ] [memo/open-questions.md](memo/open-questions.md) 里没有"影响 1.0"的开放问题

@@ -44,12 +44,13 @@
 | `model.py` | 仅标准库 | ✅ 无内部依赖 |
 | `profiles.py` | 仅标准库 | ✅ 无内部依赖 |
 | `history.py` | 仅标准库 | ✅ 无内部依赖 |
+| `fusion.py` | 仅标准库 | ✅ 无内部依赖（纯算法层，不认识任何内部类型） |
 | `registry.py` | `model` | ✅ |
 | `diff.py` | `model` | ✅ |
 | `collect/*` | 仅标准库 | ✅ 无内部依赖 |
 | `context.py` | `collect`, `profiles` | ✅ |
 | `scoring.py` | `model`, `profiles` | ✅ |
-| `checks/*` | `model`, `registry`, `collect`, `checks/_base` | ✅ |
+| `checks/*` | `model`, `registry`, `collect`, `checks/_base`, `fusion` | ✅ |
 | `reporters/*` | `model` | ✅ |
 | `connectors/*` | 仅标准库（只吃 dict） | ✅ |
 | `engine.py` | `model`, `registry`, `profiles`, `context`, `scoring`, `checks` | ✅ |
@@ -91,7 +92,7 @@
 ## 3. 编码风格 `[硬]`
 
 - 编码 UTF-8，换行 LF（`.gitattributes` 已锁定）。**不要在 Windows 上让编辑器改成 CRLF。**
-- 每个模块开头写 `from __future__ import annotations`（Python ≥3.8 下才能用 `list[str]` 这类写法）
+- 每个模块开头写 `from __future__ import annotations`（下限 Python 3.9，见 [ADR-0010](adr/0010-python-3.9-floor.md)；有了它才能直接用 `list[str]` 这类写法而不必 import `typing.List`）
 - 类型标注：**函数签名与 dataclass 必须有**，函数内部变量不强制
 - 行长不强制，但超过 ~100 列的表达式应考虑拆行
 - 中文字符串直接写，不用 `\u` 转义

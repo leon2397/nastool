@@ -1,5 +1,64 @@
 # 变更日志
 
+## 0.4.1 — 台账不说谎，守卫补位
+
+**产品行为没有任何变化**：这一版没动检测逻辑，也没动报告格式（`report_version` 仍是 4.0）。
+改的是**文档里说错的话**，以及**本该拦住这些错误的守卫**。
+
+### 为什么单独发一版
+
+一份自称"可审计"的体检工具，如果自己的台账写着过期数字，说服力是负的。
+排查时发现同一件事在文档里有三种说法（CI 矩阵同时存在 12 / 13 / 15 格），
+说明靠人工同步已经失效——**缺的不是勤快，是守卫**。
+
+### 修好的错误陈述
+
+| 位置 | 原来写的 | 实际 |
+|---|---|---|
+| `docs/README.md` | `report_version 3.0` | 4.0 |
+| `docs/README.md` | 7 条架构决策 | 11 条 |
+| `docs/DEVELOPMENT.md`、`docs/PRODUCT-PLAN.md` | `report_version 3.0` | 4.0 |
+| `README.md`、`docs/VERSION-PLAN.md` | selfcheck 12 项 | 13 项 |
+| `docs/PRODUCT-PLAN.md` | 54 项测试、8 条 ADR | 78 项、11 条 |
+| `docs/PRODUCT-PLAN.md` L2 门槛第 5 条 | 「❌ 完全没有 CI」 | ✅ v0.4.0 起 13 格 |
+| `docs/PRODUCT-PLAN.md` A3 | 「⏳ 待办：建远端 + 首个 tag」 | ✅ v0.4.0 已完成 |
+| `docs/PRODUCT-PLAN.md` 风险 R3 / R4 | 「无 CI」「无 LICENSE」 | 均已消除 |
+| 四处文档 | CI 矩阵 12 / 13 / 15 格并存 | 13 格（3 平台 × 5 版本 − macOS 缺的两格） |
+| `docs/memo/debt.md` | DEBT-015 挂在「未修」 | LICENSE 已补，移入「已修」 |
+| `docs/STANDARDS.md` | Python ≥3.8 | 下限 3.9（[ADR-0010](docs/adr/0010-python-3.9-floor.md)） |
+| `docs/memo/open-questions.md` | Q-003 标题写 3.0 | 4.0（锚点同步） |
+
+### 新增的守卫
+
+`selfcheck` 的「文档数字与代码一致」从 6 条断言扩到 14 条，另加 3 条 CI 格数断言：
+
+- **`report_version` 守卫**：文档里出现的 `report_version X.Y` 必须等于
+  `model.REPORT_VERSION`。此前这个值在四处文档里写着过期版本号，没有任何检查
+- **ADR 条数守卫**：`N 条架构决策` 必须等于 `docs/adr/` 下的实际文件数
+- **selfcheck 自身项数守卫**：`13 项` 这个数字从此跟着 `CHECKS` 列表自动走
+- **测试数守卫**：`PRODUCT-PLAN.md` 那句总览一锁四个数（检测项 / 测试 / 自检 / ADR）
+- **CI 矩阵格数守卫**：从 `ci.yml` 数 `os × python − exclude`，四处文档必须一致。
+  解析不出来时**明确提示跳过**而非静默通过——守卫失效必须可见
+
+另补：分层依赖表加入 `fusion.py`（此前这个模块不在表里，「纯算法层不许依赖内部模块」
+这条约束等于没人查）。
+
+**每条守卫都用「故意改错再跑」验证过**：把 4.0 改回 3.0、把 11 条改回 7 条、
+把 13 项改回 12 项、把 13 格改回 15 格、给 `fusion.py` 塞一个内部 import——
+五次改动全部被拦下并指出具体文件与真实值。写完不验证的守卫就是装饰品。
+
+### 删除
+
+顶层 `requirements.txt` 删除。它全是注释、不含任何依赖，却与 `pyproject.toml` 的
+`dependencies = []` 构成第二个"依赖清单入口"——两个入口必然漂移。零依赖的口径现在
+只由 `pyproject.toml` 表达，CI 与文档统一用 `pip install -e ".[dev]"`。
+
+### 破坏性变更
+
+无。CLI 参数、报告格式、退出码语义、检测项 id 全部未变。
+
+---
+
 ## 0.4.0 — 置信度参与判定（DEBT-009）
 
 **产品行为有变化**：低置信度的判定项不再和普通项一样计入分数。

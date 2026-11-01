@@ -108,12 +108,13 @@ LAYER_DEPS: Dict[str, Set[str]] = {
     "model": set(),
     "profiles": set(),
     "history": set(),
+    "fusion": set(),          # 纯算法层：只吃标准库，不认识任何内部类型
     "registry": {"model"},
     "diff": {"model"},
     "collect": set(),
     "context": {"collect", "profiles"},
     "scoring": {"model", "profiles"},
-    "checks": {"model", "registry", "collect", "checks"},
+    "checks": {"model", "registry", "collect", "checks", "fusion"},
     "reporters": {"model"},
     "connectors": set(),
     "engine": {"model", "registry", "profiles", "context", "scoring", "checks"},
@@ -123,6 +124,7 @@ _TOP_FILES = {"model": "nastool/model.py", "registry": "nastool/registry.py",
               "profiles": "nastool/profiles.py", "context": "nastool/context.py",
               "engine": "nastool/engine.py", "scoring": "nastool/scoring.py",
               "history": "nastool/history.py", "diff": "nastool/diff.py",
+              "fusion": "nastool/fusion.py",
               "cli": "nastool/cli.py"}
 _SUBPKGS = ("checks", "collect", "reporters", "connectors")
 
@@ -335,8 +337,42 @@ def _count_test_files() -> int:
     return len(list((ROOT / "tests").glob("test_*.py")))
 
 
-def _expected_values() -> Dict[str, int]:
-    from nastool.model import CATEGORY_ORDER
+def _count_adr() -> int:
+    """ADR 条数：docs/adr/ 下以数字开头的 md（README 不算）。"""
+    return len([p for p in (ROOT / "docs" / "adr").glob("*.md") if p.name[:1].isdigit()])
+
+
+def _count_ci_cells() -> Optional[int]:
+    """从 .github/workflows/ci.yml 数出测试矩阵格数 = os × python − exclude。
+
+    解析不出来返回 None，由调用方给出明确提示而不是判失败——CI 文件的结构性
+    变动不该阻塞开发；但"守卫悄悄失效"必须可见，所以不静默跳过。
+    """
+    p = ROOT / ".github" / "workflows" / "ci.yml"
+    if not p.exists():
+        return None
+    text = p.read_text(encoding="utf-8")
+    m_os = re.search(r"^\s*os:\s*\[(.+?)\]", text, re.M)
+    m_py = re.search(r"^\s*python-version:\s*\[(.+?)\]", text, re.M)
+    if not (m_os and m_py):
+        return None
+    n_os = len([x for x in m_os.group(1).split(",") if x.strip()])
+    n_py = len([x for x in m_py.group(1).split(",") if x.strip()])
+    n_ex = len(re.findall(r"^\s*-\s*\{\s*os:", text, re.M))
+    return n_os * n_py - n_ex
+
+
+# CI 格数在几处文档里出现，是最容易漂移的数字之一：曾经同时存在 12 / 13 / 15
+# 三种说法（真实值 13 = 3 平台 × 5 版本 − macOS 缺的两格）。
+CI_CELL_ASSERTS: List[Tuple[str, str]] = [
+    ("docs/VERSION-PLAN.md", r"共 (\d+) 格"),
+    ("docs/PRODUCT-PLAN.md", r"共 (\d+) 格"),
+    ("docs/memo/debt.md", r"测试矩阵 (\d+) 格"),
+]
+
+
+def _expected_values() -> Dict[str, object]:
+    from nastool.model import CATEGORY_ORDER, REPORT_VERSION
     from nastool.registry import all_meta
     checks = len(all_meta())
     fail_capable = _count_fail_capable()
@@ -346,10 +382,15 @@ def _expected_values() -> Dict[str, int]:
         "fail_capable": fail_capable,
         "non_fail": checks - fail_capable,
         "tests": _count_tests(),
+        "adr": _count_adr(),
+        "selfcheck": len(CHECKS),
+        "report_version": REPORT_VERSION,
     }
 
 
 # (文件, 正则, 捕获组对应的期望键)。所有匹配都必须与代码一致。
+# 期望值可以是 int 或 str，统一按字符串比对——report_version 这类带小数点的
+# 版本号用 int 装不下，早期正是因此漏了守卫（见 journal 2026-11-01）。
 NUMBER_ASSERTS: List[Tuple[str, str, List[str]]] = [
     ("README.md", r"共 \*\*(\d+) 项\*\*，分 (\d+) 类", ["checks", "categories"]),
     ("docs/CHECKS.md", r"本文是 \*\*(\d+) 个检测项的权威说明", ["checks"]),
@@ -358,6 +399,21 @@ NUMBER_ASSERTS: List[Tuple[str, str, List[str]]] = [
     ("docs/CHECKS-ROADMAP.md", r"## 第一部分：当前实现（(\d+) 项）", ["checks"]),
     ("docs/ARCHITECTURE.md", r"checks/  \((\d+) 项判定\)", ["checks"]),
     ("docs/README.md", r"只有 (\d+) 项能产生「严重」", ["fail_capable"]),
+    # 产品化规划的那句总览一锁四个数：检测项 / 测试 / 自检项 / ADR
+    ("docs/PRODUCT-PLAN.md",
+     r"(\d+) 项检测、(\d+) 项测试、(\d+) 项自检、(\d+) 条 ADR",
+     ["checks", "tests", "selfcheck", "adr"]),
+    ("docs/README.md", r"(\d+) 条架构决策", ["adr"]),
+    ("README.md", r"selfcheck\.py\s+#.*?（(\d+) 项", ["selfcheck"]),
+    ("docs/VERSION-PLAN.md", r"selfcheck` (\d+) 项全绿", ["selfcheck"]),
+    # report_version 出现在文档里就代表"当前契约版本"，过期即说谎。
+    # 正则容忍 `report_version 4.0` / `report_version: 4.0` / `"report_version": "4.0"`
+    # 三种写法；用 [\s:：=`"]* 而不是 .* 是为了不跨代码片段误匹配
+    # （`report_version"].startswith("4.")` 这类断言不该被当成版本声明）。
+    ("docs/README.md", r'report_version[\s:：=`"]*(\d+\.\d+)', ["report_version"]),
+    ("docs/DEVELOPMENT.md", r'report_version[\s:：=`"]*(\d+\.\d+)', ["report_version"]),
+    ("docs/PRODUCT-PLAN.md", r'report_version[\s:：=`"]*(\d+\.\d+)', ["report_version"]),
+    ("docs/OUTPUT.md", r'report_version[\s:：=`"]*(\d+\.\d+)', ["report_version"]),
 ]
 
 
@@ -369,9 +425,21 @@ def check_numbers(res: CheckResult) -> None:
         text = read(fname)
         for m in re.finditer(pat, text):
             for i, key in enumerate(keys, start=1):
-                got = int(m.group(i))
-                if got != exp[key]:
+                got = m.group(i)
+                if got != str(exp[key]):
                     res.fail(f"{fname}: 写了 {got}，代码实际 {exp[key]}（{key}）")
+
+    # CI 矩阵格数单独处理：它来自 YAML 而非 Python，解析失败要"可见地跳过"
+    cells = _count_ci_cells()
+    if cells is None:
+        res.note("CI 矩阵格数：ci.yml 结构解析不出来，本守卫本轮跳过——"
+                 "请人工确认文档里的格数仍准确")
+        return
+    res.note(f"CI 矩阵={cells} 格")
+    for fname, pat in CI_CELL_ASSERTS:
+        for m in re.finditer(pat, read(fname)):
+            if m.group(1) != str(cells):
+                res.fail(f"{fname}: 写了 {m.group(1)} 格，ci.yml 实际 {cells} 格")
 
 
 # ── 8. 文档 --flag 与 argparse 一致 ──────────────────────────
