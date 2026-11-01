@@ -46,7 +46,14 @@ jobs:
       # 一个格子失败不影响其他格子——要看到全貌，不是看到第一个错误
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Ubuntu 钉 24.04，不用 latest。理由不是洁癖：
+        # 2026-10-19 起 `ubuntu-latest` 迁移到 Ubuntu 26.04，而 actions/python-versions
+        # 的 Python 3.9 只提供 22.04 / 24.04 两种预编译包（3.13 三种都有）——
+        # 于是只有 3.9 那一格挂在 setup-python：`The version '3.9' with architecture
+        # 'x64' was not found for Ubuntu 26.04`。用 latest 等于把"跑在哪个发行版"
+        # 交给上游漂移，而这次漂移没有改任何代码就让矩阵少了一格。
+        # 升级到 ubuntu-26.04 的前提：python-versions 提供 3.9 的 26.04 包。
+        os: [ubuntu-24.04, windows-latest, macos-latest]
         # 从 3.9 起：setuptools 76+ 要求 Python >= 3.9，而 `license-files`
         # 需要 setuptools >= 77。声明支持 3.8 但装不上，是落空的承诺——
         # 3.8 已于 2024-10 EOL，不如把下限抬到真正能跑的版本。

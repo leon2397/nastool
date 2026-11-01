@@ -280,6 +280,9 @@ CSV）、003（GBK 解码）、007（全 SKIP 文案）、010（罕见分支 `Na
 - **测试矩阵 13 格**：3 平台（ubuntu / windows / macos）× Python 3.9–3.13 共 15 格，
   扣掉 macOS arm64 runner 无 3.9/3.10 的两格。下限 3.9 而非 3.8：`license-files` 需要
   setuptools ≥ 77，而 setuptools 76+ 装不上 3.8（[ADR-0010](../adr/0010-python-3.9-floor.md)）
+- **Ubuntu 钉 `ubuntu-24.04` 而非 `latest`**：`ubuntu-latest` 于 2026-10-19 迁到 26.04，
+  而 python-versions 的 3.9 只有 22.04 / 24.04 的预编译包，3.9 那一格直接装不上
+  （[GOTCHA-019](gotchas.md#gotcha-019--latest-runner-标签会把环境漂移伪装成代码故障)）
 - **每格跑三件事**：`selfcheck`（规范与文档一致性）→ `pytest`（含不变式测试）
   → 端到端冒烟（出报告、校验 `report_version`、断言有检查项）
 - **打 tag 时才构建**：校验产物内容（LICENSE 进包、reference/ 未进包、模块齐全）

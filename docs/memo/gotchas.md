@@ -278,3 +278,24 @@ coverage 恒等式）来判断"体检真的跑完了"。
 
 **守门** ⚠️ 无自动化守门。`git rev-parse --is-shallow-repository` 可以在 selfcheck 里
 加一条浅克隆检测——待办，见 debt.md。
+
+---
+
+## GOTCHA-019 `*-latest` runner 标签会把环境漂移伪装成代码故障
+
+**现象** 一次纯文档提交，CI 13 格里 12 格绿、只有 `ubuntu-latest / Python 3.9` 挂了，
+报 `The version '3.9' with architecture 'x64' was not found for Ubuntu 26.04`。
+代码一行没改，本机 `pytest` 全绿。
+
+**根因** 2026-10-19 起 `ubuntu-latest` 标签迁到 Ubuntu 26.04，而 `actions/python-versions`
+的 Python 3.9 只提供 `linux-22.04` 与 `linux-24.04` 两种预编译包（3.13 三种都有）。
+于是"声明支持 3.9"这件事在最新 runner 上变成了**无法安装**——矩阵少了一格，而不是代码坏了。
+
+**规避** 别把"跑在哪个发行版上"交给上游漂移。`runs-on` 与 `os` 里有兼容性敏感项时
+**钉具体版本**（本次钉 `ubuntu-24.04`），升级时当作一次显式变更来做。
+排查方向也要记牢：**同一份代码只有个别格子挂、且挂在 setup 阶段**，先去查 runner 镜像
+与预编译包，别去读业务代码。
+
+**守门** ✅ 双重：① CI 本身会红（setup-python 失败在第一步就停，不会静默跳过该格）；
+② selfcheck 的 CI 格数守卫从 `ci.yml` 数 `os × python − exclude`，钉版本时若少算一格，
+文档里"共 N 格"立刻对不上。

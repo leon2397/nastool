@@ -47,6 +47,22 @@
 把 13 项改回 12 项、把 13 格改回 15 格、给 `fusion.py` 塞一个内部 import——
 五次改动全部被拦下并指出具体文件与真实值。写完不验证的守卫就是装饰品。
 
+### 修好的 CI 故障（发版过程中撞见）
+
+这一版推上去后 CI 13 格里 12 格绿、只有 `ubuntu-latest / Python 3.9` 挂在第一步：
+
+```
+The version '3.9' with architecture 'x64' was not found for Ubuntu 26.04
+```
+
+代码一行没改。根因是 `ubuntu-latest` 标签在 2026-10-19 迁到 Ubuntu 26.04，而
+`actions/python-versions` 的 Python 3.9 只提供 `linux-22.04` 与 `linux-24.04` 的预编译包
+（3.13 三种都有）。**用 `latest` 等于把"跑在哪个发行版上"交给上游漂移**——
+这次漂移没碰任何代码，就让"声明支持 3.9"变成了矩阵里的一格空位。
+
+现在 Ubuntu 钉 `ubuntu-24.04`，升级当作显式变更来做。矩阵格数仍是 13。
+教训登记为 [GOTCHA-019](docs/memo/gotchas.md)。
+
 ### 删除
 
 顶层 `requirements.txt` 删除。它全是注释、不含任何依赖，却与 `pyproject.toml` 的
