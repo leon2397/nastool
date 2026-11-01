@@ -19,6 +19,7 @@
 | [0009](0009-confidence-participates-in-scoring.md) | 置信度参与判定，低置信项按 PASS / FAIL 非对称处理 | 生效 | 评分口径、报告语义 |
 | [0010](0010-python-3.9-floor.md) | Python 版本下限从 3.8 抬到 3.9 | 生效 | 部署兼容性、CI 矩阵 |
 | [0011](0011-coverage-field-naming.md) | 覆盖度侧用 `trustworthy`，不与分类的 `usable` 同名 | 生效 | 报告契约、字段语义 |
+| [0012](0012-action-plan.md) | 行动计划由检测项自己声明紧急度，报告只负责排序 | 生效 | 报告契约、检测项编写方式 |
 
 ## 什么值得记一条 ADR
 

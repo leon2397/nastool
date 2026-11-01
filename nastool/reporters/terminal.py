@@ -72,6 +72,7 @@ class TerminalReporter:
         self.lines = []
         self._header(report)
         self._verdict(report)
+        self._action_plan(report)
         self._limitations(report)
         self._categories(report)
         self._details(report)
@@ -137,6 +138,38 @@ class TerminalReporter:
 
         if sc.capped and sc.cap_reason:
             self._w(f"  {self._c('!', 'red')} {self._c(sc.cap_reason, 'yellow')}")
+        self._w()
+
+    def _action_plan(self, report: Report) -> None:
+        """
+        「建议做什么」——按紧急度排序的行动清单（DEBT-002）。
+
+        放在结论之后、明细之前：用户先要知道"先干哪件事"，
+        而不是先读 20 条并列的告警自己判断轻重。
+        没有 WARN/FAIL 时整段不出现——没问题就不该占屏幕。
+        """
+        plan = report.action_plan()
+        if not plan:
+            return
+
+        shown = plan[:10]
+        self._w("  " + self._c(f"建议做什么（共 {len(plan)} 条，按紧急度排序）", "bold"))
+
+        prio_color = {3: "red", 2: "yellow", 1: "cyan", 0: "grey"}
+        risk_note = {"高": self._c(" · 修它本身有风险", "yellow"),
+                     "中": self._c(" · 修它需谨慎", "dim"),
+                     "低": ""}
+        for a in shown:
+            head = (f"    {a.rank:>2}  "
+                    f"{self._c(a.priority_name, prio_color.get(a.priority, 'grey'))}"
+                    f"{risk_note.get(a.fix_risk, '')}  "
+                    f"{self._c(a.title, 'bold')}")
+            self._w(head)
+            if a.action:
+                for line in textwrap.wrap(a.action, width=68):
+                    self._w(f"        {line}")
+        if len(plan) > len(shown):
+            self._w(f"    {self._c(f'… 另有 {len(plan) - len(shown)} 条，见完整报告', 'grey')}")
         self._w()
 
     def _limitations(self, report: Report) -> None:

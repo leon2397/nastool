@@ -31,7 +31,7 @@ def _items(ctx):
 
 
 @check("services.port_inventory", "端口清单", "services", weight=1,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=1, fix_risk="低")
 def port_inventory(ctx):
     s = ctx.services
     if not s.total_listening:
@@ -48,7 +48,7 @@ def port_inventory(ctx):
 
 
 @check("services.file_sharing", "文件共享服务", "services", weight=3,
-       platforms=["any"], tags=["nas"])
+       platforms=["any"], tags=["nas"], priority=1, fix_risk="低")
 def file_sharing(ctx):
     items = [i for i in _items(ctx) if i.category == "文件共享"]
     if items:
@@ -67,7 +67,7 @@ def file_sharing(ctx):
 
 
 @check("services.risky_ports", "高风险服务", "services", weight=4,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=2, fix_risk="低")
 def risky_ports(ctx):
     found = [(i, _HIGH_RISK[i.port]) for i in _items(ctx) if i.port in _HIGH_RISK]
     if not found:
@@ -79,10 +79,11 @@ def risky_ports(ctx):
     docker_api = [x for x in found if x[0].port == 2375]
     if docker_api:
         i, (name, reason) = docker_api[0]
+        # 未加密的 Docker API 等于把 root 交出去，比明文 FTP 严重一个量级
         return R(Status.FAIL, f"{name} 正在监听（{i.port}）",
                  detail=reason,
                  suggestion="立即关闭 2375，改用 2376（TLS）或只走本地 socket",
-                 evidence=evidence, confidence=1.0)
+                 evidence=evidence, confidence=1.0, priority=3, fix_risk="低")
 
     names = "、".join(f"{name}({i.port})" for i, (name, _) in found)
     return R(Status.WARN, f"存在明文服务：{names}",
@@ -92,7 +93,7 @@ def risky_ports(ctx):
 
 
 @check("services.exposed_bind", "端口暴露范围", "services", weight=3,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=2, fix_risk="中")
 def exposed_bind(ctx):
     exposed = [i for i in _items(ctx)
                if i.port in _SENSITIVE_BIND
@@ -111,7 +112,7 @@ def exposed_bind(ctx):
 
 
 @check("services.docker", "容器运行时", "services", weight=2,
-       platforms=["any"], tags=["nas"])
+       platforms=["any"], tags=["nas"], priority=1, fix_risk="低")
 def docker(ctx):
     s = ctx.services
     if not s.docker_available:
@@ -128,7 +129,7 @@ def docker(ctx):
 
 
 @check("services.web_ui", "管理界面", "services", weight=1,
-       platforms=["any"], tags=["nas"])
+       platforms=["any"], tags=["nas"], priority=1, fix_risk="低")
 def web_ui(ctx):
     items = [i for i in _items(ctx) if i.category == "管理界面"]
     if not items:
@@ -138,7 +139,7 @@ def web_ui(ctx):
 
 
 @check("services.media_stack", "媒体服务", "services", weight=1,
-       platforms=["any"], tags=["nas"])
+       platforms=["any"], tags=["nas"], priority=0, fix_risk="低")
 def media_stack(ctx):
     items = [i for i in _items(ctx) if i.category in ("媒体服务", "下载")]
     if not items:
@@ -150,7 +151,7 @@ def media_stack(ctx):
 
 
 @check("services.unknown_services", "未识别端口", "services", weight=1,
-       platforms=["any"], tags=["verify"])
+       platforms=["any"], tags=["verify"], priority=2, fix_risk="低")
 def unknown_services(ctx):
     unknown = [i for i in _items(ctx) if i.category == "其他"]
     if not unknown:

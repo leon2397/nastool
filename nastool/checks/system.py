@@ -20,7 +20,7 @@ from ._base import R, ev
 
 
 @check("system.cpu_visible", "CPU 信息可读", "system", weight=1,
-       platforms=["any"], tags=["verify"])
+       platforms=["any"], tags=["verify"], priority=1, fix_risk="低")
 def cpu_visible(ctx):
     d = ctx.device
     if d.cpu.cores <= 0:
@@ -37,7 +37,7 @@ def cpu_visible(ctx):
 
 
 @check("system.memory_readable", "内存信息可读", "system", weight=1,
-       platforms=["any"], tags=["verify"])
+       platforms=["any"], tags=["verify"], priority=1, fix_risk="低")
 def memory_readable(ctx):
     mem = ctx.device.memory
     if mem.total_gb <= 0:
@@ -49,7 +49,7 @@ def memory_readable(ctx):
 
 
 @check("system.memory_pressure", "内存压力", "system", weight=3,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=3, fix_risk="中")
 def memory_pressure(ctx):
     mem = ctx.device.memory
     if mem.total_gb <= 0:
@@ -66,14 +66,15 @@ def memory_pressure(ctx):
                  suggestion="检查是否有内存泄漏进程，必要时扩容内存",
                  evidence=evidence)
     if used >= warn:
+        # 85% 只是"观察"，95% 是"随时 OOM"——后者才值 priority 3
         return R(Status.WARN, f"内存占用 {used}%",
                  suggestion="观察是否有异常进程常驻；ZFS ARC 占用高时可调 arc_max",
-                 evidence=evidence)
+                 evidence=evidence, priority=2)
     return R(Status.PASS, f"内存占用 {used}%", evidence=evidence, confidence=0.9)
 
 
 @check("system.swap_pressure", "交换分区压力", "system", weight=1,
-       platforms=["linux"], tags=["nas"])
+       platforms=["linux"], tags=["nas"], priority=1, fix_risk="低")
 def swap_pressure(ctx):
     mem = ctx.device.memory
     if mem.swap_total_gb <= 0:
@@ -91,7 +92,7 @@ def swap_pressure(ctx):
 
 
 @check("system.thermal", "温度", "system", weight=3,
-       platforms=["linux"], tags=["nas", "verify", "ai"])
+       platforms=["linux"], tags=["nas", "verify", "ai"], priority=2, fix_risk="低")
 def thermal(ctx):
     """
     温度判定：取最高值 + 交叉验证多源一致性。
@@ -163,7 +164,7 @@ def thermal(ctx):
                      f"最高温度 {peak}°C，已超过安全线{note}（温度读数存在争议）",
                      detail=detail,
                      suggestion="立即检查风扇与散热；温度读数不一致，建议人工核对传感器",
-                     evidence=evidence, confidence=confidence)
+                     evidence=evidence, confidence=confidence, priority=3)
         if peak >= warn:
             return R(Status.WARN,
                      f"最高温度 {peak}°C，偏高{note}（温度读数存在争议）",
@@ -183,7 +184,7 @@ def thermal(ctx):
     if peak >= crit:
         return R(Status.FAIL, f"最高温度 {peak}°C，已超过安全线{note}",
                  suggestion="立即检查风扇与散热，避免降频或硬件损伤",
-                 evidence=evidence, confidence=confidence)
+                 evidence=evidence, confidence=confidence, priority=3)
     if peak >= warn:
         return R(Status.WARN, f"最高温度 {peak}°C，偏高{note}",
                  suggestion="清理灰尘、检查风扇转速与风道",
@@ -193,7 +194,7 @@ def thermal(ctx):
 
 
 @check("system.load_average", "负载", "system", weight=2,
-       platforms=["linux", "macos"], tags=["nas"])
+       platforms=["linux", "macos"], tags=["nas"], priority=1, fix_risk="低")
 def load_average(ctx):
     try:
         load1 = os.getloadavg()[0]
@@ -218,7 +219,7 @@ def load_average(ctx):
 
 
 @check("system.uptime", "运行时长", "system", weight=1,
-       platforms=["any"], tags=["verify"])
+       platforms=["any"], tags=["verify"], priority=2, fix_risk="低")
 def uptime(ctx):
     hours = ctx.device.board.uptime_hours
     if hours <= 0:
@@ -237,7 +238,7 @@ def uptime(ctx):
 
 
 @check("system.clock_sync", "时间同步", "system", weight=2,
-       platforms=["linux", "windows"], tags=["nas", "verify"])
+       platforms=["linux", "windows"], tags=["nas", "verify"], priority=2, fix_risk="低")
 def clock_sync(ctx):
     if IS_WINDOWS:
         source = run("w32tm /query /source", timeout=8).strip()
@@ -296,7 +297,7 @@ def clock_sync(ctx):
 
 
 @check("system.io_pressure", "磁盘 I/O 压力", "system", weight=2,
-       platforms=["linux"], tags=["nas"])
+       platforms=["linux"], tags=["nas"], priority=1, fix_risk="低")
 def io_pressure(ctx):
     raw = read_file("/proc/pressure/io", "")
     if not raw:
@@ -330,7 +331,7 @@ def io_pressure(ctx):
 
 
 @check("system.process_count", "进程数量", "system", weight=1,
-       platforms=["linux"], tags=["verify"])
+       platforms=["linux"], tags=["verify"], priority=2, fix_risk="低")
 def process_count(ctx):
     pids = [p for p in safe_listdir("/proc") if p.isdigit()]
     if not pids:

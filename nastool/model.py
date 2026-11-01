@@ -29,12 +29,16 @@ from typing import Any, Dict, List, Optional
 
 # 报告格式版本：向后兼容契约，任何破坏性变更必须升这里
 #
+# 4.1（DEBT-002）：新增「可执行性」两个字段与一份行动计划——
+#   · checks[] 新增 priority（0–3）与 fix_risk（低/中/高）
+#   · 顶层新增 action_plan（只由 WARN/FAIL 生成，按优先级排序）
+#   · 纯新增，不改既有字段的含义与取值，4.0 的消费方可忽略这两个字段
 # 4.0（DEBT-009）：coverage 的口径变了——
 #   · 新增 low_confidence / trustworthy / trustworthy_percent 三个字段
 #   · blind_percent 现在 = (unknown + low_confidence) / applicable
 #   · score 的计算方式变了：低置信的 PASS 不计入分母
 # 历史库里的旧分数与新口径**不可直接比较**，对比时会提示口径变更。
-REPORT_VERSION = "4.0"
+REPORT_VERSION = "4.1"
 
 # 低于此置信度的判定项，在报告里标注「结论存疑」。
 # 置信度低不等于判定错，而是「数据不足以支撑这个结论」——
@@ -99,9 +103,32 @@ SEVERITY_ORDER = {
     Status.SKIP: 4,
 }
 
+# ── 可执行性：优先级与修复风险（DEBT-002）────────────────────
+#
+# 这两个字段回答「先做哪个」和「这一条修起来有没有风险」，是报告从
+# 「体检诊断」走向「照着做的清单」的关键。为什么由判定项声明而不是评分器
+# 推算：判定项比评分器更清楚这件事多急——「硬盘坏道」和「Telnet 开着」
+# 都是 FAIL，但紧急程度差一个数量级，任何统一公式都算不出这个差别。
+#
+# priority（问题本身的紧急度）
+PRIORITY_NAMES = {
+    3: "立即处理",   # 数据丢失 / 安全暴露 / 设备随时可能挂
+    2: "尽快处理",   # 服务不可用或即将不可用
+    1: "计划处理",   # 配置不合理、性能受损、版本落后
+    0: "可选优化",   # 有则更好，不做也不影响使用
+}
+PRIORITY_DEFAULT = 1     # 忘标时的兜底：按「计划处理」，而不是被降级成「可选」
+
+# fix_risk（修这个动作本身的风险）
+#
+# 与 priority 是两个维度：priority 是「不修会怎样」，fix_risk 是「修的时候
+# 可能弄坏什么」。一个高优先级 + 高风险的项（换硬盘）要提醒备份；
+# 高优先级 + 低风险的项（关掉 Telnet）可以直接动手。
+FIX_RISK_ORDER = {"低": 0, "中": 1, "高": 2}
+FIX_RISK_DEFAULT = "中"   # 不确定时假设有风险，宁可让用户多看一眼
+
 # 分类：键是稳定的机器标识，值是给人看的名字
 CATEGORY_ORDER = ["storage", "security", "system", "network", "services", "ai", "usb"]
-
 CATEGORY_NAMES = {
     "storage": "存储",
     "security": "安全",
@@ -164,6 +191,20 @@ class CheckResult:
     weight: float = 1.0
     duration_ms: int = 0
     error: str = ""      # 检查器自身异常（与「检测对象有问题」区分开）
+    # None / 空串 = 「判定项没单独指定，用注册表里的声明」。
+    # 保留"未指定"这个状态是有意的：引擎要在组装时才知道该继承哪个值，
+    # 所以不在这里归一化，而是通过 effective_* 读取。
+    priority: Optional[int] = None     # 0–3：出问题时这件事多急（DEBT-002）
+    fix_risk: str = ""                 # 低/中/高：修它本身的风险
+
+    @property
+    def effective_priority(self) -> int:
+        """读优先级：非法或缺省时退回默认，报告器不必到处判空。"""
+        return self.priority if self.priority in PRIORITY_NAMES else PRIORITY_DEFAULT
+
+    @property
+    def effective_fix_risk(self) -> str:
+        return self.fix_risk if self.fix_risk in FIX_RISK_ORDER else FIX_RISK_DEFAULT
 
     @property
     def low_confidence(self) -> bool:
@@ -199,6 +240,8 @@ class CheckResult:
             "detail": self.detail,
             "suggestion": self.suggestion,
             "weight": self.weight,
+            "priority": self.effective_priority,
+            "fix_risk": self.effective_fix_risk,
             "duration_ms": self.duration_ms,
             "error": self.error,
             "evidence": [e.to_dict() for e in self.evidence],
@@ -388,6 +431,46 @@ class ReportMeta:
         }
 
 
+# ── 行动计划 ────────────────────────────────────────────────
+@dataclass
+class ActionItem:
+    """
+    一条「建议做什么」。
+
+    只由 WARN / FAIL 生成：PASS 不需要行动，而 UNKNOWN 需要的不是"行动"
+    而是"先让它能测"——那是 `--self-test` 的职责（DEBT-011），混进这里
+    会让用户拿着一份"请安装 smartctl"的清单去修一台其实完好的机器。
+    """
+
+    rank: int
+    id: str
+    title: str
+    category: str
+    status: Status
+    priority: int
+    fix_risk: str
+    why: str = ""       # 现在是什么状况（即 summary）
+    action: str = ""    # 建议怎么做（即 suggestion）
+
+    @property
+    def priority_name(self) -> str:
+        return PRIORITY_NAMES.get(self.priority, str(self.priority))
+
+    def to_dict(self) -> dict:
+        return {
+            "rank": self.rank,
+            "id": self.id,
+            "title": self.title,
+            "category": self.category,
+            "status": self.status.value,
+            "priority": self.priority,
+            "priority_name": self.priority_name,
+            "fix_risk": self.fix_risk,
+            "why": self.why,
+            "action": self.action,
+        }
+
+
 # ── 完整报告 ────────────────────────────────────────────────
 @dataclass
 class Report:
@@ -430,6 +513,36 @@ class Report:
             c.id,
         ))
 
+    def action_plan(self) -> List[ActionItem]:
+        """
+        把 WARN / FAIL 排成一份「先做哪个」的清单（DEBT-002）。
+
+        排序三层，每层都有理由：
+          1. **priority 降序** —— 主维度。「硬盘要坏」和「Telnet 开着」
+             都是 FAIL，但前者可能导致数据全丢，不该并列
+          2. **状态严重度** —— 同优先级下 FAIL 在 WARN 前面
+          3. **fix_risk 升序** —— 同样紧急的两件事，先做那个不容易弄坏的。
+             这一层解决的是"我今晚只有半小时"的真实处境
+          最后用 id 兜底，保证同一份报告两次运行顺序一致（结论可复现）
+        """
+        items = [c for c in self.checks
+                 if c.status in (Status.FAIL, Status.WARN)]
+        items.sort(key=lambda c: (
+            -c.effective_priority,
+            SEVERITY_ORDER[c.status],
+            FIX_RISK_ORDER.get(c.effective_fix_risk, len(FIX_RISK_ORDER)),
+            c.id,
+        ))
+        return [
+            ActionItem(
+                rank=i, id=c.id, title=c.title, category=c.category,
+                status=c.status, priority=c.effective_priority,
+                fix_risk=c.effective_fix_risk,
+                why=c.summary, action=c.suggestion,
+            )
+            for i, c in enumerate(items, 1)
+        ]
+
     @property
     def healthy(self) -> bool:
         return not self.failures()
@@ -441,10 +554,15 @@ class Report:
                 f"不可判定 {self.coverage.unknown} 项（覆盖 {self.coverage.percent}%）")
 
     def to_dict(self) -> dict:
+        plan = self.action_plan()
         d = {
             "meta": self.meta.to_dict(),
             "score": self.score.to_dict(),
             "coverage": self.coverage.to_dict(),
+            "action_plan": {
+                "count": len(plan),
+                "items": [a.to_dict() for a in plan],
+            },
             "checks": [c.to_dict() for c in self.sorted_checks()],
         }
         if self.platform is not None and hasattr(self.platform, "to_dict"):

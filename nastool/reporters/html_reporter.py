@@ -101,6 +101,22 @@ tr:last-child td { border-bottom:none; }
 .note.err { background:#fdecea; border-color:#db4437; color:#8a1f17; }
 .cap { background:#fdecea; color:#8a1f17; padding:8px 12px; border-radius:6px;
        font-size:12.5px; margin-top:10px; }
+
+/* 行动计划（DEBT-002） */
+.plan { list-style:none; margin:0; padding:0; }
+.plan li { display:flex; gap:10px; padding:9px 0; border-top:1px solid #f0f1f3; }
+.plan li:first-child { border-top:none; }
+.plan .rank { flex:0 0 20px; text-align:right; color:#a5aab1; font-size:12.5px;
+              font-family:ui-monospace,Menlo,Consolas,monospace; }
+.plan .tag { flex:0 0 auto; font-size:11px; padding:1px 7px; border-radius:10px;
+             color:#fff; height:19px; line-height:17px; margin-top:2px; }
+.prio3 { background:#db4437; } .prio2 { background:#e8820c; }
+.prio1 { background:#1a73e8; } .prio0 { background:#c8ccd1; }
+.plan .body { flex:1; min-width:0; }
+.plan .t { font-weight:500; }
+.plan .a { color:#1a73e8; font-size:12.5px; margin-top:2px; }
+.risk { font-size:11.5px; color:#8f959e; margin-left:6px; font-weight:400; }
+.risk.high { color:#b45309; }
 footer { color:#a5aab1; font-size:11.5px; text-align:center; margin-top:26px; }
 
 @media print {
@@ -180,6 +196,37 @@ class HTMLReporter:
       </div>
       <div style="margin-top:16px">{cov_bar}</div>
       {cap}
+    </div>'''
+
+    def _action_plan(self, report: Report) -> str:
+        """「建议做什么」——按紧急度排序的行动清单（DEBT-002）。"""
+        plan = report.action_plan()
+        if not plan:
+            return ""
+
+        rows = []
+        for a in plan[:15]:
+            risk = ""
+            if a.fix_risk == "高":
+                risk = '<span class="risk high">修它本身有风险</span>'
+            elif a.fix_risk == "中":
+                risk = '<span class="risk">修它需谨慎</span>'
+            act = f'<div class="a">{_esc(a.action)}</div>' if a.action else ""
+            rows.append(f'''
+    <li>
+      <div class="rank">{a.rank}</div>
+      <div class="tag prio{a.priority}">{_esc(a.priority_name)}</div>
+      <div class="body"><div class="t">{_esc(a.title)}{risk}</div>{act}</div>
+    </li>''')
+
+        more = ""
+        if len(plan) > 15:
+            more = f'<div class="sub" style="margin-top:8px">另有 {len(plan) - 15} 条，见下方明细</div>'
+        return f'''
+    <div class="card">
+      <h2>建议做什么<span class="count">共 {len(plan)} 条，按紧急度排序</span></h2>
+      <ul class="plan">{"".join(rows)}</ul>
+      {more}
     </div>'''
 
     def _limitations(self, report: Report) -> str:
@@ -410,6 +457,7 @@ class HTMLReporter:
     {self._limitations(report)}
   </div>
   {self._verdict_block(report)}
+  {self._action_plan(report)}
   {self._categories(report)}
   {self._checks(report)}
   {self._inventory(report)}

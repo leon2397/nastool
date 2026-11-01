@@ -30,7 +30,8 @@ from ..registry import check
 from ._base import R, ev
 
 @check("storage.bitrot_scan", "静默损坏扫描", "storage",
-       weight=3, platforms=["linux"], requires=["btrfs"])
+       weight=3, priority=3, fix_risk="中",
+       platforms=["linux"], requires=["btrfs"])
 def bitrot_scan(ctx):
     s = ctx.storage
     if not s.raids:
@@ -57,10 +58,37 @@ def bitrot_scan(ctx):
 | `title` | ✓ | 中文显示名，尽量简短（终端里和别的项并排显示） |
 | `category` | ✓ | 必须是 `CATEGORY_ORDER` 里的值，否则 import 时就抛 `RegistryError` |
 | `weight` | | 1–6，同类内相对重要性。默认 1 |
+| `priority` | | **0–3：不修会怎样**。默认 1。见下「紧急度与修复风险」 |
+| `fix_risk` | | `低` / `中` / `高`：**修它本身的风险**。默认 `中` |
 | `platforms` | | `["linux"]` / `["any"]`。默认空 = 任何平台都跑 |
 | `requires` | | 依赖能力，见下。默认空 |
 | `tags` | | 元数据（`nas` / `verify` / `slow` / `ai`）。**当前只做记录，不参与筛选** |
 | `description` | | 长说明，`--list-checks` 不显示，留给将来 |
+
+### 紧急度与修复风险
+
+这两项决定报告里「建议做什么」的顺序，见 [ADR-0012](adr/0012-action-plan.md)。
+
+| `priority` | 名字 | 什么情况用它 |
+|:--:|---|---|
+| 3 | 立即处理 | 数据会丢、凭据在裸奔、设备随时可能挂 |
+| 2 | 尽快处理 | 服务已不可用或即将不可用 |
+| 1 | 计划处理 | 配置不合理、性能受损、版本落后（**默认值**） |
+| 0 | 可选优化 | 有则更好，不做也不影响使用 |
+
+**同一项不同状况要用不同优先级**——在 `R()` 上覆盖，不要在装饰器上写死：
+
+```python
+if pct >= crit:
+    return R(Status.FAIL, ..., priority=3)      # 95%：今晚就得清
+if pct >= warn:
+    return R(Status.WARN, ..., priority=2)      # 85%：明天再看
+```
+
+这是这套设计的关键：集中式映射表表达不了「同样是存储，95% 和 85% 差一级」。
+
+`fix_risk` 高不是「不要修」，而是「修之前先备份」。它只影响**同优先级内的先后**，
+不参与打分——分数答「这台机器多健康」，`priority` 答「先修哪个」。
 
 ### `requires` 可用值
 
@@ -202,7 +230,7 @@ class MyConnector(BaseConnector):
 
 在 `connectors/__init__.py` 的注册表里加一行，`--push` 的候选值会自动包含它。
 
-**注意 payload 是 `report_version 4.0` 结构**：事实数据在 `payload["facts"]`，平台在 `payload["platform"]`。不要读 2.0 时代的顶层 `device` / `storage` ——它们在 3.0 里已不存在（这个坑真实发生过一次）；4.0 起 `coverage` 增加了 `low_confidence` / `trustworthy` / `trustworthy_percent`，`blind_percent` 口径也变了。
+**注意 payload 是 `report_version 4.1` 结构**：事实数据在 `payload["facts"]`，平台在 `payload["platform"]`。不要读 2.0 时代的顶层 `device` / `storage` ——它们在 3.0 里已不存在（这个坑真实发生过一次）；4.0 起 `coverage` 增加了 `low_confidence` / `trustworthy` / `trustworthy_percent`，`blind_percent` 口径也变了。
 
 ---
 

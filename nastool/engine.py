@@ -111,12 +111,23 @@ def _run_one(meta: CheckMeta, ctx: CheckContext,
         result.title = result.title or meta.title
         result.category = result.category or meta.category
         result.weight = meta.weight
+        # 判定项没单独声明时就继承注册表里的优先级与修复风险
+        if result.priority is None:
+            result.priority = meta.priority
+        if not result.fix_risk:
+            result.fix_risk = meta.fix_risk
     else:
         data = dict(payload or {})
         data.pop("weight", None)
+        # 显式传入 0 是合法优先级（"可选优化"），不能用 `or` 兜底
+        prio = data.pop("priority", None)
+        risk = data.pop("fix_risk", "")
         result = CheckResult(
             id=meta.id, title=meta.title, category=meta.category,
-            weight=meta.weight, **data,
+            weight=meta.weight,
+            priority=meta.priority if prio is None else prio,
+            fix_risk=risk or meta.fix_risk,
+            **data,
         )
 
     result.duration_ms = elapsed

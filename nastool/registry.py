@@ -20,7 +20,7 @@ import fnmatch
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Sequence
 
-from .model import CATEGORY_ORDER
+from .model import CATEGORY_ORDER, FIX_RISK_DEFAULT, FIX_RISK_ORDER, PRIORITY_DEFAULT
 
 
 @dataclass
@@ -34,6 +34,8 @@ class CheckMeta:
     requires: Sequence[str] = ()       # 依赖能力：smartctl / root / docker ...
     tags: Sequence[str] = ()           # 标签：nas / verify / slow / ai（元数据，暂不参与筛选）
     description: str = ""
+    priority: int = PRIORITY_DEFAULT   # 0–3：出问题时这件事多急（DEBT-002）
+    fix_risk: str = FIX_RISK_DEFAULT   # 低/中/高：修它本身的风险
 
     def to_dict(self) -> dict:
         return {
@@ -45,6 +47,8 @@ class CheckMeta:
             "requires": list(self.requires),
             "tags": list(self.tags),
             "description": self.description,
+            "priority": self.priority,
+            "fix_risk": self.fix_risk,
         }
 
 
@@ -57,17 +61,30 @@ class RegistryError(RuntimeError):
 
 def check(id: str, title: str, category: str, weight: float = 1.0,
           platforms: Sequence[str] = (), requires: Sequence[str] = (),
-          tags: Sequence[str] = (), description: str = "") -> Callable:
+          tags: Sequence[str] = (), description: str = "",
+          priority: int = PRIORITY_DEFAULT,
+          fix_risk: str = FIX_RISK_DEFAULT) -> Callable:
     """
     注册一个检查项。
 
         @check("storage.smart_health", "硬盘 SMART 健康", "storage",
-               weight=4, requires=["smartctl"], tags=["nas", "verify"])
+               weight=4, requires=["smartctl"], tags=["nas", "verify"],
+               priority=3, fix_risk="中")
         def check_smart_health(ctx) -> CheckResult:
             ...
+
+    `priority` 与 `fix_risk` 只有出问题（WARN/FAIL）时才被消费，它们决定
+    行动计划里这一项排第几、以及要不要提醒"这一步有风险"。
     """
     if category not in CATEGORY_ORDER:
         raise RegistryError(f"未知分类 {category!r}（允许：{', '.join(CATEGORY_ORDER)}）")
+    # 参数非法就在导入时炸掉，不留到报告里——
+    # 打错成 priority=5 或 fix_risk="low" 会静默产出无法排序的清单
+    if priority not in (0, 1, 2, 3):
+        raise RegistryError(f"{id}: priority 必须是 0–3，收到 {priority!r}")
+    if fix_risk not in FIX_RISK_ORDER:
+        raise RegistryError(
+            f"{id}: fix_risk 必须是 {'/'.join(FIX_RISK_ORDER)}，收到 {fix_risk!r}")
 
     def deco(fn: Callable) -> Callable:
         if id in _REGISTRY:
@@ -76,6 +93,7 @@ def check(id: str, title: str, category: str, weight: float = 1.0,
             id=id, title=title, category=category, weight=weight,
             function=fn, platforms=tuple(platforms), requires=tuple(requires),
             tags=tuple(tags), description=description,
+            priority=priority, fix_risk=fix_risk,
         )
         return fn
 

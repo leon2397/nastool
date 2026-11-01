@@ -26,7 +26,7 @@ def _wired_up(ctx):
 
 
 @check("network.interface_present", "网络接口", "network", weight=3,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=3, fix_risk="中")
 def interface_present(ctx):
     n = ctx.network
     if not n.interfaces:
@@ -46,7 +46,7 @@ def interface_present(ctx):
 
 
 @check("network.ip_assigned", "IP 地址", "network", weight=5,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=3, fix_risk="低")
 def ip_assigned(ctx):
     n = ctx.network
     usable = _usable(ctx)
@@ -71,7 +71,7 @@ def ip_assigned(ctx):
 
 
 @check("network.link_speed", "链路速率", "network", weight=3,
-       platforms=["linux"], tags=["nas", "verify"])
+       platforms=["linux"], tags=["nas", "verify"], priority=2, fix_risk="低")
 def link_speed(ctx):
     wired = _wired_up(ctx)
     if not wired:
@@ -102,7 +102,7 @@ def link_speed(ctx):
 
 
 @check("network.duplex", "双工模式", "network", weight=2,
-       platforms=["linux"], tags=["nas"])
+       platforms=["linux"], tags=["nas"], priority=2, fix_risk="低")
 def duplex(ctx):
     wired = _wired_up(ctx)
     if not wired:
@@ -124,7 +124,7 @@ def duplex(ctx):
 
 
 @check("network.gateway", "默认网关", "network", weight=2,
-       platforms=["any"], tags=["nas"])
+       platforms=["any"], tags=["nas"], priority=1, fix_risk="低")
 def gateway(ctx):
     n = ctx.network
     if not n.gateway:
@@ -141,7 +141,7 @@ def gateway(ctx):
 
 
 @check("network.dns", "DNS 解析", "network", weight=2,
-       platforms=["any"], tags=["nas"])
+       platforms=["any"], tags=["nas"], priority=2, fix_risk="低")
 def dns(ctx):
     n = ctx.network
     if not n.gateway and not n.dns_server:
@@ -165,7 +165,7 @@ def dns(ctx):
 
 
 @check("network.internet", "外网连通", "network", weight=1,
-       platforms=["any"], tags=["nas"])
+       platforms=["any"], tags=["nas"], priority=0, fix_risk="低")
 def internet(ctx):
     n = ctx.network
     if not getattr(ctx.options, "do_internet_check", True):
@@ -182,7 +182,7 @@ def internet(ctx):
 
 
 @check("network.peer_reach", "对端可达性", "network", weight=2,
-       platforms=["any"], tags=["nas"])
+       platforms=["any"], tags=["nas"], priority=1, fix_risk="低")
 def peer_reach(ctx):
     n = ctx.network
     if not n.peers:
@@ -204,7 +204,7 @@ def peer_reach(ctx):
 
 
 @check("network.wireless_primary", "主链路类型", "network", weight=3,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=1, fix_risk="低")
 def wireless_primary(ctx):
     usable = _usable(ctx)
     if not usable:
@@ -224,7 +224,7 @@ def wireless_primary(ctx):
 
 
 @check("network.interface_errors", "网卡错误计数", "network", weight=2,
-       platforms=["linux"], tags=["nas"])
+       platforms=["linux"], tags=["nas"], priority=2, fix_risk="低")
 def interface_errors(ctx):
     names = [i.name for i in ctx.network.interfaces]
     if not names:

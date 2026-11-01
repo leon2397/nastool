@@ -28,8 +28,16 @@ def R(status: Status,
       suggestion: str = "",
       evidence: Optional[Sequence[Evidence]] = None,
       confidence: Optional[float] = None,
-      error: str = "") -> dict:
-    """构造一条检查结果。confidence 留空由引擎按状态给默认值。"""
+      error: str = "",
+      priority: Optional[int] = None,
+      fix_risk: str = "") -> dict:
+    """
+    构造一条检查结果。confidence 留空由引擎按状态给默认值。
+
+    priority / fix_risk 留空时继承 `@check` 上的声明；只有当**同一项在不同
+    状况下紧急程度差很多**时才在这里覆盖，例如容量：85% 是「计划处理」，
+    96% 是「立即处理」。
+    """
     return {
         "status": status,
         "summary": summary,
@@ -38,6 +46,8 @@ def R(status: Status,
         "evidence": list(evidence or []),
         "confidence": confidence,
         "error": error,
+        "priority": priority,
+        "fix_risk": fix_risk,
     }
 
 

@@ -1,7 +1,7 @@
 # 报告格式规范
 
 > JSON 是这个产品对外最重要的接口：上报、历史库、二次分析、CI 判定都依赖它。
-> 本文是 **`report_version: 4.0` 的字段说明书**。
+> 本文是 **`report_version: 4.1` 的字段说明书**。
 >
 > 相关：[CLI.md](CLI.md)（怎么产出）、[HISTORY.md](HISTORY.md)（存下来的报告怎么比对）
 
@@ -10,7 +10,7 @@
 ## 0. 版本契约
 
 ```json
-"meta": { "report_version": "4.0" }
+"meta": { "report_version": "4.1" }
 ```
 
 `REPORT_VERSION` 是**向后兼容契约**。规则：
@@ -24,6 +24,9 @@
 - **4.0 相对 3.0 是破坏性升级**：`coverage` 新增三个字段、`blind_percent` 口径变了、
   `score` 的计算方式变了（低置信的 PASS 不再计入分母）。
   详见 [ADR-0009](adr/0009-confidence-participates-in-scoring.md)。
+- **4.1 相对 4.0 是纯新增**：`checks[]` 增加 `priority` / `fix_risk`，顶层增加 `action_plan`。
+  既有字段的含义与取值一律未变，4.0 的消费方可以继续用，忽略新字段即可。
+  详见 [ADR-0012](adr/0012-action-plan.md)。
 
 **跨版本对比的注意事项**：3.0 的报告与 4.0 的报告**分数不可直接相减**——
 差值里一半来自设备变化、一半来自口径变化。`nastool --compare` 会自动识别并提示。
@@ -51,6 +54,7 @@
   "meta":            { ... },   // 工具版本、场景、时间、指纹
   "score":           { ... },   // 总分 / 等级 / 分类得分 / 置信度
   "coverage":        { ... },   // 覆盖了多少项
+  "action_plan":     { ... },   // 按紧急度排序的行动清单（4.1 起）
   "checks":          [ ... ],   // 逐项结论（真正的价值在这里）
   "platform":        { ... },   // 平台识别原始结果
   "facts":           { ... },   // 设备清单（展示用，非判定依据）
@@ -68,7 +72,7 @@
 |---|---|---|
 | `tool` | string | 固定 `"nastool"` |
 | `version` | string | 工具版本，如 `"0.3.4"` |
-| `report_version` | string | **格式版本，当前 `"4.0"`** |
+| `report_version` | string | **格式版本，当前 `"4.1"`** |
 | `generated_at` | string | `YYYY-MM-DD HH:MM:SS`（本地时间，无时区） |
 | `duration_s` | float | 本次检测耗时（秒） |
 | `hostname` | string | 主机名 |
@@ -223,6 +227,8 @@ usable == judged - low_confidence
   "detail": "已有坏道被备用扇区替换，短期内可用，但数量持续增长说明盘在老化",
   "suggestion": "加强备份频率，记录数值以便下次对比是否增长",
   "weight": 5,
+  "priority": 3,
+  "fix_risk": "高",
   "duration_ms": 87,
   "error": "",
   "evidence": [ ... ]
@@ -239,6 +245,8 @@ usable == judged - low_confidence
 | `summary` | string | 一句话结论（报告主行显示这个） |
 | `detail` | string | 补充解释，为什么这是个问题 |
 | `suggestion` | string | 修复建议（仅 WARN / FAIL 有） |
+| `priority` | int | **0–3**：出问题时这件事多急（4.1 起）。见下节 |
+| `fix_risk` | string | `低` / `中` / `高`：修它本身的风险（4.1 起） |
 | `weight` | int | 该项在分类内的权重 1–6 |
 | `duration_ms` | int | 该项耗时 |
 | `error` | string | **检查器自身异常**，不是「被检测对象有问题」 |
@@ -306,7 +314,67 @@ usable == judged - low_confidence
 
 ---
 
-## 7. `platform` 与 `facts`
+## 7. `action_plan`（4.1 起）
+
+把 `checks[]` 里的 **WARN / FAIL** 排成一份「先做哪个」的清单。
+它是**派生数据**：从 `checks` 现算，不存库，所以永远与 `checks` 一致。
+
+```json
+"action_plan": {
+  "count": 3,
+  "items": [
+    { "rank": 1, "id": "storage.smart_health", "title": "硬盘 SMART 健康",
+      "category": "storage", "status": "fail",
+      "priority": 3, "priority_name": "立即处理", "fix_risk": "高",
+      "why": "sda 重映射扇区 8 个",
+      "action": "先备份重要数据，再更换该盘" }
+  ]
+}
+```
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `count` | int | 清单条数，等于 `len(items)` |
+| `items[].rank` | int | 从 1 开始的建议执行顺序 |
+| `items[].id` | string | 对应 `checks[].id`，可回查完整证据 |
+| `items[].priority` | int | 0–3，见下节 |
+| `items[].priority_name` | string | 优先级的中文名，方便直接展示 |
+| `items[].fix_risk` | string | `低` / `中` / `高`：修它本身的风险 |
+| `items[].why` | string | 现在是什么状况（即该 check 的 `summary`） |
+| `items[].action` | string | 建议怎么做（即该 check 的 `suggestion`） |
+
+### 优先级与修复风险是两个维度
+
+| `priority` | 名字 | 含义 |
+|:--:|---|---|
+| 3 | 立即处理 | 数据丢失 / 安全暴露 / 设备随时可能挂 |
+| 2 | 尽快处理 | 服务不可用或即将不可用 |
+| 1 | 计划处理 | 配置不合理、性能受损、版本落后（**未标注时的默认值**） |
+| 0 | 可选优化 | 有则更好，不做也不影响使用 |
+
+`fix_risk` 回答的是「修的时候可能弄坏什么」：高优先级 + 高风险（换硬盘）要先备份，
+高优先级 + 低风险（关掉 Telnet）可以直接动手。未标注时默认 `中`——不确定就假设有风险。
+
+### 排序规则
+
+```
+① priority 降序  →  ② 状态严重度（FAIL 先）  →  ③ fix_risk 升序  →  ④ id 兜底
+```
+
+第 ④ 层保证同一份报告两次运行顺序一致（[结论可复现](../README.md)）。
+**`priority` 不影响分数**——分数答「这台机器多健康」，`priority` 答「先修哪个」，
+见 [ADR-0012](adr/0012-action-plan.md)。
+
+### 只有 WARN / FAIL 进清单
+
+`PASS` 不需要行动；`UNKNOWN` 需要的不是行动而是「先让它能测」——
+那是 `--self-test` 的职责，见 [DEBT-011](memo/debt.md#debt-011-没有自检命令)。
+所以 **`action_plan.items` 与 `checks` 里 status 为 `unknown` 的项是两回事**，
+不要用清单为空来判断「没测到东西」。
+
+---
+
+## 8. `platform` 与 `facts`
 
 ### `platform` — 平台识别原始结果
 
@@ -358,7 +426,7 @@ usable == judged - low_confidence
 
 ---
 
-## 8. 消费示例
+## 9. 消费示例
 
 ### 提取所有需要处理的问题
 
@@ -405,16 +473,17 @@ assert report["meta"]["report_version"].startswith("4.")
 
 ---
 
-## 9. 终端与 HTML
+## 10. 终端与 HTML
 
 ### 终端报告的层次
 
 ```
-nastool 0.3.1  ·  场景 nas  ·  时间      ← 我是谁、什么时候
+nastool x.y.z  ·  场景 nas  ·  时间      ← 我是谁、什么时候
 主机 / 平台 / 数据盘                     ← 这是哪台机器
 结论 / 覆盖 / 置信                        ← 先给答案
 [! 封顶原因]                             ← 答案被削弱时立刻说明
 ⚠ 检测限制                               ← 什么没测到、为什么
+建议做什么（按优先级排序，每条带风险标注）  ← 那我先修哪个（4.1 起）
 分项（条形图 + 权重 + 判定比 + 低覆盖标记）  ← 结构
 明细（按分类，只列非 PASS/SKIP 项）        ← 问题
 [-v 时追加：设备清单]                     ← 原始数据
@@ -427,11 +496,11 @@ nastool 0.3.1  ·  场景 nas  ·  时间      ← 我是谁、什么时候
 
 单文件、零外部资源（不引用 CDN、不引用字体），可直接邮件发送、离线打开、打印。
 
-包含：分数环、覆盖条、分项条形图、检测限制、按分类的明细（证据可展开）、设备清单（物理盘 / 阵列 / SMART / 网卡 / 端口 / 容器 / 安全配置）。
+包含：分数环、覆盖条、分项条形图、检测限制、「建议做什么」卡片（按优先级排序）、按分类的明细（证据可展开）、设备清单（物理盘 / 阵列 / SMART / 网卡 / 端口 / 容器 / 安全配置）。
 
 ---
 
-## 10. 相关代码
+## 11. 相关代码
 
 | 文件 | 职责 |
 |---|---|

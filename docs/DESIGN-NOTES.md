@@ -10,8 +10,8 @@
 > | `--profile` 分级标准 | ✅ 已实现（`nas` / `verify` / `dev` / `ai`，`profiles.py`） |
 > | 按芯片自适应阈值 | ✅ 已实现（`context.thermal_limits()`，RK3588 / Jetson 分开） |
 > | 检查注册中心 + 插件 | ✅ 已实现（`@check` 装饰器，加一项 = 写一个函数） |
-> | 多源数据融合 + 一致性验证 | ❌ 未做（仍是"取第一个读到的"，仅用 `UNKNOWN` 表达不确定） |
-> | `action_plan`（priority + risk） | ❌ 未做（只有 `suggestion` 文本，无优先级与风险分级） |
+> | 多源数据融合 + 一致性验证 | ✅ 已实现（v0.3.4，`fusion.py`，见 [ADR-0008](adr/0008-multi-source-fusion.md)） |
+> | `action_plan`（priority + risk） | ✅ 已实现（v0.5.0，`checks[].priority` / `fix_risk`，见 [ADR-0012](adr/0012-action-plan.md)） |
 > | 修复引擎 | ❌ 刻意不做（见第五节说明：远程改配置的风险大于收益） |
 > | `current` / `expected` 字段对 | ❌ 未做（当前用 `Evidence.num` + 阈值表达） |
 >
@@ -146,7 +146,10 @@ JSON 报告结构：
 }
 ```
 
-关键在 `action_plan` 带 **priority + risk 双维度**。当前 `scoring.py` 只产出 `findings`（问题清单），没有"先做什么、风险多大"。
+关键在 `action_plan` 带 **priority + risk 双维度**。当时 `scoring.py` 只产出 `findings`（问题清单），没有"先做什么、风险多大"。
+
+**已落地**：字段名与结构按本项目契约调整过（`fix_risk` 取「低/中/高」而非 `low/medium`，
+`action_plan` 变为 `{count, items[]}` 且**不参与打分**），理由见 [ADR-0012](adr/0012-action-plan.md)。
 
 ---
 

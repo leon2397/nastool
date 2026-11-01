@@ -28,7 +28,7 @@ def _target_disk(storage):
 
 
 @check("storage.path_exists", "数据路径存在", "storage", weight=5,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=3, fix_risk="低")
 def path_exists(ctx):
     s = ctx.storage
     evidence = [ev("os.path.exists", "target_path", s.target_path)]
@@ -45,7 +45,7 @@ def path_exists(ctx):
 
 
 @check("storage.writable", "数据路径可写", "storage", weight=5,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=3, fix_risk="低")
 def writable(ctx):
     s = ctx.storage
     if not s.target_exists or not s.is_dir:
@@ -61,7 +61,7 @@ def writable(ctx):
 
 
 @check("storage.capacity", "数据盘容量", "storage", weight=4,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=2, fix_risk="低")
 def capacity(ctx):
     s = ctx.storage
     if s.target_total_gb <= 0:
@@ -79,9 +79,11 @@ def capacity(ctx):
     ]
 
     if pct >= crit:
+        # 同一项在不同水位下的紧急度差一个量级：85% 是"规划清理"，
+        # 96% 是"应用随时会写失败"，所以这里覆盖注册表里的默认优先级
         return R(Status.FAIL, f"已用 {pct}%，剩余 {s.target_free_gb} GB，即将写满",
                  suggestion="立即清理或扩容；写满会导致应用异常、快照失效",
-                 evidence=evidence)
+                 evidence=evidence, priority=3)
     if pct >= warn:
         return R(Status.WARN, f"已用 {pct}%，剩余 {s.target_free_gb} GB",
                  suggestion="规划清理或扩容", evidence=evidence)
@@ -90,7 +92,7 @@ def capacity(ctx):
 
 
 @check("storage.inode", "inode 使用率", "storage", weight=2,
-       platforms=["linux"], tags=["nas"])
+       platforms=["linux"], tags=["nas"], priority=1, fix_risk="低")
 def inode(ctx):
     s = ctx.storage
     if not s.disks:
@@ -115,7 +117,7 @@ def inode(ctx):
 
 
 @check("storage.readonly_mount", "挂载只读", "storage", weight=4,
-       platforms=["linux"], tags=["nas", "verify"])
+       platforms=["linux"], tags=["nas", "verify"], priority=3, fix_risk="中")
 def readonly_mount(ctx):
     s = ctx.storage
     target = _target_disk(s)
@@ -139,7 +141,7 @@ def readonly_mount(ctx):
 
 
 @check("storage.physical_disks", "物理磁盘识别", "storage", weight=2,
-       platforms=["linux"], tags=["nas", "verify"])
+       platforms=["linux"], tags=["nas", "verify"], priority=1, fix_risk="低")
 def physical_disks(ctx):
     s = ctx.storage
     if not s.physical_disks:
@@ -165,7 +167,7 @@ def physical_disks(ctx):
 
 
 @check("storage.raid_state", "阵列健康", "storage", weight=5,
-       platforms=["linux"], tags=["nas", "verify"])
+       platforms=["linux"], tags=["nas", "verify"], priority=3, fix_risk="高")
 def raid_state(ctx):
     s = ctx.storage
     if not s.raids:
@@ -196,7 +198,7 @@ def raid_state(ctx):
 
 
 @check("storage.raid_rebuild", "阵列重建", "storage", weight=3,
-       platforms=["linux"], tags=["nas", "verify"])
+       platforms=["linux"], tags=["nas", "verify"], priority=2, fix_risk="中")
 def raid_rebuild(ctx):
     s = ctx.storage
     if not s.raids:
@@ -214,7 +216,7 @@ def raid_rebuild(ctx):
 
 
 @check("storage.smart_health", "硬盘 SMART 健康", "storage", weight=6,
-       platforms=["linux"], requires=["smart_data"], tags=["nas", "verify"])
+       platforms=["linux"], requires=["smart_data"], tags=["nas", "verify"], priority=3, fix_risk="高")
 def smart_health(ctx):
     s = ctx.storage
     bad = [x for x in s.smart if x.healthy is False]
@@ -235,7 +237,7 @@ def smart_health(ctx):
 
 
 @check("storage.smart_bad_sectors", "坏道计数", "storage", weight=5,
-       platforms=["linux"], requires=["smart_data"], tags=["nas", "verify"])
+       platforms=["linux"], requires=["smart_data"], tags=["nas", "verify"], priority=3, fix_risk="高")
 def smart_bad_sectors(ctx):
     s = ctx.storage
     pending = [x for x in s.smart if x.pending_sectors > 0]
@@ -269,7 +271,7 @@ def smart_bad_sectors(ctx):
 
 
 @check("storage.smart_age", "硬盘通电时长", "storage", weight=2,
-       platforms=["linux"], requires=["smart_data"], tags=["verify"])
+       platforms=["linux"], requires=["smart_data"], tags=["verify"], priority=1, fix_risk="高")
 def smart_age(ctx):
     s = ctx.storage
     known = [x for x in s.smart if x.power_on_hours > 0]
@@ -294,7 +296,7 @@ def smart_age(ctx):
 
 
 @check("storage.smart_temperature", "硬盘温度", "storage", weight=2,
-       platforms=["linux"], requires=["smart_data"], tags=["nas"])
+       platforms=["linux"], requires=["smart_data"], tags=["nas"], priority=2, fix_risk="低")
 def smart_temperature(ctx):
     s = ctx.storage
     temps = [x for x in s.smart if x.temperature_c > 0]
@@ -316,7 +318,7 @@ def smart_temperature(ctx):
 
 
 @check("storage.speed", "读写速度", "storage", weight=2,
-       platforms=["any"], tags=["nas", "slow"])
+       platforms=["any"], tags=["nas", "slow"], priority=1, fix_risk="低")
 def speed(ctx):
     s = ctx.storage
     if not s.speed_test_done:

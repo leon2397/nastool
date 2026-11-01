@@ -18,7 +18,7 @@ from ._base import R, ev
 
 
 @check("ai.hardware", "AI 加速硬件", "ai", weight=3,
-       platforms=["any"], tags=["ai", "verify"])
+       platforms=["any"], tags=["ai", "verify"], priority=2, fix_risk="中")
 def hardware(ctx):
     ai = ctx.ai
     if ai.hardware_accelerated:
@@ -41,7 +41,7 @@ def hardware(ctx):
 
 
 @check("ai.runtime", "推理运行时", "ai", weight=2,
-       platforms=["any"], tags=["ai"])
+       platforms=["any"], tags=["ai"], priority=1, fix_risk="中")
 def runtime(ctx):
     ai = ctx.ai
     if not ai.hardware_accelerated:
@@ -63,7 +63,7 @@ def runtime(ctx):
 
 
 @check("ai.inference_perf", "推理性能", "ai", weight=2,
-       platforms=["any"], tags=["ai", "slow"])
+       platforms=["any"], tags=["ai", "slow"], priority=1, fix_risk="中")
 def inference_perf(ctx):
     ai = ctx.ai
     if not ai.inference_available or not ai.inference_test_ms:
@@ -84,7 +84,7 @@ def inference_perf(ctx):
 
 
 @check("ai.vendor_env", "厂商运行环境", "ai", weight=1,
-       platforms=["linux"], tags=["ai"])
+       platforms=["linux"], tags=["ai"], priority=0, fix_risk="低")
 def vendor_env(ctx):
     hints = []
     if read_file("/etc/nv_tegra_release"):

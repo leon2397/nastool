@@ -37,7 +37,7 @@ def _target_block_device(ctx):
 
 
 @check("usb.devices", "USB 设备", "usb", weight=1,
-       platforms=["linux"], tags=["verify"])
+       platforms=["linux"], tags=["verify"], priority=0, fix_risk="低")
 def usb_devices(ctx):
     base = "/sys/bus/usb/devices"
     entries = safe_listdir(base)
@@ -70,7 +70,7 @@ def usb_devices(ctx):
 
 
 @check("usb.storage_media", "数据盘连接方式", "usb", weight=4,
-       platforms=["linux"], tags=["nas", "verify"])
+       platforms=["linux"], tags=["nas", "verify"], priority=2, fix_risk="中")
 def storage_media(ctx):
     name = _target_block_device(ctx)
     if not name:

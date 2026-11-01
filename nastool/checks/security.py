@@ -17,7 +17,7 @@ from ._base import R, ev
 
 
 @check("security.ssh_root_login", "SSH 允许 root 登录", "security", weight=4,
-       platforms=["any"], requires=["ssh_config"], tags=["nas", "verify"])
+       platforms=["any"], requires=["ssh_config"], tags=["nas", "verify"], priority=3, fix_risk="中")
 def ssh_root_login(ctx):
     ssh = ctx.security.ssh
     value = (ssh.permit_root_login or "").strip().lower()
@@ -42,7 +42,7 @@ def ssh_root_login(ctx):
 
 
 @check("security.ssh_password_auth", "SSH 密码登录", "security", weight=3,
-       platforms=["any"], requires=["ssh_config"], tags=["nas", "verify"])
+       platforms=["any"], requires=["ssh_config"], tags=["nas", "verify"], priority=2, fix_risk="中")
 def ssh_password_auth(ctx):
     ssh = ctx.security.ssh
     value = (ssh.password_auth or "").strip().lower()
@@ -62,7 +62,7 @@ def ssh_password_auth(ctx):
 
 
 @check("security.firewall", "防火墙", "security", weight=4,
-       platforms=["any"], tags=["nas", "verify"])
+       platforms=["any"], tags=["nas", "verify"], priority=2, fix_risk="中")
 def firewall(ctx):
     fw = ctx.security.firewall
     evidence = [ev("防火墙", "detected", "、".join(fw.detected) or "(未检测到)"),
@@ -90,7 +90,7 @@ def firewall(ctx):
 
 
 @check("security.tls_cert", "证书有效期", "security", weight=4,
-       platforms=["any"], requires=["certs"], tags=["nas", "verify"])
+       platforms=["any"], requires=["certs"], tags=["nas", "verify"], priority=3, fix_risk="低")
 def tls_cert(ctx):
     certs = [c for c in ctx.security.certs if c.days_left is not None]
     if not certs:
@@ -119,7 +119,7 @@ def tls_cert(ctx):
 
 
 @check("security.self_signed", "证书类型", "security", weight=2,
-       platforms=["any"], requires=["certs"], tags=["nas"])
+       platforms=["any"], requires=["certs"], tags=["nas"], priority=0, fix_risk="低")
 def self_signed(ctx):
     certs = ctx.security.certs
     selfs = [c for c in certs if c.self_signed and not c.error]
@@ -137,7 +137,7 @@ def self_signed(ctx):
 
 
 @check("security.smb_guest", "SMB 匿名访问", "security", weight=3,
-       platforms=["linux"], requires=["smb_config"], tags=["nas", "verify"])
+       platforms=["linux"], requires=["smb_config"], tags=["nas", "verify"], priority=3, fix_risk="低")
 def smb_guest(ctx):
     guest = ctx.security.smb_guest
     evidence = [ev("smb.conf", "guest_ok", guest),
@@ -152,7 +152,7 @@ def smb_guest(ctx):
 
 
 @check("security.nfs_root_squash", "NFS 权限映射", "security", weight=3,
-       platforms=["linux"], requires=["nfs_config"], tags=["nas", "verify"])
+       platforms=["linux"], requires=["nfs_config"], tags=["nas", "verify"], priority=2, fix_risk="低")
 def nfs_root_squash(ctx):
     risky = ctx.security.nfs_no_root_squash
     evidence = [ev("/etc/exports", "no_root_squash", risky)]
@@ -165,7 +165,7 @@ def nfs_root_squash(ctx):
 
 
 @check("security.fail2ban", "暴力破解防护", "security", weight=1,
-       platforms=["linux"], tags=["nas"])
+       platforms=["linux"], tags=["nas"], priority=1, fix_risk="低")
 def fail2ban(ctx):
     active = ctx.security.fail2ban
     if active is None:

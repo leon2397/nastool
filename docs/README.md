@@ -37,7 +37,7 @@
 | [SCORING.md](SCORING.md) | 三层计算、权重矩阵、两条封顶规则、覆盖度、置信度，含手算示例 | 中 |
 | [CHECKS.md](CHECKS.md) | **55 项检测逐条说明**：判什么、依据、每种情况给什么状态 | **大（核心）** |
 | [PROFILES.md](PROFILES.md) | 四个场景的权重/阈值/范围差异，怎么选，`--enable` 与 `--only` 的交互 | 中 |
-| [OUTPUT.md](OUTPUT.md) | JSON `report_version 4.0` 逐字段说明、`trend` 语义、消费示例 | 中 |
+| [OUTPUT.md](OUTPUT.md) | JSON `report_version 4.1` 逐字段说明、`trend` 语义、消费示例 | 中 |
 | [HISTORY.md](HISTORY.md) | 库结构、十种变化类型、证据级对比、现状限制 | 中 |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | 15 个典型现象：原因、验证命令、对策 | 中 |
 
@@ -49,7 +49,7 @@
 | [STANDARDS.md](STANDARDS.md) | **开发规范**（强制）：分层依赖、异常契约、兼容承诺、提交格式、自审清单；`python tools/selfcheck.py` 可自动检查 |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | 加检测项（含完整示例）、加分类、加报告格式、加连接器、测试约定、发布流程 |
 | [GLOSSARY.md](GLOSSARY.md) | 术语表：状态五态、覆盖度 vs 置信度、两个 weight 的区别 |
-| [adr/](adr/) | 11 条架构决策的来龙去脉（为什么这样，放弃了什么） |
+| [adr/](adr/) | 12 条架构决策的来龙去脉（为什么这样，放弃了什么） |
 | [memo/](memo/) | **项目记忆**：工作日志、技术债台账、踩坑记录、未决问题 |
 
 ### 规划与历史
